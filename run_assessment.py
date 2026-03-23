@@ -1164,7 +1164,7 @@ def main():
     all_mapplets = {}  # Collected from all XML files for expansion
 
     # 1. Parse Mappings (PowerCenter + IICS)
-    print("[1/9] Parsing mapping XML files...")
+    print("[1/10] Parsing mapping XML files...")
     mapping_dir = INPUT_DIR / "mappings"
     all_mappings = []
     if mapping_dir.exists():
@@ -1196,7 +1196,7 @@ def main():
     print()
 
     # 2. Expand Mapplet references
-    print("[2/9] Expanding Mapplet references...")
+    print("[2/10] Expanding Mapplet references...")
     mplt_count = 0
     for m in all_mappings:
         expand_mapplet_refs(m, all_mapplets)
@@ -1207,7 +1207,7 @@ def main():
     print()
 
     # 3. Parse Workflows
-    print("[3/9] Parsing workflow XML files...")
+    print("[3/10] Parsing workflow XML files...")
     workflow_dir = INPUT_DIR / "workflows"
     all_workflows = []
     if workflow_dir.exists():
@@ -1225,7 +1225,7 @@ def main():
     print()
 
     # 4. Parse SQL files (Oracle + SQL Server detection)
-    print("[4/9] Parsing SQL files...")
+    print("[4/10] Parsing SQL files...")
     sql_dir = INPUT_DIR / "sql"
     sql_files = []
     if sql_dir.exists():
@@ -1241,7 +1241,7 @@ def main():
     print()
 
     # 5. Parse Parameter files
-    print("[5/9] Parsing parameter files...")
+    print("[5/10] Parsing parameter files...")
     param_files = parse_parameter_files(INPUT_DIR)
     # Also check common sub-folders
     for subdir in ["params", "parameters", "prm", "mappings", "workflows", "sessions"]:
@@ -1250,7 +1250,7 @@ def main():
     print()
 
     # 6. Extract connections (inferred + XML-parsed)
-    print("[6/9] Extracting connections...")
+    print("[6/10] Extracting connections...")
     connections = extract_connections_from_mappings(all_mappings)
     # Parse connection objects from all XML files
     xml_connections = []
@@ -1272,7 +1272,7 @@ def main():
     print()
 
     # 7. Write outputs
-    print("[7/9] Writing output files...")
+    print("[7/10] Writing output files...")
     inventory = write_inventory_json(all_mappings, all_workflows, connections, sql_files)
     # Add param_files and mapplets to inventory
     inventory["parameter_files"] = param_files
@@ -1290,7 +1290,7 @@ def main():
     print()
 
     # 8. Summary
-    print("[8/9] Assessment complete!")
+    print("[8/10] Assessment complete!")
     print()
     print("=" * 60)
     cb = inventory["summary"]["complexity_breakdown"]
@@ -1317,7 +1317,7 @@ def main():
 
     # 9. Warnings and issues
     print()
-    print("[9/9] Final report...")
+    print("[9/10] Final report...")
 
     if warnings:
         print()
@@ -1345,6 +1345,22 @@ def main():
     print("    - dependency_dag.json")
     if issues:
         print("    - parse_issues.json")
+
+    # 10. Generate HTML reports
+    print()
+    print("[10/10] Generating HTML reports...")
+    try:
+        from generate_html_reports import generate_assessment_report, generate_migration_report
+        assessment_html = OUTPUT_DIR / "assessment_report.html"
+        migration_html = OUTPUT_DIR / "migration_report.html"
+        generate_assessment_report(inventory, assessment_html)
+        generate_migration_report(inventory, migration_html)
+        print("    - assessment_report.html")
+        print("    - migration_report.html")
+    except Exception as e:
+        print(f"    WARNING: HTML report generation failed: {e}")
+        print("    Run generate_html_reports.py separately to retry.")
+
     print("=" * 60)
 
     # Return non-zero exit code if there were errors (not just warnings)

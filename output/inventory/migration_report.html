@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migration Report — Informatica to Fabric</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #F0F2F5; color: #212529; line-height: 1.6;
+  }
+  .header {
+    background: linear-gradient(135deg, #0078D4 0%, #005A9E 100%);
+    color: #fff; padding: 32px 40px; margin-bottom: 28px;
+  }
+  .header h1 { font-size: 26px; margin-bottom: 6px; }
+  .header .subtitle { font-size: 14px; opacity: 0.85; }
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 20px 40px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .kpi { background: #fff; border-radius: 10px; padding: 22px 26px;
+         box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+  .kpi .number { font-size: 36px; font-weight: 700; color: #0078D4; }
+  .kpi .label  { font-size: 13px; color: #6C757D; margin-top: 2px; }
+  .card {
+    background: #fff; border-radius: 10px; padding: 24px 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 24px;
+  }
+  .card h3 { font-size: 17px; margin-bottom: 16px; color: #212529; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #F8F9FA; padding: 10px 12px; text-align: left;
+       border-bottom: 2px solid #DEE2E6; font-weight: 600; color: #495057; }
+  td { padding: 9px 12px; border-bottom: 1px solid #EDEFF2; }
+  tr:hover td { background: #F8F9FA; }
+  .section-title { font-size: 20px; font-weight: 700; margin: 32px 0 16px;
+                   padding-bottom: 8px; border-bottom: 2px solid #0078D4; color: #0078D4; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px;
+         font-size: 11px; font-weight: 600; margin: 1px 2px; }
+  .footer { text-align: center; padding: 20px; font-size: 12px; color: #6C757D; }
+  @media print {
+    body { background: #fff; }
+    .header { background: #0078D4 !important; -webkit-print-color-adjust: exact; }
+    .card, .kpi { box-shadow: none; border: 1px solid #DEE2E6; }
+  }
+</style>
+
+</head>
+<body>
+<div class="header" style="background:linear-gradient(135deg, #27AE60 0%, #1E8449 100%);">
+  <h1>📋 Migration Report</h1>
+  <div class="subtitle">Informatica to Microsoft Fabric &mdash; Generated 2026-03-23 17:44 UTC</div>
+</div>
+<div class="container">
+  <div class="grid"><div class="kpi"><div class="number">50%</div><div class="label">Overall Progress</div></div><div class="kpi"><div class="number">3/6</div><div class="label">Notebooks</div></div><div class="kpi"><div class="number">1/1</div><div class="label">Pipelines</div></div><div class="kpi"><div class="number">1/3</div><div class="label">SQL Converted</div></div><div class="kpi"><div class="number">5</div><div class="label">Validation Scripts</div></div></div>
+  <div class="grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="card"><h3>📊 Migration Progress</h3><div style="text-align:center;"><svg width="180" height="180" viewBox="0 0 180 180"><path d="M 90.00,2.00 A 88.0,88.0 0 0,1 90.00,178.00 L 90.00,138.40 A 48.400000000000006,48.400000000000006 0 0,0 90.00,41.60 Z" fill="#27AE60"><title>Completed: 5</title></path><path d="M 90.00,178.00 A 88.0,88.0 0 0,1 90.00,2.00 L 90.00,41.60 A 48.400000000000006,48.400000000000006 0 0,0 90.00,138.40 Z" fill="#DEE2E6"><title>Pending: 5</title></path><text x="90.0" y="96.0" text-anchor="middle" font-size="22" font-weight="700" fill="#212529">10</text></svg><div style="margin-top:8px;font-size:13px;color:#6C757D;"><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#27AE60;display:inline-block;margin-right:5px;"></span>Completed: 5 (50%)</span><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#DEE2E6;display:inline-block;margin-right:5px;"></span>Pending: 5 (50%)</span></div></div></div>
+    <div class="card"><h3>⚙️ Estimated Effort by Complexity</h3><div style="text-align:center;"><svg width="180" height="180" viewBox="0 0 180 180"><path d="M 90.00,2.00 A 88.0,88.0 0 0,1 166.21,134.00 L 131.92,114.20 A 48.400000000000006,48.400000000000006 0 0,0 90.00,41.60 Z" fill="#27AE60"><title>Simple: 2</title></path><path d="M 166.21,134.00 A 88.0,88.0 0 0,1 90.00,178.00 L 90.00,138.40 A 48.400000000000006,48.400000000000006 0 0,0 131.92,114.20 Z" fill="#F39C12"><title>Medium: 1</title></path><path d="M 90.00,178.00 A 88.0,88.0 0 0,1 90.00,2.00 L 90.00,41.60 A 48.400000000000006,48.400000000000006 0 0,0 90.00,138.40 Z" fill="#E74C3C"><title>Complex: 3</title></path><text x="90.0" y="96.0" text-anchor="middle" font-size="22" font-weight="700" fill="#212529">6</text></svg><div style="margin-top:8px;font-size:13px;color:#6C757D;"><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#27AE60;display:inline-block;margin-right:5px;"></span>Simple: 2 (33%)</span><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#F39C12;display:inline-block;margin-right:5px;"></span>Medium: 1 (17%)</span><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#E74C3C;display:inline-block;margin-right:5px;"></span>Complex: 3 (50%)</span><span style="display:inline-flex;align-items:center;margin-right:14px;"><span style="width:12px;height:12px;border-radius:2px;background:#8E44AD;display:inline-block;margin-right:5px;"></span>Custom: 0 (0%)</span></div></div></div>
+  </div>
+  <div class="card"><h3>🚀 Action Items (5)</h3><table><thead><tr><th>Priority</th><th>Action</th><th>Category</th></tr></thead><tbody><tr><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">High</span></td><td>Generate notebook for mapping <b>m_load_contacts</b></td><td>Notebook</td></tr><tr><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">High</span></td><td>Generate notebook for mapping <b>m_sync_accounts</b></td><td>Notebook</td></tr><tr><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">High</span></td><td>Generate notebook for mapping <b>M_LOAD_EMPLOYEES</b></td><td>Notebook</td></tr><tr><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Medium</span></td><td>Convert SQL file <b>SP_CALC_RANKINGS.sql</b> (ORACLE)</td><td>SQL</td></tr><tr><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Medium</span></td><td>Convert SQL file <b>SP_REFRESH_DASHBOARD.sql</b> (SQLSERVER)</td><td>SQL</td></tr></tbody></table></div>
+  <h2 class="section-title">Mapping Status</h2>
+  <div class="card"><h3>📓 Mapping Migration Status (3/6)</h3><table><thead><tr><th>Mapping</th><th>Complexity</th><th>Notebook</th><th>Validation</th></tr></thead><tbody><tr><td>m_load_contacts</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Medium</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Pending</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#95A5A6;color:#fff;font-size:12px;font-weight:600;">—</span></td></tr><tr><td>m_sync_accounts</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">Simple</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Pending</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#95A5A6;color:#fff;font-size:12px;font-weight:600;">—</span></td></tr><tr><td>M_LOAD_CUSTOMERS</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">Simple</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Generated</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Exists</span></td></tr><tr><td>M_LOAD_EMPLOYEES</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">Complex</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Pending</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#95A5A6;color:#fff;font-size:12px;font-weight:600;">—</span></td></tr><tr><td>M_LOAD_ORDERS</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">Complex</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Generated</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Exists</span></td></tr><tr><td>M_UPSERT_INVENTORY</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#E74C3C;color:#fff;font-size:12px;font-weight:600;">Complex</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Generated</span></td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Exists</span></td></tr></tbody></table></div>
+  <h2 class="section-title">Workflow Status</h2>
+  <div class="card"><h3>⚡ Workflow Migration Status (1/1)</h3><table><thead><tr><th>Workflow</th><th>Sessions</th><th>Pipeline</th></tr></thead><tbody><tr><td>WF_DAILY_SALES_LOAD</td><td>3</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Generated</span></td></tr></tbody></table></div>
+  <h2 class="section-title">SQL Conversion Status</h2>
+  <div class="card"><h3>🗄️ SQL Migration Status (1/3)</h3><table><thead><tr><th>SQL File</th><th>DB Type</th><th>Status</th></tr></thead><tbody><tr><td>SP_CALC_RANKINGS.sql</td><td>ORACLE</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Pending</span></td></tr><tr><td>SP_REFRESH_DASHBOARD.sql</td><td>SQLSERVER</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#F39C12;color:#fff;font-size:12px;font-weight:600;">Pending</span></td></tr><tr><td>SP_UPDATE_ORDER_STATS.sql</td><td>ORACLE</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Converted</span></td></tr></tbody></table></div>
+  <h2 class="section-title">Validation</h2>
+  <div class="card"><h3>✅ Validation Scripts (5)</h3><table><thead><tr><th>Validation Script</th><th>Status</th></tr></thead><tbody><tr><td>VAL_AGG_ORDERS_BY_CUSTOMER</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Ready</span></td></tr><tr><td>VAL_DIM_CUSTOMER</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Ready</span></td></tr><tr><td>VAL_DIM_INVENTORY</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Ready</span></td></tr><tr><td>VAL_FACT_ORDERS</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Ready</span></td></tr><tr><td>VAL_PIPELINE_EXECUTION</td><td><span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#27AE60;color:#fff;font-size:12px;font-weight:600;">✓ Ready</span></td></tr></tbody></table></div>
+</div>
+<div class="footer">
+  Informatica-to-Fabric Migration Report &bull; 2026-03-23 17:44 UTC &bull; Source: inventory.json + output/
+</div>
+</body>
+</html>
