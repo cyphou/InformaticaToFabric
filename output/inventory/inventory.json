@@ -1,0 +1,248 @@
+{
+  "generated": "2026-03-23",
+  "source_platform": "Informatica PowerCenter",
+  "target_platform": "Microsoft Fabric",
+  "mappings": [
+    {
+      "name": "M_LOAD_CUSTOMERS",
+      "sources": [
+        "Oracle.SALES.CUSTOMERS"
+      ],
+      "targets": [
+        "DIM_CUSTOMER"
+      ],
+      "transformations": [
+        "SQ",
+        "EXP",
+        "FIL"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Simple",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [
+        "DIM_CUSTOMER"
+      ]
+    },
+    {
+      "name": "M_LOAD_ORDERS",
+      "sources": [
+        "Oracle.SALES.ORDERS",
+        "Oracle.SALES.PRODUCTS"
+      ],
+      "targets": [
+        "FACT_ORDERS",
+        "AGG_ORDERS_BY_CUSTOMER"
+      ],
+      "transformations": [
+        "SQ",
+        "LKP",
+        "EXP",
+        "AGG"
+      ],
+      "has_sql_override": true,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [
+        {
+          "type": "Sql Query",
+          "value": "SELECT ORDER_ID, CUSTOMER_ID, PRODUCT_ID, QUANTITY, UNIT_PRICE, NVL(DISCOUNT_PCT, 0) AS DISCOUNT_PCT, ORDER_DATE, ORDER_STATUS, CHANNEL FROM SALES.ORDERS WHERE ORDER_DATE >= TO_DATE('$$LOAD_DATE', 'YYYY-MM-DD') AND ORDER_STATUS != 'CANCELLED'"
+        },
+        {
+          "type": "Lookup Sql Override",
+          "value": "SELECT PRODUCT_ID, NVL(PRODUCT_NAME, 'Unknown') AS PRODUCT_NAME, NVL(CATEGORY, 'Uncategorized') AS CATEGORY FROM SALES.PRODUCTS"
+        }
+      ],
+      "lookup_conditions": [
+        {
+          "lookup": "LKP_PRODUCTS",
+          "sql": "SELECT PRODUCT_ID, NVL(PRODUCT_NAME, 'Unknown') AS PRODUCT_NAME, NVL(CATEGORY, 'Uncategorized') AS CATEGORY FROM SALES.PRODUCTS"
+        },
+        {
+          "lookup": "LKP_PRODUCTS",
+          "condition": "IN_PRODUCT_ID = PRODUCT_ID"
+        }
+      ],
+      "parameters": [
+        "$$LOAD_DATE"
+      ],
+      "target_load_order": [
+        "FACT_ORDERS",
+        "AGG_ORDERS_BY_CUSTOMER"
+      ]
+    },
+    {
+      "name": "M_UPSERT_INVENTORY",
+      "sources": [
+        "Oracle.SALES.STG_INVENTORY"
+      ],
+      "targets": [
+        "DIM_INVENTORY"
+      ],
+      "transformations": [
+        "SQ",
+        "EXP",
+        "UPD"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [
+        "DIM_INVENTORY"
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "WF_DAILY_SALES_LOAD",
+      "sessions": [
+        "S_M_LOAD_CUSTOMERS",
+        "S_M_LOAD_ORDERS",
+        "S_M_UPSERT_INVENTORY"
+      ],
+      "session_to_mapping": {
+        "S_M_LOAD_CUSTOMERS": "M_LOAD_CUSTOMERS",
+        "S_M_LOAD_ORDERS": "M_LOAD_ORDERS",
+        "S_M_UPSERT_INVENTORY": "M_UPSERT_INVENTORY"
+      },
+      "dependencies": {
+        "S_M_LOAD_CUSTOMERS": [
+          "Start"
+        ],
+        "S_M_LOAD_ORDERS": [
+          "S_M_LOAD_CUSTOMERS"
+        ],
+        "EMAIL_FAILURE": [
+          "S_M_LOAD_CUSTOMERS",
+          "DEC_CHECK_ORDERS"
+        ],
+        "DEC_CHECK_ORDERS": [
+          "S_M_LOAD_ORDERS"
+        ],
+        "S_M_UPSERT_INVENTORY": [
+          "DEC_CHECK_ORDERS"
+        ]
+      },
+      "has_timer": false,
+      "has_decision": true,
+      "decision_tasks": [
+        "DEC_CHECK_ORDERS"
+      ],
+      "email_tasks": [
+        "EMAIL_FAILURE"
+      ],
+      "pre_post_sql": [
+        {
+          "session": "S_M_LOAD_ORDERS",
+          "type": "Pre SQL",
+          "value": "DELETE FROM SALES.FACT_ORDERS_STAGING WHERE ORDER_DATE = TO_DATE('$$LOAD_DATE','YYYY-MM-DD')"
+        },
+        {
+          "session": "S_M_LOAD_ORDERS",
+          "type": "Post SQL",
+          "value": "EXEC SALES.SP_UPDATE_ORDER_STATS;"
+        }
+      ],
+      "schedule": "SCHED_DAILY_0200"
+    }
+  ],
+  "connections": [
+    {
+      "name": "CONN_SALES",
+      "type": "Oracle",
+      "schema": "SALES"
+    }
+  ],
+  "sql_files": [
+    {
+      "file": "SP_UPDATE_ORDER_STATS.sql",
+      "path": "input\\sql\\SP_UPDATE_ORDER_STATS.sql",
+      "oracle_constructs": [
+        {
+          "construct": "MERGE",
+          "occurrences": 1,
+          "lines": [
+            15
+          ]
+        },
+        {
+          "construct": "DECODE",
+          "occurrences": 1,
+          "lines": [
+            24
+          ]
+        },
+        {
+          "construct": "NVL",
+          "occurrences": 1,
+          "lines": [
+            54
+          ]
+        },
+        {
+          "construct": "SYSDATE",
+          "occurrences": 4,
+          "lines": [
+            10,
+            42,
+            48,
+            77
+          ]
+        },
+        {
+          "construct": "TO_CHAR",
+          "occurrences": 1,
+          "lines": [
+            69
+          ]
+        },
+        {
+          "construct": "DBMS_",
+          "occurrences": 1,
+          "lines": [
+            69
+          ]
+        },
+        {
+          "construct": "EXCEPTION WHEN",
+          "occurrences": 1,
+          "lines": [
+            71
+          ]
+        },
+        {
+          "construct": "NUMBER",
+          "occurrences": 1,
+          "lines": [
+            12
+          ]
+        },
+        {
+          "construct": "CREATE OR REPLACE",
+          "occurrences": 1,
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "total_lines": 83
+    }
+  ],
+  "summary": {
+    "total_mappings": 3,
+    "total_workflows": 1,
+    "total_sessions": 3,
+    "total_sql_files": 1,
+    "complexity_breakdown": {
+      "Simple": 1,
+      "Medium": 0,
+      "Complex": 2,
+      "Custom": 0
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "workflows": [
+    {
+      "workflow": "WF_DAILY_SALES_LOAD",
+      "nodes": [
+        "DEC_CHECK_ORDERS",
+        "EMAIL_FAILURE",
+        "S_M_LOAD_CUSTOMERS",
+        "S_M_LOAD_ORDERS",
+        "S_M_UPSERT_INVENTORY",
+        "Start"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "S_M_LOAD_CUSTOMERS",
+          "condition": ""
+        },
+        {
+          "from": "S_M_LOAD_CUSTOMERS",
+          "to": "S_M_LOAD_ORDERS",
+          "condition": "$S_M_LOAD_CUSTOMERS.Status = SUCCEEDED"
+        },
+        {
+          "from": "S_M_LOAD_CUSTOMERS",
+          "to": "EMAIL_FAILURE",
+          "condition": "$S_M_LOAD_CUSTOMERS.Status = FAILED"
+        },
+        {
+          "from": "S_M_LOAD_ORDERS",
+          "to": "DEC_CHECK_ORDERS",
+          "condition": ""
+        },
+        {
+          "from": "DEC_CHECK_ORDERS",
+          "to": "S_M_UPSERT_INVENTORY",
+          "condition": "$DEC_CHECK_ORDERS.condition = TRUE"
+        },
+        {
+          "from": "DEC_CHECK_ORDERS",
+          "to": "EMAIL_FAILURE",
+          "condition": "$DEC_CHECK_ORDERS.condition = FALSE"
+        }
+      ]
+    }
+  ]
+}
