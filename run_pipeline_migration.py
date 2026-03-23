@@ -143,6 +143,7 @@ def generate_pipeline(workflow, mappings_by_name):
     decision_tasks = workflow.get("decision_tasks", [])
     email_tasks = workflow.get("email_tasks", [])
     schedule = workflow.get("schedule", "")
+    is_iics = workflow.get("format") == "iics"
 
     activities = []
     decision_set = set(decision_tasks)
@@ -236,6 +237,22 @@ def generate_pipeline(workflow, mappings_by_name):
     if schedule:
         annotations.append(f"OriginalSchedule:{schedule}")
 
+    # 6. Schedule trigger (from schedule_cron if available)
+    schedule_cron = workflow.get("schedule_cron", {})
+    trigger = None
+    cron_expr = schedule_cron.get("cron", "") if schedule_cron else ""
+    if cron_expr:
+        trigger = {
+            "type": "ScheduleTrigger",
+            "description": schedule_cron.get("note", ""),
+            "typeProperties": {
+                "recurrence": {
+                    "cron": cron_expr,
+                    "timeZone": "UTC",
+                }
+            }
+        }
+
     pipeline = {
         "name": f"PL_{name}",
         "properties": {
@@ -248,6 +265,9 @@ def generate_pipeline(workflow, mappings_by_name):
             "annotations": annotations
         }
     }
+
+    if trigger:
+        pipeline["properties"]["trigger"] = trigger
 
     return pipeline
 

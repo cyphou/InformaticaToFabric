@@ -62,6 +62,13 @@ ORACLE_REPLACEMENTS = [
     (r"\bNUMBER\b", "DECIMAL"),
     (r"\bCLOB\b", "STRING"),
     (r"\bBLOB\b", "BINARY"),
+    # Global Temporary Tables → Spark temp views
+    (r"\bCREATE\s+GLOBAL\s+TEMPORARY\s+TABLE\s+(\w+)", r"CREATE OR REPLACE TEMP VIEW \1  -- GTT converted to Spark temp view"),
+    (r"\bON\s+COMMIT\s+(?:PRESERVE|DELETE)\s+ROWS", "-- ON COMMIT clause removed (Spark temp views are session-scoped)"),
+    # Materialized Views → Delta tables
+    (r"\bCREATE\s+MATERIALIZED\s+VIEW\s+(\w+)", r"-- TODO: Replace with Delta table '\1' + scheduled notebook refresh"),
+    # Database links → JDBC
+    (r"(\w+)@(\w+)", r"\1  -- TODO: Replace @\2 DB link with spark.read.jdbc()"),
     # Oracle packages → TODO markers
     (r"\bDBMS_OUTPUT\.PUT_LINE\s*\(([^)]+)\)", r"-- TODO: print(\1) in PySpark notebook"),
     (r"\bDBMS_\w+\.\w+", "-- TODO: Replace Oracle DBMS package call"),

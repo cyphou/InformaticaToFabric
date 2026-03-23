@@ -597,7 +597,7 @@ def build_dependency_dag(workflows):
         all_tasks.add("Start")
         for s in wf["sessions"]:
             all_tasks.add(s)
-        for ti in wf["task_instances"]:
+        for ti in wf.get("task_instances", []):
             all_tasks.add(ti["name"])
         for dt in wf.get("decision_tasks", []):
             all_tasks.add(dt)
@@ -638,6 +638,8 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
 
     workflows_out = []
     for wf in all_workflows:
+        schedule_str = wf["schedule"]
+        schedule_cron = parse_scheduler_cron(schedule_str)
         workflows_out.append({
             "name": wf["name"],
             "sessions": wf["sessions"],
@@ -648,7 +650,8 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
             "decision_tasks": wf["decision_tasks"],
             "email_tasks": wf["email_tasks"],
             "pre_post_sql": wf.get("pre_post_sql", []),
-            "schedule": wf["schedule"],
+            "schedule": schedule_str,
+            "schedule_cron": schedule_cron,
         })
 
     inventory = {
@@ -1039,6 +1042,275 @@ def _iics_type_to_abbrev(iics_type):
 
 
 # =====================================================================
+# Sprint 19: IICS Taskflow, Sync/MassIngestion, Connection parsers
+# =====================================================================
+
+# IICS taskflow element type → Fabric activity category mapping
+IICS_TASKFLOW_TYPE_MAP = {
+    "mappingtask": "NotebookActivity",
+    "commandtask": "ScriptActivity",
+    "notificationtask": "WebActivity",
+    "humantask": "WebActivity",
+    "exclusivegateway": "IfCondition",
+    "parallelgateway": "Parallel",
+    "timerevent": "WaitActivity",
+    "subflow": "ExecutePipeline",
+}
+
+
+def parse_iics_taskflow(filepath):
+    """Parse an IICS Taskflow export file.
+    Returns a list of workflow-like dicts compatible with the PowerCenter format.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    # IICS exports may use namespaces on the root but xmlns="" on children
+    # We need to search for both namespaced and non-namespaced tags
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        """Find elements by tag, trying both namespaced and non-namespaced."""
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    taskflows = []
+
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        name = tmpl.get("name", "")
+
+        if "taskflow" not in obj_type:
+            continue
+
+        sessions = []
+        session_to_mapping = {}
+        has_timer = False
+        has_decision = False
+        decision_tasks = []
+        email_tasks = []
+        pre_post_sql = []
+        links = []
+        dependencies = {}
+        parameters = []
+
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+
+            if child_tag == "dTemplate":
+                child_type = child.get("objectType", "").lower()
+                child_name = child.get("name", "")
+                type_key = child_type.split(".")[-1] if "." in child_type else child_type
+
+                # Extract attributes from child
+                attrs = {}
+                for attr_el in child:
+                    attr_tag = attr_el.tag.split("}")[-1] if "}" in attr_el.tag else attr_el.tag
+                    if attr_tag == "dAttribute":
+                        attrs[attr_el.get("name", "")] = attr_el.get("value", "")
+
+                if "mappingtask" in type_key:
+                    sessions.append(child_name)
+                    mapping_ref = attrs.get("mappingName", child_name)
+                    session_to_mapping[child_name] = mapping_ref
+                elif "commandtask" in type_key:
+                    sessions.append(child_name)
+                elif "exclusivegateway" in type_key:
+                    has_decision = True
+                    decision_tasks.append(child_name)
+                elif "timerevent" in type_key:
+                    has_timer = True
+                elif "notificationtask" in type_key:
+                    email_tasks.append(child_name)
+
+            elif child_tag == "dLink":
+                from_task = child.get("from", "")
+                to_task = child.get("to", "")
+                condition = child.get("condition", "")
+                links.append({"from": from_task, "to": to_task, "condition": condition})
+                if to_task not in dependencies:
+                    dependencies[to_task] = []
+                dependencies[to_task].append(from_task)
+
+            elif child_tag == "dParameter":
+                param_name = child.get("name", "")
+                if param_name:
+                    parameters.append(param_name)
+
+        taskflows.append({
+            "name": name,
+            "sessions": sessions,
+            "session_to_mapping": session_to_mapping,
+            "dependencies": dependencies,
+            "has_timer": has_timer,
+            "has_decision": has_decision,
+            "decision_tasks": decision_tasks,
+            "email_tasks": email_tasks,
+            "pre_post_sql": pre_post_sql,
+            "links": links,
+            "schedule": "",
+            "format": "iics",
+            "parameters": parameters,
+        })
+
+    return taskflows
+
+
+def parse_iics_sync_tasks(filepath):
+    """Parse IICS Synchronization Task objects from export XML.
+    Returns a list of simplified mapping-like dicts for inventory.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    tasks = []
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        if "synctask" not in obj_type:
+            continue
+        name = tmpl.get("name", "")
+        attrs = {}
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if child_tag == "dAttribute":
+                attrs[child.get("name", "")] = child.get("value", "")
+
+        source = attrs.get("sourceName", "")
+        target = attrs.get("targetName", "")
+        mapping_ref = attrs.get("mappingName", "")
+
+        tasks.append({
+            "name": name,
+            "sources": [source] if source else [],
+            "targets": [target] if target else [],
+            "transformations": ["SQ", "TGT"],
+            "has_sql_override": False,
+            "has_stored_proc": False,
+            "complexity": "Simple",
+            "sql_overrides": [],
+            "lookup_conditions": [],
+            "parameters": [],
+            "target_load_order": [],
+            "connector_count": 0,
+            "has_mapplet": False,
+            "format": "iics",
+            "iics_type": "SynchronizationTask",
+            "mapping_ref": mapping_ref,
+        })
+    return tasks
+
+
+def parse_iics_mass_ingestion(filepath):
+    """Parse IICS Mass Ingestion Task objects from export XML.
+    Returns a list of simplified mapping-like dicts for inventory.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    tasks = []
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        if "massingestion" not in obj_type:
+            continue
+        name = tmpl.get("name", "")
+        attrs = {}
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if child_tag == "dAttribute":
+                attrs[child.get("name", "")] = child.get("value", "")
+
+        source = attrs.get("sourceName", "")
+        target = attrs.get("targetName", "")
+        file_pattern = attrs.get("filePattern", "")
+        load_type = attrs.get("loadType", "full")
+
+        tasks.append({
+            "name": name,
+            "sources": [source] if source else [],
+            "targets": [target] if target else [],
+            "transformations": ["SQ", "TGT"],
+            "has_sql_override": False,
+            "has_stored_proc": False,
+            "complexity": "Simple",
+            "sql_overrides": [],
+            "lookup_conditions": [],
+            "parameters": [],
+            "target_load_order": [],
+            "connector_count": 0,
+            "has_mapplet": False,
+            "format": "iics",
+            "iics_type": "MassIngestion",
+            "file_pattern": file_pattern,
+            "load_type": load_type,
+        })
+    return tasks
+
+
+def parse_iics_connections(filepath):
+    """Parse IICS connection objects from export XML.
+    Returns a list of connection dicts compatible with inventory format.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    connections = []
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        if "connection" not in obj_type:
+            continue
+        name = tmpl.get("name", "")
+        attrs = {}
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if child_tag == "dAttribute":
+                attrs[child.get("name", "")] = child.get("value", "")
+
+        conn_type = attrs.get("type", "Unknown")
+        connections.append({
+            "name": name,
+            "type": conn_type,
+            "host": attrs.get("host", ""),
+            "schema": attrs.get("schema", ""),
+            "format": "iics",
+        })
+    return connections
+
+
+# =====================================================================
 # Sprint 7.6: Connection XML parser
 # =====================================================================
 
@@ -1143,14 +1415,185 @@ def parse_sql_file(filepath):
                 "lines": lines,
             })
 
+    # Sprint 20: Detect advanced constructs
+    global_temp_tables = detect_global_temp_tables(content)
+    materialized_views = detect_materialized_views(content)
+    db_links = detect_db_links(content)
+
     return {
         "file": filepath.name,
         "path": str(filepath.relative_to(WORKSPACE)),
         "db_type": db_type,
         "oracle_constructs": oracle_constructs,
         "sqlserver_constructs": sqlserver_constructs,
+        "global_temp_tables": global_temp_tables,
+        "materialized_views": materialized_views,
+        "db_links": db_links,
         "total_lines": content.count('\n') + 1,
     }
+
+
+# =====================================================================
+# Sprint 20: Gap Remediation — P1/P2
+# =====================================================================
+
+def parse_session_config(workflow_root):
+    """Extract session config properties from workflow/session XML.
+    Returns a list of config dicts with Spark equivalents.
+    """
+    CONFIG_MAP = {
+        "DTM buffer size": {"spark": "spark.sql.shuffle.partitions", "note": "Adjust based on data volume"},
+        "Commit Interval": {"spark": "spark.databricks.delta.optimizeWrite.enabled", "note": "Use Delta auto-optimize"},
+        "Sorter Cache Size": {"spark": "spark.sql.execution.sortMergeJoinThreshold", "note": "Sorter memory"},
+        "Lookup Cache Size": {"spark": "spark.sql.autoBroadcastJoinThreshold", "note": "Broadcast threshold"},
+        "Session Sort Order": {"spark": "spark.sql.shuffle.sortBased", "note": "Sort-based shuffle"},
+        "Treat Source Rows As": {"spark": "merge_strategy", "note": "DD_INSERT/UPDATE/DELETE"},
+        "Maximum Memory Allowed For Auto Memory Attributes": {"spark": "spark.executor.memory", "note": "Executor memory"},
+    }
+
+    configs = []
+    # Check SESSION/SESSTRANSFORMATIONINST/ATTRIBUTE
+    for session in workflow_root.iter("SESSION"):
+        session_name = session.get("NAME", "")
+        for attr in session.iter("ATTRIBUTE"):
+            attr_name = attr.get("NAME", "")
+            attr_value = attr.get("VALUE", "")
+            if attr_name in CONFIG_MAP and attr_value:
+                mapping = CONFIG_MAP[attr_name]
+                configs.append({
+                    "session": session_name,
+                    "infa_property": attr_name,
+                    "infa_value": attr_value,
+                    "spark_property": mapping["spark"],
+                    "note": mapping["note"],
+                })
+        # CONFIGREFERENCE elements
+        for cfg_ref in session.iter("CONFIGREFERENCE"):
+            cfg_name = cfg_ref.get("REFOBJECTNAME", "")
+            if cfg_name:
+                configs.append({
+                    "session": session_name,
+                    "infa_property": "Session Config Reference",
+                    "infa_value": cfg_name,
+                    "spark_property": "spark.conf.set()",
+                    "note": f"Resolve config object '{cfg_name}'",
+                })
+    return configs
+
+
+def parse_scheduler_cron(schedule_str):
+    """Convert Informatica schedule names/intervals to Fabric cron.
+    Returns a dict with cron components or a note for manual config.
+    """
+    if not schedule_str:
+        return {"cron": "", "note": "No schedule defined"}
+
+    s = schedule_str.upper().strip()
+
+    # Common schedule patterns
+    CRON_PATTERNS = {
+        "DAILY": {"cron": "0 0 2 * * *", "note": "Daily at 2 AM UTC"},
+        "HOURLY": {"cron": "0 0 * * * *", "note": "Every hour"},
+        "WEEKLY": {"cron": "0 0 2 * * 1", "note": "Weekly Monday 2 AM UTC"},
+        "MONTHLY": {"cron": "0 0 2 1 * *", "note": "Monthly 1st at 2 AM UTC"},
+    }
+
+    for keyword, result in CRON_PATTERNS.items():
+        if keyword in s:
+            return result
+
+    # Extract time if present (e.g., "DAILY_02AM", "SCHED_0600")
+    time_match = re.search(r'(\d{1,2})\s*(?:AM|PM|:\d{2})', s)
+    if time_match:
+        hour = int(time_match.group(1))
+        if "PM" in s and hour < 12:
+            hour += 12
+        return {"cron": f"0 0 {hour} * * *", "note": f"Daily at {hour}:00 UTC (inferred)"}
+
+    time_match = re.search(r'(\d{2})(\d{2})', s)
+    if time_match:
+        hour = int(time_match.group(1))
+        minute = int(time_match.group(2))
+        if 0 <= hour <= 23 and 0 <= minute <= 59:
+            return {"cron": f"0 {minute} {hour} * * *", "note": f"Daily at {hour}:{minute:02d} UTC (inferred)"}
+
+    return {"cron": "", "note": f"Manual configuration needed (original: {schedule_str})"}
+
+
+def detect_global_temp_tables(sql_content):
+    """Detect Oracle Global Temporary Tables in SQL and suggest Spark equivalents.
+    Returns list of detected GTT references.
+    """
+    gtts = []
+    # CREATE GLOBAL TEMPORARY TABLE
+    for m in re.finditer(
+        r'CREATE\s+GLOBAL\s+TEMPORARY\s+TABLE\s+(\w+)',
+        sql_content, re.IGNORECASE
+    ):
+        table_name = m.group(1)
+        line_num = sql_content[:m.start()].count('\n') + 1
+        gtts.append({
+            "table": table_name,
+            "line": line_num,
+            "spark_equivalent": f'spark.sql("CREATE OR REPLACE TEMP VIEW {table_name} AS ...")',
+            "note": "Replace with createOrReplaceTempView() — session-scoped like GTT",
+        })
+    # References via ON COMMIT (preserve/delete rows)
+    for m in re.finditer(
+        r'ON\s+COMMIT\s+(PRESERVE|DELETE)\s+ROWS',
+        sql_content, re.IGNORECASE
+    ):
+        action = m.group(1).upper()
+        line_num = sql_content[:m.start()].count('\n') + 1
+        note = ("Temp view persists like PRESERVE ROWS" if action == "PRESERVE"
+                else "Use cache/unpersist after use like DELETE ROWS")
+        gtts.append({
+            "table": "(from ON COMMIT clause)",
+            "line": line_num,
+            "spark_equivalent": "createOrReplaceTempView()",
+            "note": note,
+        })
+    return gtts
+
+
+def detect_materialized_views(sql_content):
+    """Detect Oracle Materialized Views and suggest Delta table equivalents.
+    Returns list of detected MV references.
+    """
+    mvs = []
+    for m in re.finditer(
+        r'CREATE\s+MATERIALIZED\s+VIEW\s+(\w+)',
+        sql_content, re.IGNORECASE
+    ):
+        mv_name = m.group(1)
+        line_num = sql_content[:m.start()].count('\n') + 1
+        mvs.append({
+            "name": mv_name,
+            "line": line_num,
+            "spark_equivalent": f"Delta table '{mv_name}' with scheduled notebook refresh",
+            "note": "No native MV in Spark; use Delta table + scheduled pipeline for refresh",
+        })
+    return mvs
+
+
+def detect_db_links(sql_content):
+    """Detect Oracle database link references (@dblink syntax).
+    Returns list of detected DB link references.
+    """
+    links = []
+    for m in re.finditer(r'@(\w+)', sql_content):
+        # Filter false positives (email-like, annotations)
+        pre = sql_content[max(0, m.start() - 20):m.start()]
+        if any(kw in pre.lower() for kw in ['from', 'table', 'join', 'into', 'update', 'select']):
+            link_name = m.group(1)
+            line_num = sql_content[:m.start()].count('\n') + 1
+            links.append({
+                "db_link": link_name,
+                "line": line_num,
+                "spark_equivalent": "Configure separate JDBC connection for remote database",
+                "note": f"Replace @{link_name} with spark.read.jdbc() pointing to remote DB",
+            })
+    return links
 
 
 def main():
@@ -1204,7 +1647,7 @@ def main():
     print(f"  Mapplets defined: {len(all_mapplets)}, Mappings with Mapplet refs: {mplt_count}")
     print()
 
-    # 3. Parse Workflows
+    # 3. Parse Workflows (PowerCenter + IICS Taskflows)
     print("[3/10] Parsing workflow XML files...")
     workflow_dir = INPUT_DIR / "workflows"
     all_workflows = []
@@ -1212,15 +1655,53 @@ def main():
         for xml_file in sorted(workflow_dir.glob("*.xml")):
             print(f"  Parsing: {xml_file.name}")
             try:
-                workflows = parse_workflow_xml(xml_file)
-                all_workflows.extend(workflows)
-                for wf in workflows:
-                    print(f"    -> {wf['name']} -- {len(wf['sessions'])} sessions, {len(wf['links'])} links")
+                fmt = detect_xml_format(xml_file)
+                if fmt == "iics":
+                    # Parse IICS Taskflows
+                    taskflows = parse_iics_taskflow(xml_file)
+                    all_workflows.extend(taskflows)
+                    for tf in taskflows:
+                        print(f"    [IICS Taskflow] -> {tf['name']} -- {len(tf['sessions'])} tasks, {len(tf['links'])} links")
+
+                    # Parse IICS Sync Tasks and Mass Ingestion Tasks as mappings
+                    sync_tasks = parse_iics_sync_tasks(xml_file)
+                    for st in sync_tasks:
+                        all_mappings.append(st)
+                        print(f"    [IICS SyncTask] -> {st['name']}")
+
+                    mi_tasks = parse_iics_mass_ingestion(xml_file)
+                    for mi in mi_tasks:
+                        all_mappings.append(mi)
+                        print(f"    [IICS MassIngestion] -> {mi['name']}")
+
+                    # Parse IICS Connections
+                    iics_conns = parse_iics_connections(xml_file)
+                    if iics_conns:
+                        print(f"    [IICS Connections] {len(iics_conns)} found")
+                else:
+                    workflows = parse_workflow_xml(xml_file)
+                    all_workflows.extend(workflows)
+                    for wf in workflows:
+                        print(f"    -> {wf['name']} -- {len(wf['sessions'])} sessions, {len(wf['links'])} links")
             except Exception as e:
                 warnings.append(f"Error processing {xml_file.name}: {e}")
                 print(f"    ERROR: {e}")
     print(f"  Total workflows found: {len(all_workflows)}")
     print()
+
+    # 3b. Extract session configs from workflow XMLs
+    all_session_configs = []
+    if workflow_dir.exists():
+        for xml_file in sorted(workflow_dir.glob("*.xml")):
+            fmt = detect_xml_format(xml_file)
+            if fmt != "iics":
+                tree, root = safe_parse_xml(xml_file)
+                if root is not None:
+                    configs = parse_session_config(root)
+                    all_session_configs.extend(configs)
+    if all_session_configs:
+        print(f"  Session configs extracted: {len(all_session_configs)}")
+        print()
 
     # 4. Parse SQL files (Oracle + SQL Server detection)
     print("[4/10] Parsing SQL files...")
@@ -1247,7 +1728,7 @@ def main():
     print(f"  Total parameter files: {len(param_files)}, Total params: {sum(pf['total_params'] for pf in param_files)}")
     print()
 
-    # 6. Extract connections (inferred + XML-parsed)
+    # 6. Extract connections (inferred + XML-parsed + IICS)
     print("[6/10] Extracting connections...")
     connections = extract_connections_from_mappings(all_mappings)
     # Parse connection objects from all XML files
@@ -1256,9 +1737,14 @@ def main():
         xml_dir = INPUT_DIR / xml_dir_name
         if xml_dir.exists():
             for xml_file in xml_dir.glob("*.xml"):
-                tree, root = safe_parse_xml(xml_file)
-                if root is not None:
-                    xml_connections.extend(parse_connection_objects(root))
+                fmt = detect_xml_format(xml_file)
+                if fmt == "iics":
+                    # Parse IICS connection objects
+                    xml_connections.extend(parse_iics_connections(xml_file))
+                else:
+                    tree, root = safe_parse_xml(xml_file)
+                    if root is not None:
+                        xml_connections.extend(parse_connection_objects(root))
     # Deduplicate by name
     seen_conn_names = {c["name"] for c in connections}
     for xc in xml_connections:
@@ -1275,8 +1761,10 @@ def main():
     # Add param_files and mapplets to inventory
     inventory["parameter_files"] = param_files
     inventory["mapplets"] = {name: [t["abbrev"] for t in txs] for name, txs in all_mapplets.items()}
+    inventory["session_configs"] = all_session_configs
     inventory["summary"]["total_parameter_files"] = len(param_files)
     inventory["summary"]["total_mapplets"] = len(all_mapplets)
+    inventory["summary"]["total_session_configs"] = len(all_session_configs)
     # Re-write with augmented data
     out_path = OUTPUT_DIR / "inventory.json"
     with open(out_path, "w", encoding="utf-8") as f:

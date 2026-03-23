@@ -151,7 +151,7 @@ These Informatica transformation types are **not recognized** by the project. If
 | # | Informatica Element | Usage | Fabric Equivalent | Priority | Status |
 |---|---|---|---|---|---|
 | 13 | ~~Control Task~~ (Abort/Fail) | 🟡 Moderate | Pipeline `Fail Activity` | ~~P1~~ | ✅ **Addressed Sprint 6** |
-| 14 | **Session Config Objects** | 🟡 Moderate | Spark pool settings / notebook config | **P1** | ❌ Gap |
+| 14 | **Session Config Objects** | 🟡 Moderate | Spark pool settings / notebook config | **P1** | ✅ Sprint 20 |
 
 ---
 
@@ -240,10 +240,10 @@ $$TRUNCATE_FLAG=Y
 | # | Oracle Construct | Usage | Why It's a Gap | Priority | Status |
 |---|---|---|---|---|---|
 | 1 | ~~Analytic functions~~ | 🔥 Very Common | ~~Not in ORACLE_PATTERNS~~ | ~~P0~~ | ✅ **Addressed Sprint 6** |
-| 2 | **Global Temp Tables** | 🟡 Moderate | Used in complex SPs; no Spark equivalent pattern documented | **P1** | ❌ Gap |
+| 2 | **Global Temp Tables** | 🟡 Moderate | Used in complex SPs; no Spark equivalent pattern documented | **P1** | ✅ Sprint 20 |
 | 3 | ~~PL/SQL Packages~~ | 🟡 Moderate | ~~No strategy to split into individual notebooks~~ | ~~P1~~ | ✅ **Addressed Sprint 7** — Splitting strategy in sql-migration agent |
-| 4 | **Materialized Views** | 🟡 Moderate | Not detected; Fabric uses Delta tables with scheduled refresh | **P2** | ❌ Gap |
-| 5 | **Database Links** (`@dblink`) | 🟢 Rare | Cross-database references not detected | **P2** | ❌ Gap |
+| 4 | **Materialized Views** | 🟡 Moderate | Not detected; Fabric uses Delta tables with scheduled refresh | **P2** | ✅ Sprint 20 |
+| 5 | **Database Links** (`@dblink`) | 🟢 Rare | Cross-database references not detected | **P2** | ✅ Sprint 20 |
 | 6 | **Object Types** (`CREATE TYPE`) | 🟢 Rare | Custom Oracle types not detected | **P3** | ❌ Gap |
 
 ### 4.3 Non-Oracle SQL Sources
@@ -370,16 +370,16 @@ quadrantChart
 | ~~P1~~ | ~~Parameter file (.prm) parser~~ | ~~Parameter defaults and overrides are unknown~~ | ~~Low~~ | ~~Parse `.prm` files → inject into notebook parameters~~ | ✅ Sprint 6 |
 | ~~P1~~ | ~~Normalizer template~~ | ~~`.explode()` pattern not documented~~ | ~~Low~~ | ~~Add PySpark template to notebook agent~~ | ✅ Sprint 6 |
 | ~~P1~~ | ~~Control Task (Abort/Fail)~~ | ~~Missing error path in pipelines~~ | ~~Low~~ | ~~Map to Fabric `Fail Activity`~~ | ✅ Sprint 6 |
-| **P1** | **Session Config objects** | Spark pool/memory settings not migrated | Medium | Extract DTM buffer size, sort order → Spark config | ❌ Gap |
+| **P1** | **Session Config objects** | Spark pool/memory settings not migrated | Medium | Extract DTM buffer size, sort order → Spark config | ✅ Sprint 20 |
 | ~~P1~~ | ~~Web Service Consumer~~ | ~~API-calling transformations invisible~~ | ~~Medium~~ | ~~Map to pipeline Web Activity or `requests` UDF~~ | ✅ Sprint 7 |
 | ~~P1~~ | ~~Data Masking~~ | ~~Compliance-critical transformation~~ | ~~Medium~~ | ~~Map to Fabric Dynamic Data Masking or PySpark UDF~~ | ✅ Sprint 7 |
 | ~~P1~~ | ~~Non-Oracle SQL sources (MSSQL)~~ | ~~Common in multi-source pipelines~~ | ~~Medium~~ | ~~Add SQL Server → Spark SQL pattern set~~ | ✅ Sprint 7 |
 | ~~P2~~ | ~~Connection XML parser~~ | ~~Connection details are only inferred~~ | ~~Medium~~ | ~~Parse PowerCenter connection XML objects~~ | ✅ Sprint 7 |
 | ~~P2~~ | ~~PL/SQL Package splitting~~ | ~~`PACKAGE BODY` flagged but no split strategy~~ | ~~High~~ | ~~Split into individual notebooks/functions~~ | ✅ Sprint 7 |
-| **P2** | **Global Temp Tables** | No Spark equivalent documented | Low | Map to `createOrReplaceTempView()` | ❌ Gap |
-| **P2** | **Scheduler cron parser** | Only schedule name captured | Low | Parse repeat interval → Fabric trigger cron | ❌ Gap |
+| **P2** | **Global Temp Tables** | No Spark equivalent documented | Low | Map to `createOrReplaceTempView()` | ✅ Sprint 20 |
+| **P2** | **Scheduler cron parser** | Only schedule name captured | Low | Parse repeat interval → Fabric trigger cron | ✅ Sprint 20 |
 | **P2** | **Roles & permissions** | Manual Fabric setup | Medium | Generate workspace role assignment scripts | ❌ Gap |
-| **P3** | **Database links (`@dblink`)** | Not detected | Low | Flag for manual JDBC config | ❌ Gap |
+| **P3** | **Database links (`@dblink`)** | Not detected | Low | Flag for manual JDBC config | ✅ Sprint 20 |
 | **P3** | **Object Types (`CREATE TYPE`)** | Rare usage | Low | Flatten to struct/columns | ❌ Gap |
 | **P3** | **Address Validator** | Rare, third-party dependent | High | Azure Maps API integration | ❌ Gap |
 

@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-03-23T18:39:08.837032+00:00",
+  "workspace_id": "00000000-0000-0000-0000-000000000000",
+  "dry_run": true,
+  "results": [
+    {
+      "artifact": "NB_m_load_contacts",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "NB_M_LOAD_CUSTOMERS",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "NB_M_LOAD_EMPLOYEES",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "NB_M_LOAD_ORDERS",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "NB_m_sync_accounts",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "NB_M_UPSERT_INVENTORY",
+      "type": "Notebook",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "PL_WF_DAILY_SALES_LOAD",
+      "type": "DataPipeline",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "SQL_SQL_OVERRIDES_M_LOAD_EMPLOYEES",
+      "type": "Notebook (SQL)",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "SQL_SQL_OVERRIDES_M_LOAD_ORDERS",
+      "type": "Notebook (SQL)",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "SQL_SQL_SP_CALC_RANKINGS",
+      "type": "Notebook (SQL)",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "SQL_SQL_SP_REFRESH_DASHBOARD",
+      "type": "Notebook (SQL)",
+      "status": "dry-run"
+    },
+    {
+      "artifact": "SQL_SQL_SP_UPDATE_ORDER_STATS",
+      "type": "Notebook (SQL)",
+      "status": "dry-run"
+    }
+  ]
+}

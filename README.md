@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/agents-6-0078D4?style=flat-square" alt="Agents"/>
-  <img src="https://img.shields.io/badge/coverage-82%25-27AE60?style=flat-square" alt="82% coverage"/>
+  <img src="https://img.shields.io/badge/coverage-88%25-27AE60?style=flat-square" alt="88% coverage"/>
   <img src="https://img.shields.io/badge/target-Microsoft%20Fabric-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric"/>
   <img src="https://img.shields.io/badge/notebooks-PySpark-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/pipelines-Data%20Factory-0078D4?style=flat-square" alt="Pipelines"/>
@@ -654,10 +654,14 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview (this file) |
-| [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis (82% coverage) |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Step-by-step user guide |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
+| [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (16/16 sprints complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (21/21 sprints complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
+| [docs/ADR/](docs/ADR/) | Architecture Decision Records |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
 
 ### Agent Definitions

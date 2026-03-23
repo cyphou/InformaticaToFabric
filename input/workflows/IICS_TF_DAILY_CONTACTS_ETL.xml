@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+<weightedCSPackage xmlns="" name="TF_DAILY_CONTACTS_ETL" description="Daily ETL for contacts data">
+
+  <!-- Taskflow: TF_DAILY_CONTACTS_ETL -->
+  <dTemplate name="TF_DAILY_CONTACTS_ETL" objectType="com.infa.deployment.taskflow">
+
+    <!-- Mapping Task — runs m_load_contacts -->
+    <dTemplate name="mt_load_contacts" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_load_contacts"/>
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+    </dTemplate>
+
+    <!-- Mapping Task — runs m_sync_accounts -->
+    <dTemplate name="mt_sync_accounts" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_sync_accounts"/>
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+    </dTemplate>
+
+    <!-- Command Task — post-load stats update -->
+    <dTemplate name="cmd_update_stats" objectType="com.infa.deployment.commandtask">
+      <dAttribute name="command" value="python update_stats.py --schema silver"/>
+    </dTemplate>
+
+    <!-- Notification Task — email on completion -->
+    <dTemplate name="notify_complete" objectType="com.infa.deployment.notificationtask">
+      <dAttribute name="recipients" value="etl-team@example.com"/>
+      <dAttribute name="subject" value="Daily Contacts ETL Complete"/>
+    </dTemplate>
+
+    <!-- Exclusive Gateway — downstream decision -->
+    <dTemplate name="gw_check_quality" objectType="com.infa.deployment.exclusivegateway">
+      <dAttribute name="condition" value="row_count > 0"/>
+    </dTemplate>
+
+    <!-- Timer Event — wait 5 minutes before validation -->
+    <dTemplate name="timer_wait" objectType="com.infa.deployment.timerevent">
+      <dAttribute name="duration" value="PT5M"/>
+    </dTemplate>
+
+    <!-- Links / Dependencies -->
+    <dLink from="Start" to="mt_load_contacts"/>
+    <dLink from="Start" to="mt_sync_accounts"/>
+    <dLink from="mt_load_contacts" to="gw_check_quality" condition="$mt_load_contacts.status = SUCCEEDED"/>
+    <dLink from="mt_sync_accounts" to="cmd_update_stats"/>
+    <dLink from="gw_check_quality" to="timer_wait" condition="row_count > 0"/>
+    <dLink from="gw_check_quality" to="notify_complete" condition="row_count = 0"/>
+    <dLink from="timer_wait" to="cmd_update_stats"/>
+    <dLink from="cmd_update_stats" to="notify_complete"/>
+
+    <!-- Parameters -->
+    <dParameter name="$$ENV" type="string" defaultValue="PROD"/>
+    <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+  </dTemplate>
+
+  <!-- Synchronization Task -->
+  <dTemplate name="SYNC_CUSTOMER_DATA" objectType="com.infa.deployment.synctask">
+    <dAttribute name="sourceName" value="Oracle_CRM"/>
+    <dAttribute name="targetName" value="Lakehouse_Silver"/>
+    <dAttribute name="mappingName" value="m_sync_customers"/>
+  </dTemplate>
+
+  <!-- Mass Ingestion Task -->
+  <dTemplate name="MI_BULK_LOAD_PRODUCTS" objectType="com.infa.deployment.massingestion">
+    <dAttribute name="sourceName" value="S3_LANDING"/>
+    <dAttribute name="targetName" value="Lakehouse_Bronze"/>
+    <dAttribute name="filePattern" value="products_*.csv"/>
+    <dAttribute name="loadType" value="full"/>
+  </dTemplate>
+
+  <!-- IICS Connection Objects -->
+  <dTemplate name="CONN_SALESFORCE_PROD" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Salesforce"/>
+    <dAttribute name="host" value="https://login.salesforce.com"/>
+    <dAttribute name="authType" value="OAuth2"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_ORACLE_CRM" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Oracle"/>
+    <dAttribute name="host" value="oracle-crm.example.com:1521/ORCL"/>
+    <dAttribute name="schema" value="CRM"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_LAKEHOUSE" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Lakehouse"/>
+    <dAttribute name="workspace" value="ws_analytics"/>
+    <dAttribute name="lakehouse" value="lh_silver"/>
+  </dTemplate>
+
+</weightedCSPackage>
+</exportMetadata>

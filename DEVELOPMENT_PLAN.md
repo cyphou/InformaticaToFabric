@@ -1,7 +1,7 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-16%2F16%20complete-27AE60?style=for-the-badge" alt="16/16 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-21%2F21%20complete-27AE60?style=for-the-badge" alt="21/21 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
 </p>
@@ -29,6 +29,11 @@
 - [Sprint 14 — Code Coverage & Quality](#sprint-14--code-coverage--quality)
 - [Sprint 15 — Incremental Migration](#sprint-15--incremental-migration)
 - [Sprint 16 — Interactive Dashboard](#sprint-16--interactive-dashboard)
+- [Sprint 17 — Coverage to 80%+](#sprint-17--coverage-to-80)
+- [Sprint 18 — E2E Integration Tests](#sprint-18--e2e-integration-tests)
+- [Sprint 19 — IICS Full Support](#sprint-19--iics-full-support)
+- [Sprint 20 — Gap Remediation P1/P2](#sprint-20--gap-remediation-p1p2)
+- [Sprint 21 — User Guide & Onboarding](#sprint-21--user-guide--onboarding)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -470,6 +475,98 @@ gantt
 - ✅ `--json` outputs structured status
 - ✅ `--open` launches browser
 - ✅ 112 tests passing, lint clean
+
+---
+
+## Sprint 17 — Coverage to 80%+ ✅
+
+**Goal:** Push unit test coverage from 52% to 80%+ with targeted tests for uncovered paths.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 17.1 | HTML report tests | `tests/test_coverage.py` | ✅ Assessment & migration report generation |
+| 17.2 | Assessment deep path tests | `tests/test_coverage.py` | ✅ main(), complexity report, edge cases |
+| 17.3 | Connection & SQL tests | `tests/test_coverage.py` | ✅ Connection parsing, SQL conversion, all Oracle patterns |
+| 17.4 | Notebook/Pipeline/Validation tests | `tests/test_coverage.py` | ✅ All generator functions covered |
+| 17.5 | Deploy & orchestrator tests | `tests/test_coverage.py` | ✅ Deploy helpers, orchestrator unit tests |
+
+**Sprint 17 Exit Criteria:** ✅ ALL MET
+- ✅ 239 tests passing
+- ✅ 85% overall coverage (up from 52%)
+
+---
+
+## Sprint 18 — E2E Integration Tests ✅
+
+**Goal:** End-to-end integration tests running all 5 phases against real XML fixtures.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 18.1 | E2E test framework | `tests/test_e2e.py` | ✅ Workspace setup, module redirection, sys.argv isolation |
+| 18.2 | Phase-by-phase E2E tests | `tests/test_e2e.py` | ✅ Assessment, SQL, Notebook, Pipeline, Validation phases |
+| 18.3 | Full pipeline test | `tests/test_e2e.py` | ✅ All 5 phases in sequence with content verification |
+| 18.4 | Orchestrator resume test | `tests/test_e2e.py` | ✅ Checkpoint-based resume |
+| 18.5 | Artifact content tests | `tests/test_e2e.py` | ✅ Verify generated file contents |
+
+**Sprint 18 Exit Criteria:** ✅ ALL MET
+- ✅ 258 tests passing (19 E2E tests)
+- ✅ 87% overall coverage
+
+---
+
+## Sprint 19 — IICS Full Support ✅
+
+**Goal:** Complete support for Informatica Intelligent Cloud Services (IICS) exports.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 19.1 | IICS Taskflow parser | `run_assessment.py` | ✅ Parse taskflows with mapping tasks, commands, gateways, events |
+| 19.2 | IICS Sync Task parser | `run_assessment.py` | ✅ Parse sync tasks as mappings |
+| 19.3 | IICS Mass Ingestion parser | `run_assessment.py` | ✅ Parse mass ingestion tasks |
+| 19.4 | IICS Connection parser | `run_assessment.py` | ✅ Parse IICS connection objects |
+| 19.5 | XML namespace fix | `run_assessment.py` | ✅ Handle `xmlns=""` clearing namespace |
+| 19.6 | IICS test suite | `tests/test_iics.py` | ✅ 23 tests covering all IICS parsers |
+| 19.7 | IICS test fixture | `input/workflows/IICS_TF_DAILY_CONTACTS_ETL.xml` | ✅ Full taskflow XML |
+
+**Sprint 19 Exit Criteria:** ✅ ALL MET
+- ✅ 281 tests passing (23 IICS tests)
+- ✅ 88% overall coverage
+
+---
+
+## Sprint 20 — Gap Remediation P1/P2 ✅
+
+**Goal:** Close priority 1 and 2 gaps from GAP_ANALYSIS.md.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 20.1 | Session config parser | `run_assessment.py` | ✅ DTM buffer, commit interval, cache sizes → Spark config |
+| 20.2 | Scheduler cron converter | `run_assessment.py` | ✅ DAILY/HOURLY/WEEKLY/MONTHLY → cron |
+| 20.3 | GTT / MV / DB Link detection | `run_assessment.py` | ✅ Detection functions with line tracking |
+| 20.4 | SQL conversion rules | `run_sql_migration.py` | ✅ GTT → temp view, MV → TODO, DB link → TODO JDBC |
+| 20.5 | Inventory integration | `run_assessment.py` | ✅ session_configs + schedule_cron in inventory |
+| 20.6 | Pipeline trigger support | `run_pipeline_migration.py` | ✅ ScheduleTrigger from schedule_cron |
+| 20.7 | Gap test suite | `tests/test_gaps.py` | ✅ 52 tests |
+
+**Sprint 20 Exit Criteria:** ✅ ALL MET
+- ✅ 333 tests passing (52 gap tests)
+- ✅ 88% overall coverage
+
+---
+
+## Sprint 21 — User Guide & Onboarding ✅
+
+**Goal:** Comprehensive documentation for new users and contributors.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 21.1 | User guide | `docs/USER_GUIDE.md` | ✅ Full workflow guide |
+| 21.2 | Troubleshooting guide | `docs/TROUBLESHOOTING.md` | ✅ 10 common issues |
+| 21.3 | Contributing guide | `CONTRIBUTING.md` | ✅ Dev setup, tests, PR checklist |
+| 21.4 | Architecture Decision Records | `docs/ADR/` | ✅ 3 ADRs |
+
+**Sprint 21 Exit Criteria:** ✅ ALL MET
+- ✅ Complete documentation set
 
 ---
 
