@@ -4,14 +4,12 @@ Parses all XML mappings, workflows, sessions, and SQL files.
 Produces: inventory.json, complexity_report.md, dependency_dag.json
 """
 
-import xml.etree.ElementTree as ET
 import json
 import os
 import re
 import sys
-import traceback
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from collections import OrderedDict
 
 WORKSPACE = Path(r"c:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric")
 INPUT_DIR = WORKSPACE / "input"
@@ -750,9 +748,9 @@ def write_complexity_report(inventory):
             lines.append(f"### {m['name']}")
             for ovr in m["sql_overrides"]:
                 lines.append(f"- **{ovr['type']}:**")
-                lines.append(f"  ```sql")
+                lines.append("  ```sql")
                 lines.append(f"  {ovr['value']}")
-                lines.append(f"  ```")
+                lines.append("  ```")
             lines.append("")
 
     if not any_overrides:
@@ -766,7 +764,7 @@ def write_complexity_report(inventory):
             lines.append(f"### {sf['file']}")
             lines.append(f"- **Path:** `{sf['path']}`")
             lines.append(f"- **Total lines:** {sf['total_lines']}")
-            lines.append(f"- **Oracle-specific constructs:**")
+            lines.append("- **Oracle-specific constructs:**")
             lines.append("")
             if sf["oracle_constructs"]:
                 lines.append("| Construct | Occurrences | Lines |")
@@ -1174,7 +1172,7 @@ def main():
                 fmt = detect_xml_format(xml_file)
                 if fmt == "iics":
                     mappings = parse_iics_mapping(xml_file)
-                    print(f"    [IICS format]")
+                    print("    [IICS format]")
                 else:
                     mappings = parse_mapping_xml(xml_file)
 

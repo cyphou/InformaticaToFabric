@@ -1,0 +1,11 @@
+# Core
+pyyaml>=6.0
+
+# Deployment (optional: pip install -r requirements-deploy.txt)
+# azure-identity>=1.15.0
+# requests>=2.31.0
+
+# Development (optional: pip install -r requirements-dev.txt)
+# pytest>=8.0
+# pytest-cov>=5.0
+# ruff>=0.4.0

@@ -1,19 +1,19 @@
 # Migration Summary
 
-**Generated:** 2026-03-23 18:44 UTC
+**Generated:** 2026-03-23 19:08 UTC
 
 ## Phase Results
 
 | Phase | Name | Status | Duration |
 |-------|------|--------|----------|
 | 0 | Assessment | ⏭️ Skipped | — |
-| 1 | SQL Migration | ✅ OK | 0.3s |
-| 2 | Notebook Migration | ✅ OK | 0.0s |
-| 3 | Pipeline Migration | ✅ OK | 0.0s |
-| 4 | Validation | ✅ OK | 0.1s |
+| 1 | SQL Migration | ❌ None | — |
+| 2 | Notebook Migration | ❌ None | — |
+| 3 | Pipeline Migration | ❌ None | — |
+| 4 | Validation | ❌ None | — |
 
-**Phases completed:** 4/5
-**Total duration:** 0.4s
+**Phases completed:** 0/5
+**Total duration:** 0.0s
 
 ## Output Directories
 

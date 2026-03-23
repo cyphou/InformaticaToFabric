@@ -1,0 +1,130 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "informatica-to-fabric"
+version = "0.12.0"
+description = "Migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Pierre Doudet" },
+]
+keywords = ["informatica", "fabric", "migration", "pyspark", "data-pipelines"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Code Generators",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+deploy = [
+    "azure-identity>=1.15.0",
+    "requests>=2.31.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4.0",
+]
+all = [
+    "informatica-to-fabric[deploy,dev]",
+]
+
+[project.scripts]
+informatica-to-fabric = "run_migration:main"
+
+[project.urls]
+Homepage = "https://github.com/cyphou/InformaticaToFabric"
+Repository = "https://github.com/cyphou/InformaticaToFabric"
+Issues = "https://github.com/cyphou/InformaticaToFabric/issues"
+
+[tool.setuptools]
+py-modules = [
+    "run_migration",
+    "run_assessment",
+    "run_sql_migration",
+    "run_notebook_migration",
+    "run_pipeline_migration",
+    "run_validation",
+    "deploy_to_fabric",
+    "generate_html_reports",
+    "dashboard",
+]
+
+[tool.setuptools.packages.find]
+include = ["tests*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+exclude = [
+    "output/",
+    "templates/",
+    "input/",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "S",     # flake8-bandit (security)
+    "T20",   # flake8-print
+    "SIM",   # flake8-simplify
+]
+ignore = [
+    "T201",   # allow print() — our scripts are CLI tools
+    "S603",   # allow subprocess without shell=True check
+    "S607",   # allow partial executable path
+    "E501",   # line length handled by formatter
+    "S314",   # XML parsing is intentional (we parse Informatica exports)
+    "S608",   # SQL string building is intentional (migration tool)
+    "E741",   # allow l/O/I variable names in existing code
+    "SIM102", # nested if is sometimes clearer
+    "SIM108", # if-else vs ternary — keep readable form
+    "B007",   # unused loop control variable in iterparse
+    "SIM105", # try-except-pass is clearer than contextlib.suppress for I/O
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]  # allow assert in tests
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    ".github/*",
+    "templates/*",
+    "input/*",
+    "output/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+]

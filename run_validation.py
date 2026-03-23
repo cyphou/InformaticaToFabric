@@ -14,8 +14,8 @@ Usage:
 
 import json
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent
 OUTPUT_DIR = WORKSPACE / "output" / "validation"
@@ -152,74 +152,74 @@ def generate_validation(mapping, source_type):
 
         # Cell 2: Row Count
         cell2 = (
-            f"# Cell 2: Level 1 — Row Count Validation\n"
-            f"try:\n"
-            f"    df_source = spark.read.jdbc(\n"
-            f"        url=source_jdbc_url,\n"
-            f"        table=f\"({{source_table}})\",\n"
-            f"        properties=source_jdbc_properties\n"
-            f"    )\n"
-            f"    source_count = df_source.count()\n"
-            f"except Exception as e:\n"
-            f"    source_count = None\n"
-            f'    print(f"WARNING: Could not read source — {{e}}")\n'
-            f"\n"
-            f"try:\n"
-            f"    df_target = spark.table(target_table)\n"
-            f"    target_count = df_target.count()\n"
-            f"except Exception as e:\n"
-            f"    target_count = None\n"
-            f'    print(f"WARNING: Could not read target — {{e}}")\n'
-            f"\n"
-            f"if source_count is None or target_count is None:\n"
-            f'    row_count_result = "SKIPPED"\n'
-            f'    row_count_detail = "Connection failure — see warnings above"\n'
-            f"elif source_count == target_count:\n"
-            f'    row_count_result = "PASS"\n'
-            f'    row_count_detail = f"Source={{source_count}}, Target={{target_count}}"\n'
-            f"else:\n"
-            f'    row_count_result = "FAIL"\n'
-            f'    row_count_detail = f"Source={{source_count}}, Target={{target_count}}, Delta={{target_count - source_count}}"\n'
-            f"\n"
-            f"results.append({{\n"
-            f'    "check": "Row Count", "level": 1,\n'
-            f'    "result": row_count_result, "detail": row_count_detail\n'
-            f"}})\n"
-            f'print(f"[Level 1] Row Count: {{row_count_result}} — {{row_count_detail}}")\n'
+            "# Cell 2: Level 1 — Row Count Validation\n"
+            "try:\n"
+            "    df_source = spark.read.jdbc(\n"
+            "        url=source_jdbc_url,\n"
+            "        table=f\"({source_table})\",\n"
+            "        properties=source_jdbc_properties\n"
+            "    )\n"
+            "    source_count = df_source.count()\n"
+            "except Exception as e:\n"
+            "    source_count = None\n"
+            '    print(f"WARNING: Could not read source — {e}")\n'
+            "\n"
+            "try:\n"
+            "    df_target = spark.table(target_table)\n"
+            "    target_count = df_target.count()\n"
+            "except Exception as e:\n"
+            "    target_count = None\n"
+            '    print(f"WARNING: Could not read target — {e}")\n'
+            "\n"
+            "if source_count is None or target_count is None:\n"
+            '    row_count_result = "SKIPPED"\n'
+            '    row_count_detail = "Connection failure — see warnings above"\n'
+            "elif source_count == target_count:\n"
+            '    row_count_result = "PASS"\n'
+            '    row_count_detail = f"Source={source_count}, Target={target_count}"\n'
+            "else:\n"
+            '    row_count_result = "FAIL"\n'
+            '    row_count_detail = f"Source={source_count}, Target={target_count}, Delta={target_count - source_count}"\n'
+            "\n"
+            "results.append({\n"
+            '    "check": "Row Count", "level": 1,\n'
+            '    "result": row_count_result, "detail": row_count_detail\n'
+            "})\n"
+            'print(f"[Level 1] Row Count: {row_count_result} — {row_count_detail}")\n'
         )
         cells.append(cell2)
 
         # Cell 3: Checksum
         cell3 = (
-            f"# Cell 3: Level 2 — Column-Level Checksum Validation\n"
-            f"try:\n"
-            f"    source_hash = (\n"
-            f"        df_source\n"
-            f'        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
-            f'        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
-            f'        .collect()[0]["checksum"]\n'
-            f"    )\n"
-            f"    target_hash = (\n"
-            f"        df_target\n"
-            f'        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
-            f'        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
-            f'        .collect()[0]["checksum"]\n'
-            f"    )\n"
-            f"    if source_hash == target_hash:\n"
-            f'        checksum_result = "PASS"\n'
-            f'        checksum_detail = f"Checksum match: {{source_hash}}"\n'
-            f"    else:\n"
-            f'        checksum_result = "FAIL"\n'
-            f'        checksum_detail = f"Source={{source_hash}}, Target={{target_hash}}"\n'
-            f"except Exception as e:\n"
-            f'    checksum_result = "SKIPPED"\n'
-            f'    checksum_detail = f"Error computing checksums — {{e}}"\n'
-            f"\n"
-            f"results.append({{\n"
-            f'    "check": "Column Checksum", "level": 2,\n'
-            f'    "result": checksum_result, "detail": checksum_detail\n'
-            f"}})\n"
-            f'print(f"[Level 2] Column Checksum: {{checksum_result}} — {{checksum_detail}}")\n'
+            "# Cell 3: Level 2 — Column-Level Checksum Validation\n"
+            "try:\n"
+            "    source_hash = (\n"
+            "        df_source\n"
+            '        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
+            '        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
+            '        .collect()[0]["checksum"]\n'
+            "    )\n"
+            "    target_hash = (\n"
+            "        df_target\n"
+            '        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
+            '        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
+            '        .collect()[0]["checksum"]\n'
+            "    )\n"
+            "    if source_hash == target_hash:\n"
+            '        checksum_result = "PASS"\n'
+            '        checksum_detail = f"Checksum match: {source_hash}"\n'
+            "    else:\n"
+            '        checksum_result = "FAIL"\n'
+            '        checksum_detail = f"Source={source_hash}, Target={target_hash}"\n'
+            "except Exception as e:\n"
+            '    checksum_result = "SKIPPED"\n'
+            '    checksum_detail = f"Error computing checksums — {e}"\n'
+            "\n"
+            "results.append({\n"
+            '    "check": "Column Checksum", "level": 2,\n'
+            '    "result": checksum_result, "detail": checksum_detail\n'
+            "})\n"
+            'print(f"[Level 2] Column Checksum: {checksum_result} — {checksum_detail}")\n'
         )
         cells.append(cell3)
 
@@ -272,32 +272,32 @@ def generate_validation(mapping, source_type):
 
         # Cell 5: Summary
         cell5 = (
-            f"# Cell 5: Summary Report\n"
-            f'overall = "PASS" if all(r["result"] == "PASS" for r in results) else (\n'
-            f'    "FAIL" if any(r["result"] == "FAIL" for r in results) else "SKIPPED"\n'
-            f")\n"
-            f"\n"
-            f"summary = {{\n"
-            f'    "mapping": mapping_name,\n'
-            f'    "target_table": target_table,\n'
-            f'    "run_timestamp": run_timestamp,\n'
-            f'    "checks": results,\n'
-            f'    "overall": overall\n'
-            f"}}\n"
-            f"\n"
-            f'print("=" * 60)\n'
-            f'print(f"VALIDATION SUMMARY — {{mapping_name}} → {{target_table}}")\n'
-            f'print("=" * 60)\n'
-            f"print(json.dumps(summary, indent=2, default=str))\n"
-            f'print("=" * 60)\n'
-            f'print(f"OVERALL RESULT: {{overall}}")\n'
-            f'print("=" * 60)\n'
-            f"\n"
-            f"df_summary = spark.createDataFrame(\n"
-            f'    [(r["check"], r["level"], r["result"], r["detail"]) for r in results],\n'
-            f'    ["check_name", "level", "result", "detail"]\n'
-            f")\n"
-            f"df_summary.show(truncate=False)\n"
+            "# Cell 5: Summary Report\n"
+            'overall = "PASS" if all(r["result"] == "PASS" for r in results) else (\n'
+            '    "FAIL" if any(r["result"] == "FAIL" for r in results) else "SKIPPED"\n'
+            ")\n"
+            "\n"
+            "summary = {\n"
+            '    "mapping": mapping_name,\n'
+            '    "target_table": target_table,\n'
+            '    "run_timestamp": run_timestamp,\n'
+            '    "checks": results,\n'
+            '    "overall": overall\n'
+            "}\n"
+            "\n"
+            'print("=" * 60)\n'
+            'print(f"VALIDATION SUMMARY — {mapping_name} → {target_table}")\n'
+            'print("=" * 60)\n'
+            "print(json.dumps(summary, indent=2, default=str))\n"
+            'print("=" * 60)\n'
+            'print(f"OVERALL RESULT: {overall}")\n'
+            'print("=" * 60)\n'
+            "\n"
+            "df_summary = spark.createDataFrame(\n"
+            '    [(r["check"], r["level"], r["result"], r["detail"]) for r in results],\n'
+            '    ["check_name", "level", "result", "detail"]\n'
+            ")\n"
+            "df_summary.show(truncate=False)\n"
         )
         cells.append(cell5)
 
@@ -360,7 +360,7 @@ def main():
         print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
         sys.exit(1)
 
-    with open(inv_path, "r", encoding="utf-8") as f:
+    with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
     print("=" * 60)
@@ -390,7 +390,7 @@ def main():
     matrix_path = OUTPUT_DIR / "test_matrix.md"
     with open(matrix_path, "w", encoding="utf-8") as f:
         f.write(matrix_content)
-    print(f"\n  📋 test_matrix.md")
+    print("\n  📋 test_matrix.md")
 
     print()
     print("=" * 60)

@@ -9,6 +9,7 @@ Runs all migration phases in sequence:
 
 Outputs:
   output/migration_summary.md — overall migration summary
+  output/.checkpoint.json     — incremental migration state
 
 Usage:
     python run_migration.py                    # Run all phases
@@ -17,6 +18,8 @@ Usage:
     python run_migration.py --verbose          # Debug-level logging
     python run_migration.py --dry-run          # Preview without executing
     python run_migration.py --config my.yaml   # Custom config file
+    python run_migration.py --resume           # Resume from last checkpoint
+    python run_migration.py --reset            # Clear checkpoint and start fresh
 """
 
 import argparse
@@ -57,6 +60,10 @@ def _parse_args():
                         help="Path to migration.yaml config file")
     parser.add_argument("--log-format", choices=["text", "json"], default=None,
                         help="Log format: text (default) or json")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume from last checkpoint (skip completed phases)")
+    parser.add_argument("--reset", action="store_true",
+                        help="Clear checkpoint and start fresh")
     parsed = parser.parse_args()
     return parsed
 
@@ -72,7 +79,7 @@ def _load_config(config_path=None):
     try:
         # Use PyYAML if available, otherwise basic key-value parsing
         import yaml
-        with open(p, "r", encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
         return cfg or {}
     except ImportError:
@@ -121,6 +128,34 @@ def _setup_logging(verbose=False, log_format=None, config=None):
         logger.addHandler(fh)
 
     return logger
+
+
+CHECKPOINT_PATH = WORKSPACE / "output" / ".checkpoint.json"
+
+
+def _load_checkpoint():
+    """Load checkpoint state from disk. Returns dict with completed phase IDs."""
+    if CHECKPOINT_PATH.exists():
+        try:
+            with open(CHECKPOINT_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return {"completed_phases": [], "results": []}
+    return {"completed_phases": [], "results": []}
+
+
+def _save_checkpoint(checkpoint):
+    """Persist checkpoint state to disk."""
+    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint["updated"] = datetime.now(timezone.utc).isoformat()
+    with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
+        json.dump(checkpoint, f, indent=2, ensure_ascii=False)
+
+
+def _clear_checkpoint():
+    """Remove checkpoint file."""
+    if CHECKPOINT_PATH.exists():
+        CHECKPOINT_PATH.unlink()
 
 
 def run_phase(phase):
@@ -197,6 +232,15 @@ def main():
     config = _load_config(args.config)
     log = _setup_logging(verbose=args.verbose, log_format=args.log_format, config=config)
 
+    # Handle --reset
+    if args.reset:
+        _clear_checkpoint()
+        print("  Checkpoint cleared.")
+
+    # Handle --resume
+    checkpoint = _load_checkpoint() if args.resume else {"completed_phases": [], "results": []}
+    completed_phases = set(checkpoint.get("completed_phases", []))
+
     skip = set(args.skip)
     only = set(args.only) if args.only is not None else None
 
@@ -209,6 +253,8 @@ def main():
         print("  *** DRY-RUN MODE — no phases will execute ***")
     if args.verbose:
         print("  *** VERBOSE logging enabled ***")
+    if args.resume and completed_phases:
+        print(f"  *** RESUMING — skipping phases: {sorted(completed_phases)} ***")
     if config and config.get("fabric", {}).get("workspace_id"):
         print(f"  Config workspace: {config['fabric']['workspace_id']}")
     print()
@@ -235,6 +281,12 @@ def main():
             results.append({"id": pid, "name": pname, "status": "skipped", "duration": 0, "error": None})
             continue
 
+        if pid in completed_phases:
+            print(f"  ⏭️  Phase {pid}: {pname} — already completed (checkpoint)")
+            log.debug(f"Phase {pid} skipped (checkpoint)")
+            results.append({"id": pid, "name": pname, "status": "skipped", "duration": 0, "error": None})
+            continue
+
         if args.dry_run:
             print(f"  📋 Phase {pid}: {pname} — would execute ({phase['module']})")
             log.info(f"Phase {pid} dry-run: {pname}")
@@ -252,24 +304,34 @@ def main():
             results.append({"id": pid, "name": pname, "status": "ok", "duration": elapsed, "error": None})
             log.info(f"Phase {pid} completed in {elapsed:.1f}s")
             print(f"  ✅ Phase {pid} completed in {elapsed:.1f}s")
+            # Save checkpoint
+            completed_phases.add(pid)
+            checkpoint["completed_phases"] = sorted(completed_phases)
+            checkpoint["results"] = results[:]
+            _save_checkpoint(checkpoint)
         except SystemExit as se:
             elapsed = time.time() - t0
             if se.code == 0:
                 results.append({"id": pid, "name": pname, "status": "ok", "duration": elapsed, "error": None})
                 log.info(f"Phase {pid} completed in {elapsed:.1f}s")
                 print(f"  ✅ Phase {pid} completed in {elapsed:.1f}s")
+                # Save checkpoint
+                completed_phases.add(pid)
+                checkpoint["completed_phases"] = sorted(completed_phases)
+                checkpoint["results"] = results[:]
+                _save_checkpoint(checkpoint)
             else:
                 results.append({"id": pid, "name": pname, "status": "error", "duration": elapsed, "error": f"exit code {se.code}"})
                 log.error(f"Phase {pid} failed: exit code {se.code}")
                 print(f"  ❌ Phase {pid} failed (exit code {se.code})")
-                print(f"     Continuing to next phase...")
+                print("     Continuing to next phase...")
         except Exception as exc:
             elapsed = time.time() - t0
             error_msg = str(exc)[:100]
             results.append({"id": pid, "name": pname, "status": "error", "duration": elapsed, "error": error_msg})
             log.error(f"Phase {pid} failed: {error_msg}")
             print(f"  ❌ Phase {pid} failed: {error_msg}")
-            print(f"     Continuing to next phase...")
+            print("     Continuing to next phase...")
         print()
 
     # Generate summary

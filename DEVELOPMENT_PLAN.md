@@ -1,7 +1,7 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-11%2F11%20complete-27AE60?style=for-the-badge" alt="11/11 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-16%2F16%20complete-27AE60?style=for-the-badge" alt="16/16 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
 </p>
@@ -24,6 +24,11 @@
 - [Sprint 9 — Unit Test Suite](#sprint-9--unit-test-suite)
 - [Sprint 10 — Fabric Deployment](#sprint-10--fabric-deployment)
 - [Sprint 11 — CLI, Config & Logging](#sprint-11--cli-config--logging)
+- [Sprint 12 — CI/CD](#sprint-12--cicd)
+- [Sprint 13 — Python Packaging](#sprint-13--python-packaging)
+- [Sprint 14 — Code Coverage & Quality](#sprint-14--code-coverage--quality)
+- [Sprint 15 — Incremental Migration](#sprint-15--incremental-migration)
+- [Sprint 16 — Interactive Dashboard](#sprint-16--interactive-dashboard)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -371,6 +376,103 @@ gantt
 
 ---
 
+## Sprint 12 — CI/CD ✅
+
+**Goal:** Automated testing and linting on every push via GitHub Actions.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 12.1 | GitHub Actions CI workflow | `.github/workflows/ci.yml` | ✅ Matrix: ubuntu + windows, Python 3.10-3.13, pytest + ruff |
+| 12.2 | Ruff linter integration | `pyproject.toml` | ✅ `ruff check .` passes with zero errors; security (S), bugbear (B), import sort (I) rules enabled |
+| 12.3 | Auto-fix 122 lint issues | All `.py` files | ✅ Removed 103 extraneous f-prefixes, 7 unused imports, 6 unsorted imports, 6 redundant open modes |
+| 12.4 | Codecov integration | `.github/workflows/ci.yml` | ✅ Coverage XML upload on ubuntu/3.12 matrix cell |
+
+**Sprint 12 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `ruff check .` → "All checks passed!"
+- ✅ CI workflow tests on 2 OS × 4 Python versions
+- ✅ 112 tests pass after lint auto-fixes
+
+---
+
+## Sprint 13 — Python Packaging ✅
+
+**Goal:** Make the project installable as a Python package with CLI entry-point.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 13.1 | pyproject.toml (PEP 621) | `pyproject.toml` | ✅ Build system, metadata, classifiers, optional deps [deploy], [dev], [all] |
+| 13.2 | CLI entry-point | `pyproject.toml` | ✅ `informatica-to-fabric` command maps to `run_migration:main` |
+| 13.3 | requirements.txt | `requirements.txt` | ✅ Core (pyyaml), deploy (azure-identity, requests), dev (pytest, ruff) |
+| 13.4 | Editable install | — | ✅ `pip install -e ".[dev]"` succeeds, CLI shows help |
+
+**Sprint 13 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `informatica-to-fabric --help` shows full CLI interface
+- ✅ `pip install -e ".[dev]"` installs package + dev dependencies
+- ✅ PEP 639 license expression (no deprecated classifiers)
+
+---
+
+## Sprint 14 — Code Coverage & Quality ✅
+
+**Goal:** Expand test coverage with tests for assessment, deployment, and config.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 14.1 | Assessment unit tests (22 tests) | `tests/test_extended.py` | ✅ Complexity classification (7 tests), DB type detection (4), XML parsing (7), parameter files (3), abbreviation (2) |
+| 14.2 | Deployment unit tests (5 tests) | `tests/test_extended.py` | ✅ base64 encoding, headers, dry-run for notebooks/pipelines/SQL |
+| 14.3 | Orchestrator config tests (6 tests) | `tests/test_extended.py` | ✅ Config loading (valid/missing YAML), logging setup (text/json/verbose), main() dry-run |
+| 14.4 | Coverage configuration | `pyproject.toml` | ✅ [tool.coverage.run] with source/omit, [tool.coverage.report] with show_missing |
+
+**Sprint 14 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ Coverage: 28% → 49% (+21 percentage points)
+- ✅ `run_assessment.py`: 0% → 36%
+- ✅ `deploy_to_fabric.py`: 0% → 39%
+- ✅ `run_migration.py`: 24% → 67%
+
+---
+
+## Sprint 15 — Incremental Migration ✅
+
+**Goal:** Add checkpoint-based incremental migration with `--resume` and `--reset` flags.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 15.1 | Checkpoint save/load | `run_migration.py` | ✅ `_save_checkpoint()` / `_load_checkpoint()` persist to `output/.checkpoint.json` |
+| 15.2 | `--resume` flag | `run_migration.py` | ✅ Skips phases listed in checkpoint's `completed_phases` |
+| 15.3 | `--reset` flag | `run_migration.py` | ✅ Deletes checkpoint file, starts fresh |
+| 15.4 | Auto-checkpoint after each phase | `run_migration.py` | ✅ Checkpoint updated after every successful phase completion |
+| 15.5 | Checkpoint tests (6 tests) | `tests/test_extended.py` | ✅ Save/load, nonexistent, clear, clear-nonexistent, --resume/--reset arg parsing |
+| 15.6 | .gitignore checkpoint | `.gitignore` | ✅ `output/.checkpoint.json` excluded from version control |
+
+**Sprint 15 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `--only 1` creates checkpoint with phase 1 completed
+- ✅ `--resume --only 1 2 --dry-run` skips phase 1, shows phase 2 as would-execute
+- ✅ `--reset` clears checkpoint
+- ✅ 112 tests passing
+
+---
+
+## Sprint 16 — Interactive Dashboard ✅
+
+**Goal:** Self-contained HTML dashboard aggregating all migration outputs.
+
+| # | Task | Files | Acceptance Criteria |
+|---|------|-------|-------------------|
+| 16.1 | Status collector | `dashboard.py` | ✅ Aggregates inventory, artifacts, phases, checkpoint, deployment log, test matrix |
+| 16.2 | HTML dashboard generator | `dashboard.py` | ✅ Responsive CSS grid, KPI cards, complexity bar, phase table, artifact lists |
+| 16.3 | JSON status output | `dashboard.py` | ✅ `--json` flag outputs machine-readable status |
+| 16.4 | Browser auto-open | `dashboard.py` | ✅ `--open` flag launches default browser |
+| 16.5 | Dashboard tests (7 tests) | `tests/test_extended.py` | ✅ Status collection, artifact discovery, HTML generation, file output |
+
+**Sprint 16 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `python dashboard.py` generates `output/dashboard.html`
+- ✅ Dashboard shows KPI cards (19 total artifacts), complexity bar, phase results
+- ✅ `--json` outputs structured status
+- ✅ `--open` launches browser
+- ✅ 112 tests passing, lint clean
+
+---
+
 ## Agent Development Plans
 
 ### 🔍 Assessment Agent — Development Roadmap
@@ -618,6 +720,11 @@ pie title Sprint Effort Distribution
     "Sprint 9 — Unit Tests" : 10
     "Sprint 10 — Fabric Deploy" : 10
     "Sprint 11 — CLI & Config" : 10
+    "Sprint 12 — CI/CD" : 5
+    "Sprint 13 — Packaging" : 5
+    "Sprint 14 — Coverage" : 10
+    "Sprint 15 — Incremental" : 10
+    "Sprint 16 — Dashboard" : 10
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -633,3 +740,8 @@ pie title Sprint Effort Distribution
 | **9** | All (testing) | `tests/test_migration.py`, `pytest.ini`, `tests/__init__.py` | ✅ Complete |
 | **10** | Orchestrator (deployment) | `deploy_to_fabric.py` | ✅ Complete |
 | **11** | Orchestrator (CLI/config) | `run_migration.py` (enhanced), `migration.yaml` | ✅ Complete |
+| **12** | All (CI/CD) | `.github/workflows/ci.yml`, ruff lint | ✅ Complete |
+| **13** | All (packaging) | `pyproject.toml`, `requirements.txt`, CLI entry-point | ✅ Complete |
+| **14** | All (coverage) | `tests/test_extended.py`, coverage config | ✅ Complete |
+| **15** | Orchestrator (incremental) | `--resume`, `--reset`, `.checkpoint.json` | ✅ Complete |
+| **16** | All (dashboard) | `dashboard.py`, `output/dashboard.html` | ✅ Complete |

@@ -14,7 +14,6 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
 
 WORKSPACE = Path(__file__).resolve().parent
 OUTPUT_DIR = WORKSPACE / "output" / "pipelines"
@@ -259,7 +258,7 @@ def main():
         print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
         sys.exit(1)
 
-    with open(inv_path, "r", encoding="utf-8") as f:
+    with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
     print("=" * 60)

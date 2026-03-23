@@ -28,3 +28,6 @@ desktop.ini
 *.tmp
 *.bak
 *.log
+
+# Checkpoint (incremental migration state)
+output/.checkpoint.json

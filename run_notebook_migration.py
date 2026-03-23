@@ -13,8 +13,8 @@ Usage:
 
 import json
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent
 OUTPUT_DIR = WORKSPACE / "output" / "notebooks"
@@ -73,7 +73,7 @@ def _metadata_cell(mapping):
         '# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}',
         "# METADATA_END",
         "",
-        f"# CELL 1 — Metadata & Parameters",
+        "# CELL 1 — Metadata & Parameters",
         f"# Notebook: NB_{name}",
         f"# Migrated from: Informatica mapping {name}",
         f"# Complexity: {complexity}",
@@ -118,7 +118,7 @@ def _source_cell(mapping, cell_num):
             schema_table = src
             lakehouse_table = f"bronze.{src.lower()}"
 
-        var_name = f"df_source" if i == 0 else f"df_source_{i + 1}"
+        var_name = "df_source" if i == 0 else f"df_source_{i + 1}"
         lines.append(f"# --- Source: {src} ---")
         lines.append(f"# Oracle: SELECT * FROM {schema_table}")
         lines.append(f'{var_name} = spark.table("{lakehouse_table}")')
@@ -221,7 +221,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
         lines.extend([
             "# --- Update Strategy → Delta MERGE ---",
             f'target_table = DeltaTable.forName(spark, "silver.{target}")',
-            f"target_table.alias('tgt').merge(",
+            "target_table.alias('tgt').merge(",
             f"    {prev_df}.alias('src'),",
             "    'tgt.ID = src.ID'  # TODO: Replace with actual merge key",
             ").whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()",
@@ -310,7 +310,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
         lines.extend([
             f"# --- {tx_type} transformation (PLACEHOLDER) ---",
             f"# TODO: Manual conversion required for {tx_type}",
-            f"#   This transformation type requires manual review and PySpark implementation.",
+            "#   This transformation type requires manual review and PySpark implementation.",
             f"df = {prev_df}",
         ])
 
@@ -398,7 +398,7 @@ def main():
         print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
         sys.exit(1)
 
-    with open(inv_path, "r", encoding="utf-8") as f:
+    with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
     print("=" * 60)

@@ -15,8 +15,8 @@ Usage:
 import json
 import re
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent
 INPUT_DIR = WORKSPACE / "input"
@@ -233,7 +233,7 @@ def convert_sql_overrides(mapping_name, overrides, db_type="oracle"):
         f"-- SQL Overrides for mapping: {mapping_name}",
         f"-- DB Type: {db_type.upper()} → Spark SQL",
         f"-- Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
-        f"-- Agent: sql-migration (automated)",
+        "-- Agent: sql-migration (automated)",
         f"-- {'=' * 76}",
         "",
     ]
@@ -242,10 +242,10 @@ def convert_sql_overrides(mapping_name, overrides, db_type="oracle"):
         original = ovr.get("value", "")
         converted = convert_sql(original, db_type)
         lines.append(f"-- Override #{i}: {ovr_type}")
-        lines.append(f"-- Original:")
+        lines.append("-- Original:")
         for ol in original.split("\n"):
             lines.append(f"--   {ol}")
-        lines.append(f"-- Converted:")
+        lines.append("-- Converted:")
         lines.append(converted)
         lines.append("")
     out_path = OUTPUT_DIR / f"SQL_OVERRIDES_{mapping_name}.sql"
@@ -259,7 +259,7 @@ def main():
         print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
         sys.exit(1)
 
-    with open(inv_path, "r", encoding="utf-8") as f:
+    with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
     print("=" * 60)

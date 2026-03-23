@@ -10,11 +10,11 @@ Usage:
 """
 
 import json
-import sys
 import math
-from pathlib import Path
+import sys
 from datetime import datetime, timezone
 from html import escape
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent
 OUTPUT_DIR = WORKSPACE / "output" / "inventory"
@@ -614,7 +614,7 @@ def main():
         print("Run run_assessment.py first to generate inventory.json")
         sys.exit(1)
 
-    with open(inv_path, "r", encoding="utf-8") as f:
+    with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
     print("=" * 50)

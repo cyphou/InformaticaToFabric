@@ -44,23 +44,33 @@
 
 ### Script-driven (Command Line)
 ```bash
+# Install the package
+pip install -e ".[dev]"
+
 # Run the full pipeline (assessment → SQL → notebooks → pipelines → validation)
-python run_migration.py
+informatica-to-fabric
+# or: python run_migration.py
 
 # Skip assessment if already done
-python run_migration.py --skip 0
+informatica-to-fabric --skip 0
 
 # Run only specific phases (e.g., SQL + notebooks)
-python run_migration.py --only 1 2
+informatica-to-fabric --only 1 2
 
 # Preview without executing (dry-run)
-python run_migration.py --dry-run --verbose
+informatica-to-fabric --dry-run --verbose
+
+# Resume from last checkpoint (skip completed phases)
+informatica-to-fabric --resume
 
 # Use a custom config file with JSON logging
-python run_migration.py --config migration.yaml --log-format json
+informatica-to-fabric --config migration.yaml --log-format json
 
 # Deploy generated artifacts to Fabric workspace
 python deploy_to_fabric.py --workspace-id <GUID> --dry-run
+
+# Generate interactive dashboard
+python dashboard.py --open
 ```
 
 > [!TIP]
@@ -440,14 +450,18 @@ InformaticaToDBFabric/
 ├── run_validation.py                    # ✅ Validation generation script (Phase 4)
 ├── run_migration.py                     # 🎯 End-to-end orchestrator (all phases)
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
+├── dashboard.py                         # 📊 Interactive HTML dashboard generator
 ├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
 ├── migration.yaml                       # ⚙️ Configuration template (workspace, sources, logging)
+├── pyproject.toml                       # 📦 Python package config (PEP 621)
+├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 Unit test suite (64 tests)
+├── tests/                               # 🧪 Unit test suite (112 tests)
 │   ├── __init__.py
-│   └── test_migration.py                # 6 test classes covering all phases
+│   ├── test_migration.py                # Sprint 9: Core migration tests (64)
+│   └── test_extended.py                 # Sprint 14: Assessment, deploy, dashboard tests (48)
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (11 sprints)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (16 sprints)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis (82% coverage)
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -514,11 +528,14 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 64 tests
+# Run all 112 tests
 python -m pytest tests/ -v
 
 # Run specific test class
 python -m pytest tests/test_migration.py::TestSQLConversion -v
+
+# Run with coverage
+python -m pytest tests/ --cov=. --cov-report=term-missing
 ```
 
 | Test Class | Tests | Covers |
@@ -529,6 +546,14 @@ python -m pytest tests/test_migration.py::TestSQLConversion -v
 | `TestValidationGeneration` | 8 | Target inference, validation notebook L1-L3 checks |
 | `TestOrchestrator` | 9 | CLI arg parsing, summary generation, phase config |
 | `TestSQLEndToEnd` | 1 | Full SQL migration integration test |
+| `TestAssessmentHelpers` | 11 | Complexity classification, abbreviation |
+| `TestDetectSourceDbType` | 4 | Oracle/SQL Server/ANSI SQL detection |
+| `TestXmlParsing` | 7 | PowerCenter/IICS format detection, XML parsing |
+| `TestParameterFiles` | 3 | .prm parameter file parsing |
+| `TestDeployment` | 5 | Dry-run deployment (notebooks/pipelines/SQL) |
+| `TestOrchestratorConfig` | 6 | Config loading, logging setup, main dry-run |
+| `TestCheckpointing` | 6 | Save/load/clear checkpoint, --resume/--reset |
+| `TestDashboard` | 7 | Status collection, HTML generation, file output |
 
 ### Configuration
 
@@ -631,7 +656,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [README.md](README.md) | Project overview (this file) |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis (82% coverage) |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (11/11 sprints complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (16/16 sprints complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
 
