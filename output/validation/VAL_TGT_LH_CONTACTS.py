@@ -1,8 +1,8 @@
 # Databricks notebook source / Fabric Notebook
 # =============================================================================
-# Validation Notebook: VAL_AGG_ORDERS_BY_CUSTOMER
-# Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: gold.agg_orders_by_customer
-# Mapping: M_LOAD_ORDERS
+# Validation Notebook: VAL_TGT_LH_CONTACTS
+# Source: src_sf_contacts → Target: silver.tgt_lh_contacts
+# Mapping: m_load_contacts
 # =============================================================================
 
 # COMMAND ----------
@@ -15,8 +15,8 @@ from pyspark.sql.functions import (
 )
 from datetime import datetime
 
-mapping_name = "M_LOAD_ORDERS"
-target_table = "gold.agg_orders_by_customer"
+mapping_name = "m_load_contacts"
+target_table = "silver.tgt_lh_contacts"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"
@@ -25,9 +25,9 @@ source_jdbc_properties = {
     "password": "<password>",  # Use Key Vault in production
     "driver": "oracle.jdbc.driver.OracleDriver"
 }
-source_table = "SALES.ORDERS"
+source_table = "SCHEMA.src_sf_contacts"
 
-key_columns = ['customer_id']
+key_columns = ['contact_id']
 checksum_columns = key_columns  # TODO: expand with all validated columns
 nullable_not_allowed = key_columns  # TODO: add mandatory columns
 
@@ -121,10 +121,10 @@ except Exception as e:
 # Key uniqueness
 try:
     total = df_target.count()
-    distinct_keys = df_target.select("customer_id").distinct().count()
+    distinct_keys = df_target.select("contact_id").distinct().count()
     key_status = "PASS" if total == distinct_keys else "FAIL"
     dq_checks.append({
-        "rule": "Key Uniqueness: customer_id",
+        "rule": "Key Uniqueness: contact_id",
         "result": key_status,
         "detail": f"Total={total}, Distinct={distinct_keys}"
     })

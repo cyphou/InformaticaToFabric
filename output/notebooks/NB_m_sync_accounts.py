@@ -5,12 +5,12 @@
 # METADATA_END
 
 # CELL 1 — Metadata & Parameters
-# Notebook: NB_M_LOAD_CUSTOMERS
-# Migrated from: Informatica mapping M_LOAD_CUSTOMERS
+# Notebook: NB_m_sync_accounts
+# Migrated from: Informatica mapping m_sync_accounts
 # Complexity: Simple
-# Sources: Oracle.SALES.CUSTOMERS
-# Targets: DIM_CUSTOMER
-# Flow: SQ → EXP → FIL
+# Sources: src_accounts
+# Targets: tgt_accounts
+# Flow: EXP
 # Generated: 2026-03-23
 
 from pyspark.sql.functions import (
@@ -23,35 +23,28 @@ from delta.tables import DeltaTable
 # COMMAND ----------
 
 # CELL 2 — Source Read
-# --- Source: Oracle.SALES.CUSTOMERS ---
-# Oracle: SELECT * FROM SALES.CUSTOMERS
-df_source = spark.table("bronze.customers")
+# --- Source: src_accounts ---
+# Oracle: SELECT * FROM src_accounts
+df_source = spark.table("bronze.src_accounts")
 
 # COMMAND ----------
 
 # CELL 3 — Transformation: EXP
 # --- Expression transformation ---
 # Map Informatica ports to PySpark withColumn / select expressions
-df = df.withColumn(
+df = df_source.withColumn(
     "ETL_LOAD_DATE", current_timestamp()
 )
 # TODO: Add derived column expressions from mapping ports
 # COMMAND ----------
 
-# CELL 4 — Transformation: FIL
-# --- Filter transformation ---
-df = df.filter(
-    col("STATUS") != "INACTIVE"  # TODO: Replace with actual filter condition
-)
-# COMMAND ----------
-
-# CELL 5 — Target Write
-# --- Target: DIM_CUSTOMER → silver.dim_customer ---
+# CELL 4 — Target Write
+# --- Target: tgt_accounts → silver.tgt_accounts ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.dim_customer")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.tgt_accounts")
 
 # COMMAND ----------
 
-# CELL 6 — Audit Log
-print(f"Notebook NB_M_LOAD_CUSTOMERS completed successfully")
+# CELL 5 — Audit Log
+print(f"Notebook NB_m_sync_accounts completed successfully")
 print(f"Rows written: {df.count()}")

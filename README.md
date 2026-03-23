@@ -34,11 +34,24 @@
 
 ## ⚡ Quick Start
 
+### Agent-driven (Copilot Chat)
 ```
 1. Place Informatica XML exports in input/
 2. Invoke: @migration-orchestrator start migration
 3. Review generated artifacts in output/
 4. Deploy to Microsoft Fabric
+```
+
+### Script-driven (Command Line)
+```bash
+# Run the full pipeline (assessment → SQL → notebooks → pipelines → validation)
+python run_migration.py
+
+# Skip assessment if already done
+python run_migration.py --skip 0
+
+# Run only specific phases (e.g., SQL + notebooks)
+python run_migration.py --only 1 2
 ```
 
 > [!TIP]
@@ -412,8 +425,14 @@ InformaticaToDBFabric/
 │   ├── pipeline_template.json           #   Base pipeline JSON
 │   └── validation_template.py           #   Base validation notebook
 ├── run_assessment.py                    # 🔍 Assessment script (Phase 0)
+├── run_sql_migration.py                 # 🗄️ SQL conversion script (Phase 1)
+├── run_notebook_migration.py            # 📓 Notebook generation script (Phase 2)
+├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 3)
+├── run_validation.py                    # ✅ Validation generation script (Phase 4)
+├── run_migration.py                     # 🎯 End-to-end orchestrator (all phases)
+├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (7 sprints)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (8 sprints)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis (82% coverage)
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -549,7 +568,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [README.md](README.md) | Project overview (this file) |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis (82% coverage) |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (7/7 sprints complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (8/8 sprints complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
 

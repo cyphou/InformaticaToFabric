@@ -1,7 +1,7 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-7%2F7%20complete-27AE60?style=for-the-badge" alt="7/7 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-8%2F8%20complete-27AE60?style=for-the-badge" alt="8/8 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
 </p>
@@ -20,6 +20,7 @@
 - [Sprint 5 — Polish, Hardening & Documentation](#sprint-5--polish-hardening--documentation)
 - [Sprint 6 — Critical Gap Remediation](#sprint-6--critical-gap-remediation)
 - [Sprint 7 — Extended Coverage](#sprint-7--extended-coverage)
+- [Sprint 8 — Executable Migration Engine](#sprint-8--executable-migration-engine)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -279,6 +280,28 @@ gantt
 
 ---
 
+## Sprint 8 — Executable Migration Engine ✅
+
+**Goal:** Build runnable Python scripts that execute each migration phase end-to-end, converting agent knowledge into automated tooling with a single-command orchestrator.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 8.1 | SQL Migration script | SQL | `run_sql_migration.py` | ✅ 30+ Oracle regex rules (NVL→COALESCE, DECODE→CASE, date formats, types) + 20+ SQL Server rules (ISNULL, CHARINDEX, TOP→LIMIT); converts standalone SQL files + mapping SQL overrides |
+| 8.2 | Notebook Migration script | Notebook | `run_notebook_migration.py` | ✅ Generates PySpark notebook per mapping with 18 transformation-type handlers (EXP, FIL, AGG, JNR, LKP, RTR, UPD, RNK, SRT, UNI, NRM, SEQ, SP, SQLT, DM, WSC, MPLT + unknown); metadata/imports, source read, target write, audit cells |
+| 8.3 | Pipeline Migration script | Pipeline | `run_pipeline_migration.py` | ✅ Generates Fabric Pipeline JSON per workflow with TridentNotebook activities, IfCondition for decisions, WebActivity for emails, dependsOn chains, pipeline parameters |
+| 8.4 | Validation Generation script | Validation | `run_validation.py` | ✅ Generates validation notebook per target with L1 (row count), L2 (checksum), L3 (NULL+uniqueness) checks; generates test_matrix.md summary |
+| 8.5 | End-to-End Orchestrator | Orchestrator | `run_migration.py` | ✅ 5-phase orchestrator (assessment→SQL→notebooks→pipelines→validation) with `--skip` and `--only` flags, sys.argv isolation, SystemExit handling, phase timing, migration_summary.md generation |
+
+**Sprint 8 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `run_migration.py --skip 0` runs all 4 conversion phases successfully
+- ✅ SQL: 3 standalone + 2 override files converted (NVL→COALESCE, TO_DATE date format, etc.)
+- ✅ Notebooks: 6 notebooks generated (Simple through Complex mappings)
+- ✅ Pipelines: 1 pipeline generated with 4 activities
+- ✅ Validation: 7 validation notebooks + test_matrix.md generated
+- ✅ migration_summary.md generated with phase results table
+
+---
+
 ## Agent Development Plans
 
 ### 🔍 Assessment Agent — Development Roadmap
@@ -522,6 +545,7 @@ pie title Sprint Effort Distribution
     "Sprint 5 — Hardening" : 10
     "Sprint 6 — Gap Remediation" : 15
     "Sprint 7 — Extended Coverage" : 10
+    "Sprint 8 — Migration Engine" : 20
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -533,3 +557,4 @@ pie title Sprint Effort Distribution
 | **5** | All (hardening) | Edge case handling, docs, final QA | ✅ Complete |
 | **6** | Assessment, Notebook, Pipeline, SQL | Mapplet expansion, analytics, param files, templates | ✅ Complete |
 | **7** | Assessment, Notebook, Pipeline, SQL | IICS parser, SQL Server patterns, WSC/DM, PL/SQL split | ✅ Complete |
+| **8** | All (executable scripts) | `run_sql_migration.py`, `run_notebook_migration.py`, `run_pipeline_migration.py`, `run_validation.py`, `run_migration.py` | ✅ Complete |

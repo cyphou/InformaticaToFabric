@@ -1,0 +1,403 @@
+"""
+Validation Generation — Phase 4
+Reads inventory.json and generates validation notebooks for each
+migrated mapping, plus a test_matrix.md summary.
+
+Outputs:
+  output/validation/VAL_<target_table>.py — one validation per target
+  output/validation/test_matrix.md         — overall test matrix
+
+Usage:
+    python run_validation.py
+    python run_validation.py path/to/inventory.json
+"""
+
+import json
+import sys
+from pathlib import Path
+from datetime import datetime, timezone
+
+WORKSPACE = Path(__file__).resolve().parent
+OUTPUT_DIR = WORKSPACE / "output" / "validation"
+INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+SEP = "# COMMAND ----------\n\n"
+
+
+def _infer_target_table(target_name, transformations):
+    """Infer lakehouse tier from target name and transformation types."""
+    name_lower = target_name.lower()
+    if any(x in name_lower for x in ("agg", "gold", "rpt", "kpi", "summary")):
+        return f"gold.{name_lower}"
+    elif any(x in name_lower for x in ("dim", "fact", "silver", "stg")):
+        return f"silver.{name_lower}"
+    else:
+        return f"silver.{name_lower}"
+
+
+def _infer_key_columns(target_name):
+    """Infer likely key columns from target table name."""
+    name_lower = target_name.lower()
+    # Common patterns
+    if "customer" in name_lower:
+        return ["customer_id"]
+    elif "employee" in name_lower:
+        return ["employee_id"]
+    elif "order" in name_lower:
+        return ["order_id"]
+    elif "product" in name_lower:
+        return ["product_id"]
+    elif "inventory" in name_lower:
+        return ["inventory_id"]
+    elif "account" in name_lower:
+        return ["account_id"]
+    elif "contact" in name_lower:
+        return ["contact_id"]
+    else:
+        # Generic fallback
+        base = name_lower.replace("dim_", "").replace("fact_", "").replace("agg_", "")
+        return [f"{base}_id"]
+
+
+def _source_connection(sources):
+    """Determine source connection type."""
+    for src in sources:
+        if src.startswith("Oracle."):
+            return "oracle"
+        elif src.startswith("SqlServer."):
+            return "sqlserver"
+    return "oracle"
+
+
+def generate_validation(mapping, source_type):
+    """Generate a validation notebook for a mapping's targets."""
+    mapping_name = mapping["name"]
+    sources = mapping.get("sources", [])
+    targets = mapping.get("targets", [])
+    transformations = mapping.get("transformations", [])
+
+    notebooks = []
+
+    for target in targets:
+        target_table = _infer_target_table(target, transformations)
+        key_cols = _infer_key_columns(target)
+        safe_name = target.upper().replace(" ", "_")
+
+        cells = []
+
+        # Header
+        cells.append(
+            f"# Databricks notebook source / Fabric Notebook\n"
+            f"# =============================================================================\n"
+            f"# Validation Notebook: VAL_{safe_name}\n"
+            f"# Source: {', '.join(sources)} → Target: {target_table}\n"
+            f"# Mapping: {mapping_name}\n"
+            f"# =============================================================================\n"
+        )
+
+        # Cell 1: Configuration
+        cell1 = (
+            f"# Cell 1: Configuration\n"
+            f"import json\n"
+            f"from pyspark.sql.functions import (\n"
+            f"    md5, concat_ws, col, count, lit, when, isnull,\n"
+            f"    sum as spark_sum, min as spark_min, max as spark_max\n"
+            f")\n"
+            f"from datetime import datetime\n"
+            f"\n"
+            f'mapping_name = "{mapping_name}"\n'
+            f'target_table = "{target_table}"\n'
+            f"\n"
+        )
+
+        # Source JDBC config
+        if source_type == "oracle":
+            source_table = sources[0].split(".")[-1] if sources else target
+            schema = sources[0].split(".")[1] if sources and len(sources[0].split(".")) > 2 else "SCHEMA"
+            cell1 += (
+                f"# Oracle JDBC — update for your environment\n"
+                f'source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"\n'
+                f"source_jdbc_properties = {{\n"
+                f'    "user": "<username>",\n'
+                f'    "password": "<password>",  # Use Key Vault in production\n'
+                f'    "driver": "oracle.jdbc.driver.OracleDriver"\n'
+                f"}}\n"
+                f'source_table = "{schema}.{source_table}"\n'
+            )
+        elif source_type == "sqlserver":
+            source_table = sources[0].split(".")[-1] if sources else target
+            cell1 += (
+                f"# SQL Server JDBC — update for your environment\n"
+                f'source_jdbc_url = "jdbc:sqlserver://<host>:1433;databaseName=<db>"\n'
+                f"source_jdbc_properties = {{\n"
+                f'    "user": "<username>",\n'
+                f'    "password": "<password>",  # Use Key Vault in production\n'
+                f'    "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver"\n'
+                f"}}\n"
+                f'source_table = "{source_table}"\n'
+            )
+
+        cell1 += (
+            f"\n"
+            f"key_columns = {key_cols}\n"
+            f"checksum_columns = key_columns  # TODO: expand with all validated columns\n"
+            f"nullable_not_allowed = key_columns  # TODO: add mandatory columns\n"
+            f"\n"
+            f"run_timestamp = datetime.utcnow().isoformat()\n"
+            f"results = []\n"
+        )
+        cells.append(cell1)
+
+        # Cell 2: Row Count
+        cell2 = (
+            f"# Cell 2: Level 1 — Row Count Validation\n"
+            f"try:\n"
+            f"    df_source = spark.read.jdbc(\n"
+            f"        url=source_jdbc_url,\n"
+            f"        table=f\"({{source_table}})\",\n"
+            f"        properties=source_jdbc_properties\n"
+            f"    )\n"
+            f"    source_count = df_source.count()\n"
+            f"except Exception as e:\n"
+            f"    source_count = None\n"
+            f'    print(f"WARNING: Could not read source — {{e}}")\n'
+            f"\n"
+            f"try:\n"
+            f"    df_target = spark.table(target_table)\n"
+            f"    target_count = df_target.count()\n"
+            f"except Exception as e:\n"
+            f"    target_count = None\n"
+            f'    print(f"WARNING: Could not read target — {{e}}")\n'
+            f"\n"
+            f"if source_count is None or target_count is None:\n"
+            f'    row_count_result = "SKIPPED"\n'
+            f'    row_count_detail = "Connection failure — see warnings above"\n'
+            f"elif source_count == target_count:\n"
+            f'    row_count_result = "PASS"\n'
+            f'    row_count_detail = f"Source={{source_count}}, Target={{target_count}}"\n'
+            f"else:\n"
+            f'    row_count_result = "FAIL"\n'
+            f'    row_count_detail = f"Source={{source_count}}, Target={{target_count}}, Delta={{target_count - source_count}}"\n'
+            f"\n"
+            f"results.append({{\n"
+            f'    "check": "Row Count", "level": 1,\n'
+            f'    "result": row_count_result, "detail": row_count_detail\n'
+            f"}})\n"
+            f'print(f"[Level 1] Row Count: {{row_count_result}} — {{row_count_detail}}")\n'
+        )
+        cells.append(cell2)
+
+        # Cell 3: Checksum
+        cell3 = (
+            f"# Cell 3: Level 2 — Column-Level Checksum Validation\n"
+            f"try:\n"
+            f"    source_hash = (\n"
+            f"        df_source\n"
+            f'        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
+            f'        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
+            f'        .collect()[0]["checksum"]\n'
+            f"    )\n"
+            f"    target_hash = (\n"
+            f"        df_target\n"
+            f'        .withColumn("row_hash", md5(concat_ws("||", *[col(c).cast("string") for c in checksum_columns])))\n'
+            f'        .selectExpr("sum(cast(conv(substring(row_hash, 1, 8), 16, 10) as bigint)) as checksum")\n'
+            f'        .collect()[0]["checksum"]\n'
+            f"    )\n"
+            f"    if source_hash == target_hash:\n"
+            f'        checksum_result = "PASS"\n'
+            f'        checksum_detail = f"Checksum match: {{source_hash}}"\n'
+            f"    else:\n"
+            f'        checksum_result = "FAIL"\n'
+            f'        checksum_detail = f"Source={{source_hash}}, Target={{target_hash}}"\n'
+            f"except Exception as e:\n"
+            f'    checksum_result = "SKIPPED"\n'
+            f'    checksum_detail = f"Error computing checksums — {{e}}"\n'
+            f"\n"
+            f"results.append({{\n"
+            f'    "check": "Column Checksum", "level": 2,\n'
+            f'    "result": checksum_result, "detail": checksum_detail\n'
+            f"}})\n"
+            f'print(f"[Level 2] Column Checksum: {{checksum_result}} — {{checksum_detail}}")\n'
+        )
+        cells.append(cell3)
+
+        # Cell 4: DQ rules — NULL + duplicate checks
+        key_col_0 = key_cols[0] if key_cols else "id"
+        cell4 = (
+            f"# Cell 4: Level 3 — Data Quality Rules\n"
+            f"dq_checks = []\n"
+            f"\n"
+            f"# NULL checks on mandatory columns\n"
+            f"try:\n"
+            f"    for col_name in nullable_not_allowed:\n"
+            f"        null_count = df_target.filter(isnull(col(col_name))).count()\n"
+            f'        status = "PASS" if null_count == 0 else "FAIL"\n'
+            f"        dq_checks.append({{\n"
+            f'            "rule": f"NOT NULL: {{col_name}}",\n'
+            f'            "result": status,\n'
+            f'            "detail": f"Null count = {{null_count}}"\n'
+            f"        }})\n"
+            f"except Exception as e:\n"
+            f'    dq_checks.append({{"rule": "NOT NULL checks", "result": "SKIPPED", "detail": str(e)}})\n'
+            f"\n"
+            f"# Key uniqueness\n"
+            f"try:\n"
+            f"    total = df_target.count()\n"
+            f'    distinct_keys = df_target.select("{key_col_0}").distinct().count()\n'
+            f'    key_status = "PASS" if total == distinct_keys else "FAIL"\n'
+            f"    dq_checks.append({{\n"
+            f'        "rule": "Key Uniqueness: {key_col_0}",\n'
+            f'        "result": key_status,\n'
+            f'        "detail": f"Total={{total}}, Distinct={{distinct_keys}}"\n'
+            f"    }})\n"
+            f"except Exception as e:\n"
+            f'    dq_checks.append({{"rule": "Key Uniqueness", "result": "SKIPPED", "detail": str(e)}})\n'
+            f"\n"
+            f'dq_overall = "PASS" if all(c["result"] == "PASS" for c in dq_checks) else (\n'
+            f'    "SKIPPED" if all(c["result"] == "SKIPPED" for c in dq_checks) else "FAIL"\n'
+            f")\n"
+            f'dq_detail = "; ".join([f\'{{c["rule"]}}={{c["result"]}}\' for c in dq_checks])\n'
+            f"\n"
+            f"results.append({{\n"
+            f'    "check": "Data Quality", "level": 3,\n'
+            f'    "result": dq_overall, "detail": dq_detail\n'
+            f"}})\n"
+            f'print(f"[Level 3] Data Quality: {{dq_overall}}")\n'
+            f"for c in dq_checks:\n"
+            f'    print(f\'  - {{c["rule"]}}: {{c["result"]}} ({{c["detail"]}})\')\n'
+        )
+        cells.append(cell4)
+
+        # Cell 5: Summary
+        cell5 = (
+            f"# Cell 5: Summary Report\n"
+            f'overall = "PASS" if all(r["result"] == "PASS" for r in results) else (\n'
+            f'    "FAIL" if any(r["result"] == "FAIL" for r in results) else "SKIPPED"\n'
+            f")\n"
+            f"\n"
+            f"summary = {{\n"
+            f'    "mapping": mapping_name,\n'
+            f'    "target_table": target_table,\n'
+            f'    "run_timestamp": run_timestamp,\n'
+            f'    "checks": results,\n'
+            f'    "overall": overall\n'
+            f"}}\n"
+            f"\n"
+            f'print("=" * 60)\n'
+            f'print(f"VALIDATION SUMMARY — {{mapping_name}} → {{target_table}}")\n'
+            f'print("=" * 60)\n'
+            f"print(json.dumps(summary, indent=2, default=str))\n"
+            f'print("=" * 60)\n'
+            f'print(f"OVERALL RESULT: {{overall}}")\n'
+            f'print("=" * 60)\n'
+            f"\n"
+            f"df_summary = spark.createDataFrame(\n"
+            f'    [(r["check"], r["level"], r["result"], r["detail"]) for r in results],\n'
+            f'    ["check_name", "level", "result", "detail"]\n'
+            f")\n"
+            f"df_summary.show(truncate=False)\n"
+        )
+        cells.append(cell5)
+
+        # Assemble notebook
+        content = cells[0] + "\n" + SEP + (SEP).join(cells[1:])
+        notebooks.append((safe_name, content))
+
+    return notebooks
+
+
+def generate_test_matrix(inventory, generated_files):
+    """Generate a test_matrix.md summary."""
+    lines = [
+        "# Test Matrix — Informatica to Fabric Validation",
+        "",
+        f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+        "",
+        "## Validation Notebooks",
+        "",
+        "| # | Mapping | Target Table | Validation File | Levels |",
+        "|---|---------|-------------|-----------------|--------|",
+    ]
+
+    for i, (mapping_name, target, filename) in enumerate(generated_files, 1):
+        lines.append(
+            f"| {i} | {mapping_name} | {target} | `{filename}` | L1–L3 |"
+        )
+
+    lines.extend([
+        "",
+        "## Validation Levels",
+        "",
+        "| Level | Check | Description |",
+        "|-------|-------|-------------|",
+        "| L1 | Row Count | Source count == Target count |",
+        "| L2 | Checksum | MD5-based column hash comparison |",
+        "| L3 | Data Quality | NULL checks, key uniqueness |",
+        "",
+        "## How to Run",
+        "",
+        "1. Upload validation notebooks to a Fabric workspace",
+        "2. Configure source JDBC connection strings in Cell 1",
+        "3. Run all cells — review OVERALL RESULT in final cell",
+        "4. Address any FAIL results before sign-off",
+        "",
+        "## Notes",
+        "",
+        "- `SKIPPED` results indicate a connection failure — not a data issue",
+        "- Expand `checksum_columns` and `nullable_not_allowed` in Cell 1 for deeper coverage",
+        "- For aggregate targets (gold layer), row count comparison may differ by design",
+        ""
+    ])
+
+    return "\n".join(lines)
+
+
+def main():
+    inv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else INVENTORY_PATH
+    if not inv_path.exists():
+        print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
+        sys.exit(1)
+
+    with open(inv_path, "r", encoding="utf-8") as f:
+        inv = json.load(f)
+
+    print("=" * 60)
+    print("  Validation Generation — Phase 4")
+    print("=" * 60)
+    print()
+
+    mappings = inv.get("mappings", [])
+    generated_files = []
+    generated = 0
+
+    for mapping in mappings:
+        source_type = _source_connection(mapping.get("sources", []))
+        notebooks = generate_validation(mapping, source_type)
+
+        for safe_name, content in notebooks:
+            filename = f"VAL_{safe_name}.py"
+            out_path = OUTPUT_DIR / filename
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            generated += 1
+            generated_files.append((mapping["name"], safe_name, filename))
+            print(f"  ✅ {filename}")
+
+    # Generate test matrix
+    matrix_content = generate_test_matrix(inv, generated_files)
+    matrix_path = OUTPUT_DIR / "test_matrix.md"
+    with open(matrix_path, "w", encoding="utf-8") as f:
+        f.write(matrix_content)
+    print(f"\n  📋 test_matrix.md")
+
+    print()
+    print("=" * 60)
+    print(f"  Validation notebooks generated: {generated}")
+    print(f"  Output: {OUTPUT_DIR}")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()

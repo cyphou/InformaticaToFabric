@@ -1,0 +1,24 @@
+-- ============================================================================
+-- SQL Overrides for mapping: M_LOAD_EMPLOYEES
+-- DB Type: ORACLE → Spark SQL
+-- Date: 2026-03-23
+-- Agent: sql-migration (automated)
+-- ============================================================================
+
+-- Override #1: Sql Query
+-- Original:
+--   SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, DEPARTMENT, MONTHLY_SALARY, HIRE_DATE, STATUS FROM HR.EMPLOYEES WHERE STATUS = 'ACTIVE' AND HIRE_DATE >= ADD_MONTHS(SYSDATE, -120)
+-- Converted:
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, DEPARTMENT, MONTHLY_SALARY, HIRE_DATE, STATUS FROM HR.EMPLOYEES WHERE STATUS = 'ACTIVE' AND HIRE_DATE >= ADD_MONTHS(current_timestamp(), -120)
+
+-- Override #2: Lookup Sql Override
+-- Original:
+--   SELECT DEPT_NAME, MANAGER_NAME FROM HR.DEPARTMENTS WHERE ACTIVE = 'Y'
+-- Converted:
+SELECT DEPT_NAME, MANAGER_NAME FROM HR.DEPARTMENTS WHERE ACTIVE = 'Y'
+
+-- Override #3: Sql Query
+-- Original:
+--   SELECT EMPLOYEE_ID, DENSE_RANK() OVER (PARTITION BY DEPARTMENT ORDER BY ANNUAL_SALARY DESC) AS DEPT_SALARY_RANK FROM HR.EMPLOYEES
+-- Converted:
+SELECT EMPLOYEE_ID, DENSE_RANK() OVER (PARTITION BY DEPARTMENT ORDER BY ANNUAL_SALARY DESC) AS DEPT_SALARY_RANK FROM HR.EMPLOYEES

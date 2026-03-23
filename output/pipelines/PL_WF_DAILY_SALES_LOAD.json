@@ -1,11 +1,11 @@
 {
   "name": "PL_WF_DAILY_SALES_LOAD",
   "properties": {
-    "description": "Migrated from Informatica workflow WF_DAILY_SALES_LOAD. Original schedule: Daily at 02:00 UTC. Loads customers, orders, validates order counts, and conditionally upserts inventory.",
+    "description": "Migrated from Informatica workflow WF_DAILY_SALES_LOAD. Original schedule: SCHED_DAILY_0200.",
     "activities": [
       {
         "name": "NB_M_LOAD_CUSTOMERS",
-        "description": "Migrated from Informatica session S_M_LOAD_CUSTOMERS. Loads customer dimension data.",
+        "description": "Migrated from Informatica session S_M_LOAD_CUSTOMERS.",
         "type": "TridentNotebook",
         "dependsOn": [],
         "policy": {
@@ -38,7 +38,7 @@
       },
       {
         "name": "NB_M_LOAD_ORDERS",
-        "description": "Migrated from Informatica session S_M_LOAD_ORDERS. Pre SQL and Post SQL handled within the notebook. Max error threshold: 5%. Parameter $$LOAD_DATE mapped to pipeline parameter load_date.",
+        "description": "Migrated from Informatica session S_M_LOAD_ORDERS.",
         "type": "TridentNotebook",
         "dependsOn": [
           {
@@ -77,40 +77,8 @@
         }
       },
       {
-        "name": "EMAIL_FAILURE_CUSTOMERS",
-        "description": "Migrated from Informatica EMAIL_FAILURE task. Triggered when S_M_LOAD_CUSTOMERS fails.",
-        "type": "WebActivity",
-        "dependsOn": [
-          {
-            "activity": "NB_M_LOAD_CUSTOMERS",
-            "dependencyConditions": [
-              "Failed"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.00:10:00",
-          "retry": 1,
-          "retryIntervalInSeconds": 30
-        },
-        "typeProperties": {
-          "url": {
-            "value": "@pipeline().parameters.alert_webhook_url",
-            "type": "Expression"
-          },
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
-            "value": "@json(concat('{\"pipeline\":\"PL_WF_DAILY_SALES_LOAD\",\"activity\":\"NB_M_LOAD_CUSTOMERS\",\"status\":\"Failed\",\"load_date\":\"', pipeline().parameters.load_date, '\",\"runId\":\"', pipeline().RunId, '\"}'))",
-            "type": "Expression"
-          }
-        }
-      },
-      {
         "name": "DEC_CHECK_ORDERS",
-        "description": "Migrated from Informatica Decision task DEC_CHECK_ORDERS. Checks if NB_M_LOAD_ORDERS exit value > 0.",
+        "description": "Migrated from Informatica Decision task DEC_CHECK_ORDERS.",
         "type": "IfCondition",
         "dependsOn": [
           {
@@ -128,13 +96,15 @@
           "ifTrueActivities": [
             {
               "name": "NB_M_UPSERT_INVENTORY",
-              "description": "Migrated from Informatica session S_M_UPSERT_INVENTORY. Upserts inventory data.",
+              "description": "Migrated from Informatica session S_M_UPSERT_INVENTORY.",
               "type": "TridentNotebook",
               "dependsOn": [],
               "policy": {
                 "timeout": "0.02:00:00",
                 "retry": 2,
-                "retryIntervalInSeconds": 60
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
               },
               "typeProperties": {
                 "notebookId": "",
@@ -160,57 +130,24 @@
           ],
           "ifFalseActivities": [
             {
-              "name": "Set_Skip_Reason",
-              "description": "Record why inventory upsert was skipped.",
+              "name": "Set_Skip_DEC_CHECK_ORDERS",
               "type": "SetVariable",
               "dependsOn": [],
               "typeProperties": {
                 "variableName": "skip_reason",
-                "value": "DEC_CHECK_ORDERS evaluated FALSE - 0 rows loaded. Inventory upsert skipped."
-              }
-            },
-            {
-              "name": "EMAIL_FAILURE_DECISION",
-              "description": "Triggered when DEC_CHECK_ORDERS evaluates FALSE.",
-              "type": "WebActivity",
-              "dependsOn": [
-                {
-                  "activity": "Set_Skip_Reason",
-                  "dependencyConditions": [
-                    "Succeeded"
-                  ]
-                }
-              ],
-              "policy": {
-                "timeout": "0.00:10:00",
-                "retry": 1,
-                "retryIntervalInSeconds": 30
-              },
-              "typeProperties": {
-                "url": {
-                  "value": "@pipeline().parameters.alert_webhook_url",
-                  "type": "Expression"
-                },
-                "method": "POST",
-                "headers": {
-                  "Content-Type": "application/json"
-                },
-                "body": {
-                  "value": "@json(concat('{\"pipeline\":\"PL_WF_DAILY_SALES_LOAD\",\"activity\":\"DEC_CHECK_ORDERS\",\"status\":\"DecisionFalse\",\"load_date\":\"', pipeline().parameters.load_date, '\",\"reason\":\"', variables('skip_reason'), '\",\"runId\":\"', pipeline().RunId, '\"}'))",
-                  "type": "Expression"
-                }
+                "value": "DEC_CHECK_ORDERS evaluated FALSE — downstream skipped."
               }
             }
           ]
         }
       },
       {
-        "name": "EMAIL_FAILURE_ORDERS",
-        "description": "Migrated from Informatica EMAIL_FAILURE task. Triggered when S_M_LOAD_ORDERS fails.",
+        "name": "EMAIL_FAILURE",
+        "description": "Migrated from Informatica EMAIL_FAILURE. Triggered on Failed.",
         "type": "WebActivity",
         "dependsOn": [
           {
-            "activity": "NB_M_LOAD_ORDERS",
+            "activity": "NB_M_LOAD_CUSTOMERS",
             "dependencyConditions": [
               "Failed"
             ]
@@ -231,7 +168,7 @@
             "Content-Type": "application/json"
           },
           "body": {
-            "value": "@json(concat('{\"pipeline\":\"PL_WF_DAILY_SALES_LOAD\",\"activity\":\"NB_M_LOAD_ORDERS\",\"status\":\"Failed\",\"load_date\":\"', pipeline().parameters.load_date, '\",\"runId\":\"', pipeline().RunId, '\"}'))",
+            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"NB_M_LOAD_CUSTOMERS\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
             "type": "Expression"
           }
         }
@@ -240,11 +177,11 @@
     "parameters": {
       "load_date": {
         "type": "string",
-        "defaultValue": ""
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
       },
       "alert_webhook_url": {
         "type": "string",
-        "defaultValue": ""
+        "defaultValue": "https://your-logic-app-webhook-url"
       }
     },
     "variables": {
@@ -254,14 +191,9 @@
       }
     },
     "annotations": [
-      "source:informatica",
-      "workflow:WF_DAILY_SALES_LOAD",
-      "agent:pipeline-migration",
-      "schedule:daily-0200-utc"
-    ],
-    "folder": {
-      "name": "Migrated/InformaticaWorkflows"
-    }
-  },
-  "type": "Microsoft.Fabric/workspaces/dataPipelines"
+      "MigratedFromInformatica",
+      "OriginalWorkflow:WF_DAILY_SALES_LOAD",
+      "OriginalSchedule:SCHED_DAILY_0200"
+    ]
+  }
 }

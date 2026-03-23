@@ -1,0 +1,293 @@
+"""
+Pipeline Migration — Phase 3
+Reads inventory.json and generates Fabric Data Pipeline JSON definitions
+for each Informatica workflow.
+
+Outputs:
+  output/pipelines/PL_<workflow_name>.json — one pipeline per workflow
+
+Usage:
+    python run_pipeline_migration.py
+    python run_pipeline_migration.py path/to/inventory.json
+"""
+
+import json
+import sys
+from pathlib import Path
+from datetime import datetime, timezone
+
+WORKSPACE = Path(__file__).resolve().parent
+OUTPUT_DIR = WORKSPACE / "output" / "pipelines"
+INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _notebook_activity(session_name, mapping_name, depends_on, params):
+    """Generate a TridentNotebook activity JSON."""
+    dep_list = []
+    for dep in depends_on:
+        if dep == "Start":
+            continue
+        dep_list.append({
+            "activity": dep,
+            "dependencyConditions": ["Succeeded"]
+        })
+
+    activity = {
+        "name": f"NB_{mapping_name}" if mapping_name else session_name,
+        "description": f"Migrated from Informatica session {session_name}.",
+        "type": "TridentNotebook",
+        "dependsOn": dep_list,
+        "policy": {
+            "timeout": "0.02:00:00",
+            "retry": 2,
+            "retryIntervalInSeconds": 60,
+            "secureOutput": False,
+            "secureInput": False
+        },
+        "typeProperties": {
+            "notebookId": "",
+            "notebook": {
+                "referenceName": f"NB_{mapping_name}" if mapping_name else f"NB_{session_name}",
+                "type": "NotebookReference"
+            },
+            "parameters": {},
+            "sparkPool": {
+                "referenceName": "default",
+                "type": "BigDataPoolReference"
+            }
+        }
+    }
+
+    # Add parameters from mapping
+    if params:
+        for p in params:
+            param_name = p.replace("$$", "").lower()
+            activity["typeProperties"]["parameters"][param_name] = {
+                "value": {"value": f"@pipeline().parameters.{param_name}", "type": "Expression"},
+                "type": "string"
+            }
+    else:
+        # Default load_date parameter
+        activity["typeProperties"]["parameters"]["load_date"] = {
+            "value": {"value": "@pipeline().parameters.load_date", "type": "Expression"},
+            "type": "string"
+        }
+
+    return activity
+
+
+def _email_activity(email_name, trigger_activity, trigger_condition="Failed"):
+    """Generate a WebActivity for email notification."""
+    return {
+        "name": email_name,
+        "description": f"Migrated from Informatica {email_name}. Triggered on {trigger_condition}.",
+        "type": "WebActivity",
+        "dependsOn": [{
+            "activity": trigger_activity,
+            "dependencyConditions": [trigger_condition]
+        }],
+        "policy": {
+            "timeout": "0.00:10:00",
+            "retry": 1,
+            "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+            "url": {"value": "@pipeline().parameters.alert_webhook_url", "type": "Expression"},
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": {
+                "value": f"@json(concat('{{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"{trigger_activity}\",\"status\":\"{trigger_condition}\",\"runId\":\"', pipeline().RunId, '\"}}'))",
+                "type": "Expression"
+            }
+        }
+    }
+
+
+def _decision_activity(decision_name, depends_on_activity, true_activities, false_activities=None):
+    """Generate an IfCondition for Informatica Decision tasks."""
+    activity = {
+        "name": decision_name,
+        "description": f"Migrated from Informatica Decision task {decision_name}.",
+        "type": "IfCondition",
+        "dependsOn": [{
+            "activity": depends_on_activity,
+            "dependencyConditions": ["Succeeded"]
+        }],
+        "typeProperties": {
+            "expression": {
+                "value": f"@greater(int(activity('{depends_on_activity}').output.status.Output.result.exitValue), 0)",
+                "type": "Expression"
+            },
+            "ifTrueActivities": true_activities,
+            "ifFalseActivities": false_activities or []
+        }
+    }
+    return activity
+
+
+def _resolve_activity_name(session_name, session_to_mapping):
+    """Resolve a session reference to an activity name."""
+    mapping = session_to_mapping.get(session_name)
+    if mapping:
+        return f"NB_{mapping}"
+    return session_name
+
+
+def generate_pipeline(workflow, mappings_by_name):
+    """Generate a complete Fabric Pipeline JSON for a workflow."""
+    name = workflow["name"]
+    sessions = workflow.get("sessions", [])
+    session_to_mapping = workflow.get("session_to_mapping", {})
+    dependencies = workflow.get("dependencies", {})
+    decision_tasks = workflow.get("decision_tasks", [])
+    email_tasks = workflow.get("email_tasks", [])
+    schedule = workflow.get("schedule", "")
+
+    activities = []
+    decision_set = set(decision_tasks)
+    email_set = set(email_tasks)
+
+    # Track which sessions are inside decision branches
+    sessions_in_decisions = set()
+
+    # 1. Build notebook activities for each session
+    for session in sessions:
+        mapping_name = session_to_mapping.get(session, session.replace("S_", ""))
+        mapping = mappings_by_name.get(mapping_name, {})
+        params = mapping.get("parameters", [])
+
+        # Resolve dependencies
+        deps = dependencies.get(session, [])
+        resolved_deps = []
+        for dep in deps:
+            if dep == "Start":
+                continue
+            elif dep in decision_set:
+                # This session depends on a decision — it will be nested inside
+                sessions_in_decisions.add(session)
+                continue
+            else:
+                resolved_deps.append(_resolve_activity_name(dep, session_to_mapping))
+
+        if session not in sessions_in_decisions:
+            activity = _notebook_activity(session, mapping_name, deps, params)
+            # Fix dependsOn to use resolved names
+            activity["dependsOn"] = [
+                {"activity": _resolve_activity_name(d, session_to_mapping), "dependencyConditions": ["Succeeded"]}
+                for d in deps if d != "Start"
+            ]
+            activities.append(activity)
+
+    # 2. Build decision activities
+    for dec_name in decision_tasks:
+        # Find what the decision depends on
+        dec_deps = dependencies.get(dec_name, [])
+        dep_activity = _resolve_activity_name(dec_deps[0], session_to_mapping) if dec_deps else ""
+
+        # Find sessions that depend on this decision
+        true_sessions = []
+        for session, deps in dependencies.items():
+            if dec_name in deps and session not in email_set:
+                mapping_name = session_to_mapping.get(session, session.replace("S_", ""))
+                mapping = mappings_by_name.get(mapping_name, {})
+                params = mapping.get("parameters", [])
+                true_sessions.append(_notebook_activity(session, mapping_name, [], params))
+
+        false_activities = [{
+            "name": f"Set_Skip_{dec_name}",
+            "type": "SetVariable",
+            "dependsOn": [],
+            "typeProperties": {
+                "variableName": "skip_reason",
+                "value": f"{dec_name} evaluated FALSE — downstream skipped."
+            }
+        }]
+
+        activities.append(_decision_activity(dec_name, dep_activity, true_sessions, false_activities))
+
+    # 3. Build email activities
+    for email_name in email_tasks:
+        email_deps = dependencies.get(email_name, [])
+        for dep in email_deps:
+            trigger = _resolve_activity_name(dep, session_to_mapping)
+            activities.append(_email_activity(email_name, trigger))
+            break  # One email activity per email task
+
+    # 4. Collect pipeline parameters
+    pipeline_params = {
+        "load_date": {
+            "type": "string",
+            "defaultValue": "@utcnow('yyyy-MM-dd')"
+        }
+    }
+    # Add alert webhook if there are email tasks
+    if email_tasks:
+        pipeline_params["alert_webhook_url"] = {
+            "type": "string",
+            "defaultValue": "https://your-logic-app-webhook-url"
+        }
+
+    # 5. Annotations
+    annotations = [
+        "MigratedFromInformatica",
+        f"OriginalWorkflow:{name}",
+    ]
+    if schedule:
+        annotations.append(f"OriginalSchedule:{schedule}")
+
+    pipeline = {
+        "name": f"PL_{name}",
+        "properties": {
+            "description": f"Migrated from Informatica workflow {name}. {f'Original schedule: {schedule}.' if schedule else ''}",
+            "activities": activities,
+            "parameters": pipeline_params,
+            "variables": {
+                "skip_reason": {"type": "String", "defaultValue": ""}
+            },
+            "annotations": annotations
+        }
+    }
+
+    return pipeline
+
+
+def main():
+    inv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else INVENTORY_PATH
+    if not inv_path.exists():
+        print(f"ERROR: {inv_path} not found. Run run_assessment.py first.")
+        sys.exit(1)
+
+    with open(inv_path, "r", encoding="utf-8") as f:
+        inv = json.load(f)
+
+    print("=" * 60)
+    print("  Pipeline Migration — Phase 3")
+    print("=" * 60)
+    print()
+
+    # Build mapping lookup
+    mappings_by_name = {m["name"]: m for m in inv.get("mappings", [])}
+    workflows = inv.get("workflows", [])
+    generated = 0
+
+    for wf in workflows:
+        pipeline = generate_pipeline(wf, mappings_by_name)
+        out_path = OUTPUT_DIR / f"PL_{wf['name']}.json"
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(pipeline, f, indent=2, ensure_ascii=False)
+        generated += 1
+
+        act_count = len(pipeline["properties"]["activities"])
+        print(f"  ✅ PL_{wf['name']}.json ({act_count} activities)")
+
+    print()
+    print("=" * 60)
+    print(f"  Pipelines generated: {generated}")
+    print(f"  Output: {OUTPUT_DIR}")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
