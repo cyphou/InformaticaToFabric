@@ -363,6 +363,7 @@ InformaticaToDBFabric/
 │   ├── pipeline_template.json           #   Base pipeline JSON
 │   └── validation_template.py           #   Base validation notebook
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
+├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
 ```
@@ -413,7 +414,7 @@ After generation, deploy artifacts to Fabric using:
 
 ---
 
-## � Generated Output Examples
+## 📸 Generated Output Examples
 
 Here are excerpts from actual generated artifacts to illustrate what the agents produce.
 
@@ -490,11 +491,12 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 
 ---
 
-## �📝 Documentation
+## 📝 Documentation
 
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview (this file) |
+| [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
