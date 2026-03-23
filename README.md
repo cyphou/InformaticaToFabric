@@ -12,10 +12,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/agents-6-0078D4?style=flat-square" alt="Agents"/>
+  <img src="https://img.shields.io/badge/coverage-82%25-27AE60?style=flat-square" alt="82% coverage"/>
   <img src="https://img.shields.io/badge/target-Microsoft%20Fabric-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric"/>
   <img src="https://img.shields.io/badge/notebooks-PySpark-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/pipelines-Data%20Factory-0078D4?style=flat-square" alt="Pipelines"/>
-  <img src="https://img.shields.io/badge/SQL-Oracle%20→%20SparkSQL-blue?style=flat-square" alt="SQL"/>
+  <img src="https://img.shields.io/badge/SQL-Oracle%20%2B%20SQL%20Server%20%E2%86%92%20SparkSQL-blue?style=flat-square" alt="SQL"/>
+  <img src="https://img.shields.io/badge/IICS-supported-27AE60?style=flat-square" alt="IICS"/>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"/>
 </p>
 
@@ -53,14 +55,14 @@
 
 ### 📓 Mappings → Notebooks
 Every Informatica mapping becomes a **Fabric Notebook** (PySpark):
-Source Qualifier, Expression, Filter, Aggregator, Joiner, Lookup, Router, Update Strategy, Rank, Union, Normalizer, Sequence Generator, Stored Procedure
+Source Qualifier, Expression, Filter, Aggregator, Joiner, Lookup, Router, Update Strategy, Rank, Union, Normalizer, Sorter, Sequence Generator, Stored Procedure, **Mapplets** (auto-expanded), **SQL Transformation**, **Data Masking**, **Web Service Consumer**
 
 </td>
 <td width="50%">
 
 ### ⚡ Workflows → Data Pipelines
 Every Informatica workflow becomes a **Fabric Data Pipeline** (JSON):
-Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email Tasks, Worklets, Link Conditions
+Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email Tasks, Worklets, Link Conditions, **Control Tasks** (Abort/Fail → Fail Activity), **IICS Taskflows**
 
 </td>
 </tr>
@@ -68,8 +70,8 @@ Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email
 <td>
 
 ### 🗄️ SQL → Spark SQL / T-SQL
-All Oracle SQL is converted to Fabric-compatible SQL:
-SQL overrides, stored procedures, pre/post-session SQL, Oracle functions (NVL, DECODE, SYSDATE, ROWNUM, CONNECT BY, (+) joins)
+All Oracle **and SQL Server** SQL is converted to Fabric-compatible SQL:
+SQL overrides, stored procedures, pre/post-session SQL, Oracle functions (NVL, DECODE, SYSDATE, ROWNUM, CONNECT BY, (+) joins), **Oracle analytics** (LEAD, LAG, DENSE_RANK, NTILE, ROW_NUMBER, FIRST_VALUE, LAST_VALUE), **SQL Server** (GETDATE, ISNULL, CROSS APPLY, STRING_AGG, TOP, etc.), **PL/SQL Package splitting**
 
 </td>
 <td>
@@ -84,6 +86,19 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 
 > [!NOTE]
 > The migration targets a **Medallion architecture** — Bronze (raw), Silver (cleansed), Gold (curated) — using **Delta Lake** on **OneLake**.
+
+### 🌐 Supported Sources
+
+| Source Platform | Assessment | SQL Conversion | Status |
+|---|---|---|---|
+| **Informatica PowerCenter** 9.x/10.x | ✅ Full XML parsing | ✅ Oracle + SQL Server | Production-ready |
+| **Informatica IICS** (Cloud) | ✅ Cloud Mapping parsing | ✅ Namespace-aware | New in Sprint 7 |
+| **Oracle** SQL overrides & stored procs | ✅ 43+ patterns | ✅ Full conversion | Production-ready |
+| **SQL Server** SQL overrides & stored procs | ✅ 18 patterns | ✅ T-SQL → Spark SQL | New in Sprint 7 |
+| **Flat files** (CSV, fixed-width) | ✅ Documented | ✅ `spark.read.csv()` patterns | New in Sprint 6 |
+| **Mapplets** (reusable fragments) | ✅ Parsed + expanded | ✅ Auto-resolved | New in Sprint 6 |
+| **Parameter files** (.prm) | ✅ Parsed | ✅ Key-value extraction | New in Sprint 6 |
+| **Connection objects** (XML) | ✅ Parsed | ✅ DB/FTP/generic | New in Sprint 7 |
 
 ---
 
@@ -279,11 +294,44 @@ sequenceDiagram
 | Rank | `ROWNUM` | `ROW_NUMBER() OVER(...)` |
 | Regex | `REGEXP_LIKE(s, p)` | `s RLIKE p` |
 | Agg | `LISTAGG(col, ',')` | `CONCAT_WS(',', COLLECT_LIST(col))` |
+| Analytics | `LEAD(col, 1) OVER(...)` | `LEAD(col, 1) OVER(...)` (1:1) |
+| Analytics | `LAG(col, 1) OVER(...)` | `LAG(col, 1) OVER(...)` (1:1) |
+| Analytics | `DENSE_RANK() OVER(...)` | `DENSE_RANK() OVER(...)` (1:1) |
+| Analytics | `NTILE(n) OVER(...)` | `NTILE(n) OVER(...)` (1:1) |
+| Analytics | `FIRST_VALUE(col) OVER(...)` | `FIRST_VALUE(col) OVER(...)` (1:1) |
+| Analytics | `LAST_VALUE(col) OVER(...)` | `LAST_VALUE(col) OVER(...)` (1:1) |
 | Join | `a.id = b.id(+)` | `a LEFT JOIN b ON a.id = b.id` |
 | Hierarchy | `CONNECT BY PRIOR` | Recursive CTE |
 | DML | `MERGE INTO` | Delta `MERGE INTO` |
 | Meta | `DUAL` table | Remove `FROM DUAL` |
 | Sequence | `SEQ.NEXTVAL` | `monotonically_increasing_id()` |
+
+</details>
+
+### SQL Server → Spark SQL Conversion
+
+<details>
+<summary><b>📋 SQL Server function mapping</b> (click to expand)</summary>
+
+| Category | SQL Server | Spark SQL |
+|----------|------------|----------|
+| Null | `ISNULL(a, b)` | `COALESCE(a, b)` |
+| Date | `GETDATE()` | `current_timestamp()` |
+| Date | `DATEADD(day, n, d)` | `date_add(d, n)` |
+| Date | `DATEDIFF(day, a, b)` | `datediff(b, a)` |
+| Date | `CONVERT(VARCHAR, d, 120)` | `date_format(d, 'yyyy-MM-dd HH:mm:ss')` |
+| Text | `LEN(s)` | `LENGTH(s)` |
+| Text | `CHARINDEX(sub, s)` | `INSTR(s, sub)` |
+| Text | `STUFF(s, start, len, new)` | `CONCAT(SUBSTRING(s,1,start-1), new, SUBSTRING(s,start+len))` |
+| Text | `STRING_AGG(col, ',')` | `CONCAT_WS(',', COLLECT_LIST(col))` |
+| Logic | `IIF(cond, a, b)` | `CASE WHEN cond THEN a ELSE b END` |
+| Type | `CAST(x AS NVARCHAR)` | `CAST(x AS STRING)` |
+| Limit | `TOP n` | `LIMIT n` |
+| Join | `CROSS APPLY` | `LATERAL VIEW` / `.explode()` |
+| Join | `OUTER APPLY` | `LEFT LATERAL VIEW` |
+| Table | `#temp_table` | `createOrReplaceTempView()` |
+| Identity | `@@IDENTITY` / `SCOPE_IDENTITY()` | `monotonically_increasing_id()` |
+| Error | `@@ERROR` / `TRY...CATCH` | Python try/except wrapper |
 
 </details>
 
@@ -304,6 +352,7 @@ sequenceDiagram
 | Assignment | Set Variable Activity |
 | Email Task | Web Activity (Logic App webhook) |
 | Worklet | Invoke Pipeline (child pipeline) |
+| Control Task (Abort/Fail) | Fail Activity |
 | Link — Unconditional | `dependsOn: Succeeded` |
 | Link — On Success | `dependsOn: Succeeded` |
 | Link — On Failure | `dependsOn: Failed` |
@@ -349,11 +398,11 @@ InformaticaToDBFabric/
 │       └── informatica-patterns.instructions.md  # 📘 Shared conversion rules
 ├── input/                               # 📂 Informatica exports (your files go here)
 │   ├── workflows/                       #   Workflow XML exports
-│   ├── mappings/                        #   Mapping XML exports
+│   ├── mappings/                        #   Mapping XML exports + .prm param files
 │   ├── sessions/                        #   Session XML exports
-│   └── sql/                             #   Oracle SQL / stored procedures
+│   └── sql/                             #   Oracle + SQL Server SQL / stored procs
 ├── output/                              # 📤 Generated Fabric artifacts
-│   ├── inventory/                       #   Assessment results (JSON/CSV)
+│   ├── inventory/                       #   Assessment results (JSON/Markdown)
 │   ├── notebooks/                       #   Generated Fabric Notebooks (.py)
 │   ├── pipelines/                       #   Generated Pipeline JSON
 │   ├── sql/                             #   Converted SQL files
@@ -362,8 +411,10 @@ InformaticaToDBFabric/
 │   ├── notebook_template.py             #   Base notebook structure
 │   ├── pipeline_template.json           #   Base pipeline JSON
 │   └── validation_template.py           #   Base validation notebook
+├── run_assessment.py                    # 🔍 Assessment script (Phase 0)
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (7 sprints)
+├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis (82% coverage)
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
 ```
@@ -496,8 +547,9 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview (this file) |
-| [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
+| [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis (82% coverage) |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (7/7 sprints complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
 
