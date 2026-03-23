@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 333 tests, 88% coverage.
+**Current status:** 443 tests, 92% coverage.
 
 ## Test Files
 

@@ -1,7 +1,7 @@
 # Informatica to Fabric — Object Inventory & Gap Analysis
 
 <p align="center">
-  <img src="https://img.shields.io/badge/objects_covered-88%25-27AE60?style=for-the-badge" alt="88% covered"/>
+  <img src="https://img.shields.io/badge/objects_covered-92%25-27AE60?style=for-the-badge" alt="92% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
   <img src="https://img.shields.io/badge/status-sprint_21_complete-27AE60?style=for-the-badge" alt="Sprint 21 complete"/>
 </p>

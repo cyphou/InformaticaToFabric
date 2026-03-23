@@ -117,6 +117,139 @@ SQLSERVER_REPLACEMENTS = [
 
 SQLSERVER_RULES = [(re.compile(pat, re.IGNORECASE), repl) for pat, repl in SQLSERVER_REPLACEMENTS]
 
+# ─────────────────────────────────────────────
+#  Teradata → Spark SQL conversion rules (Sprint 23)
+# ─────────────────────────────────────────────
+
+TERADATA_REPLACEMENTS = [
+    # Functions
+    (r"\bZEROIFNULL\s*\(([^)]+)\)", r"COALESCE(\1, 0)"),
+    (r"\bNULLIFZERO\s*\(([^)]+)\)", r"CASE WHEN \1 = 0 THEN NULL ELSE \1 END"),
+    (r"\bSTRTOK\s*\(([^,]+),\s*([^,]+),\s*(\d+)\)", r"SPLIT(\1, \2)[\3 - 1]"),
+    # Date/time
+    (r"\bDATE\s*'(\d{4}-\d{2}-\d{2})'", r"TO_DATE('\1', 'yyyy-MM-dd')"),
+    (r"\bCURRENT_DATE\b", "current_date()"),
+    (r"\bCURRENT_TIMESTAMP\s*\(\d*\)", "current_timestamp()"),
+    # QUALIFY → HAVING-like window filter (needs manual review)
+    (r"\bQUALIFY\b", "-- TODO: QUALIFY clause → use subquery with ROW_NUMBER() and filter"),
+    # COLLECT STATISTICS → no-op in Spark (ANALYZE TABLE instead)
+    (r"\bCOLLECT\s+STAT(?:ISTIC)?S?\b[^;]*", "-- TODO: Replace COLLECT STATISTICS with ANALYZE TABLE"),
+    # VOLATILE TABLE → temp view
+    (r"\bCREATE\s+VOLATILE\s+TABLE\s+(\w+)", r"CREATE OR REPLACE TEMP VIEW \1  -- Volatile table converted"),
+    (r"\bCREATE\s+(?:MULTISET|SET)\s+TABLE\b", "CREATE TABLE"),
+    # SEL → SELECT (Teradata shorthand)
+    (r"(?:^|\n)(\s*)SEL\s+", r"\n\1SELECT "),
+    # FORMAT clause removal
+    (r"\bFORMAT\s+'[^']*'", "-- FORMAT removed (use date_format in Spark)"),
+    # CASESPECIFIC removal
+    (r"\bCASESPECIFIC\b", "-- CASESPECIFIC removed"),
+    # TITLE clause removal
+    (r"\bTITLE\s+'[^']*'", ""),
+    # SAMPLE → TABLESAMPLE
+    (r"\bSAMPLE\s+(\d+)\b", r"TABLESAMPLE (\1 ROWS)"),
+    # Type conversions
+    (r"\bBYTEINT\b", "TINYINT"),
+    (r"\bINTEGER\b", "INT"),
+]
+
+TERADATA_RULES = [(re.compile(pat, re.IGNORECASE), repl) for pat, repl in TERADATA_REPLACEMENTS]
+
+# ─────────────────────────────────────────────
+#  DB2 → Spark SQL conversion rules (Sprint 23)
+# ─────────────────────────────────────────────
+
+DB2_REPLACEMENTS = [
+    # Functions
+    (r"\bVALUE\s*\(", "COALESCE("),
+    (r"\bRRN\s*\(([^)]+)\)", r"monotonically_increasing_id()  -- RRN(\1) converted"),
+    (r"\bDAYS\s*\(([^)]+)\)", r"DATEDIFF(current_date(), \1)"),
+    (r"\bDAYOFWEEK\s*\(([^)]+)\)", r"DAYOFWEEK(\1)"),
+    (r"\bMIDNIGHT_SECONDS\s*\(([^)]+)\)", r"(HOUR(\1) * 3600 + MINUTE(\1) * 60 + SECOND(\1))"),
+    (r"\bDIGITS\s*\(([^)]+)\)", r"LPAD(CAST(\1 AS STRING), 10, '0')"),
+    # Date/time
+    (r"\bCURRENT\s+DATE\b", "current_date()"),
+    (r"\bCURRENT\s+TIMESTAMP\b", "current_timestamp()"),
+    # FETCH FIRST → LIMIT
+    (r"\bFETCH\s+FIRST\s+(\d+)\s+ROWS?\s+ONLY\b", r"LIMIT \1"),
+    # WITH UR (uncommitted read) → remove
+    (r"\bWITH\s+UR\b", "-- WITH UR removed (Spark has no isolation levels in SQL)"),
+    (r"\bWITH\s+CS\b", "-- WITH CS removed"),
+    (r"\bWITH\s+RR\b", "-- WITH RR removed"),
+    # OPTIMIZE FOR → remove
+    (r"\bOPTIMIZE\s+FOR\s+\d+\s+ROWS?\b", ""),
+    # Type conversions
+    (r"\bDECIMAL\s*\((\d+),\s*(\d+)\)", r"DECIMAL(\1, \2)"),
+    (r"\bGRAPHIC\s*\(\d+\)", "STRING"),
+    (r"\bVARGRAPHIC\s*\(\d+\)", "STRING"),
+    (r"\bDBCLOB\b", "STRING"),
+]
+
+DB2_RULES = [(re.compile(pat, re.IGNORECASE), repl) for pat, repl in DB2_REPLACEMENTS]
+
+# ─────────────────────────────────────────────
+#  MySQL → Spark SQL conversion rules (Sprint 23)
+# ─────────────────────────────────────────────
+
+MYSQL_REPLACEMENTS = [
+    # Functions
+    (r"\bIFNULL\s*\(", "COALESCE("),
+    (r"\bNOW\s*\(\s*\)", "current_timestamp()"),
+    (r"\bCURDATE\s*\(\s*\)", "current_date()"),
+    (r"\bGROUP_CONCAT\s*\(([^)]+)\)", r"CONCAT_WS(',', COLLECT_LIST(\1))"),
+    (r"\bDATE_FORMAT\s*\(([^,]+),\s*([^)]+)\)", r"date_format(\1, \2)"),
+    (r"\bSTR_TO_DATE\s*\(([^,]+),\s*([^)]+)\)", r"to_date(\1, \2)"),
+    (r"\bUNIX_TIMESTAMP\s*\(\s*\)", "unix_timestamp()"),
+    # LIMIT is already Spark-compatible — keep as-is
+    # AUTO_INCREMENT → monotonically_increasing_id
+    (r"\bAUTO_INCREMENT\b", "-- AUTO_INCREMENT removed (use monotonically_increasing_id() in PySpark)"),
+    # Backtick identifiers → standard identifiers
+    (r"`(\w+)`", r"\1"),
+    # Type conversions
+    (r"\bUNSIGNED\b", ""),
+    (r"\bTINYINT\s*\(1\)", "BOOLEAN"),
+    (r"\bDATETIME\b", "TIMESTAMP"),
+    (r"\bMEDIUMTEXT\b", "STRING"),
+    (r"\bLONGTEXT\b", "STRING"),
+    (r"\bENUM\s*\([^)]+\)", "STRING"),
+    # ENGINE= clause removal
+    (r"\bENGINE\s*=\s*\w+", ""),
+    # CHARSET clause removal
+    (r"\bDEFAULT\s+CHARSET\s*=\s*\w+", ""),
+]
+
+MYSQL_RULES = [(re.compile(pat, re.IGNORECASE), repl) for pat, repl in MYSQL_REPLACEMENTS]
+
+# ─────────────────────────────────────────────
+#  PostgreSQL → Spark SQL conversion rules (Sprint 23)
+# ─────────────────────────────────────────────
+
+POSTGRESQL_REPLACEMENTS = [
+    # :: type cast → CAST
+    (r"(\w+)::(\w+)", r"CAST(\1 AS \2)"),
+    # Functions
+    (r"\bILIKE\b", "LIKE  -- TODO: ILIKE → case-insensitive; use LOWER() on both sides"),
+    (r"\bGENERATE_SERIES\s*\(([^)]+)\)", r"SEQUENCE(\1)  -- TODO: Replace with EXPLODE(SEQUENCE(...))"),
+    (r"\bARRAY_AGG\s*\(([^)]+)\)", r"COLLECT_LIST(\1)"),
+    (r"\bSTRING_TO_ARRAY\s*\(([^,]+),\s*([^)]+)\)", r"SPLIT(\1, \2)"),
+    (r"\bSTRING_AGG\s*\(([^,]+),\s*([^)]+)\)", r"CONCAT_WS(\2, COLLECT_LIST(\1))"),
+    (r"\bCOALESCE\s*\(", "COALESCE("),  # Already compatible, keep
+    # ON CONFLICT → MERGE
+    (r"\bON\s+CONFLICT\b[^;]*", "-- TODO: ON CONFLICT (upsert) → convert to MERGE INTO"),
+    # RETURNING → not supported in Spark
+    (r"\bRETURNING\b[^;]*", "-- TODO: RETURNING clause not supported in Spark SQL"),
+    # SERIAL → BIGINT (auto-increment via PySpark)
+    (r"\bBIGSERIAL\b", "BIGINT  -- TODO: auto-increment via monotonically_increasing_id()"),
+    (r"\bSERIAL\b", "INT  -- TODO: auto-increment via monotonically_increasing_id()"),
+    # Type conversions
+    (r"\bTEXT\b", "STRING"),
+    (r"\bBOOLEAN\b", "BOOLEAN"),
+    (r"\bBYTEA\b", "BINARY"),
+    (r"\bINTERVAL\s+'([^']+)'", r"INTERVAL \1"),
+    (r"\bPG_CATALOG\.\w+", "-- TODO: Replace pg_catalog reference"),
+]
+
+POSTGRESQL_RULES = [(re.compile(pat, re.IGNORECASE), repl) for pat, repl in POSTGRESQL_REPLACEMENTS]
+
 # DECODE is special — needs argument-count-aware conversion
 DECODE_PATTERN = re.compile(r"\bDECODE\s*\(", re.IGNORECASE)
 
@@ -190,12 +323,23 @@ def convert_sql(sql_text, db_type="oracle"):
     result = sql_text
 
     if db_type == "oracle":
-        # DECODE first (complex multi-arg)
         result = _convert_decode(result)
         for pattern, replacement in ORACLE_RULES:
             result = pattern.sub(replacement, result)
     elif db_type == "sqlserver":
         for pattern, replacement in SQLSERVER_RULES:
+            result = pattern.sub(replacement, result)
+    elif db_type == "teradata":
+        for pattern, replacement in TERADATA_RULES:
+            result = pattern.sub(replacement, result)
+    elif db_type == "db2":
+        for pattern, replacement in DB2_RULES:
+            result = pattern.sub(replacement, result)
+    elif db_type == "mysql":
+        for pattern, replacement in MYSQL_RULES:
+            result = pattern.sub(replacement, result)
+    elif db_type == "postgresql":
+        for pattern, replacement in POSTGRESQL_RULES:
             result = pattern.sub(replacement, result)
     else:
         # Unknown DB — apply Oracle rules as default
@@ -206,9 +350,19 @@ def convert_sql(sql_text, db_type="oracle"):
     return result
 
 
+DB_TYPE_LABELS = {
+    "oracle": "Oracle → Spark SQL",
+    "sqlserver": "SQL Server → Spark SQL",
+    "teradata": "Teradata → Spark SQL",
+    "db2": "DB2 → Spark SQL",
+    "mysql": "MySQL → Spark SQL",
+    "postgresql": "PostgreSQL → Spark SQL",
+}
+
+
 def _header(original_path, db_type):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    rules = "Oracle → Spark SQL" if db_type == "oracle" else "SQL Server → Spark SQL" if db_type == "sqlserver" else "Auto-detected → Spark SQL"
+    rules = DB_TYPE_LABELS.get(db_type, "Auto-detected → Spark SQL")
     return (
         f"-- {'=' * 76}\n"
         f"-- Converted from: {original_path}\n"
@@ -299,9 +453,17 @@ def main():
         if not overrides:
             continue
         # Detect db_type from sources (simple heuristic)
-        sources = " ".join(m.get("sources", []))
-        if "sqlserver" in sources.lower() or "mssql" in sources.lower():
+        sources = " ".join(m.get("sources", [])).lower()
+        if "sqlserver" in sources or "mssql" in sources:
             db_type = "sqlserver"
+        elif "teradata" in sources:
+            db_type = "teradata"
+        elif "db2" in sources:
+            db_type = "db2"
+        elif "mysql" in sources:
+            db_type = "mysql"
+        elif "postgres" in sources or "postgresql" in sources:
+            db_type = "postgresql"
         else:
             db_type = "oracle"
         out_path = convert_sql_overrides(m["name"], overrides, db_type)

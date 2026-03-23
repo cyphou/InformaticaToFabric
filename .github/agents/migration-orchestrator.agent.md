@@ -31,7 +31,7 @@ You coordinate the full migration lifecycle by:
 Read the following files before starting any work:
 - `MIGRATION_PLAN.md` — Full migration strategy
 - `AGENTS.md` — Multi-agent architecture
-- `DEVELOPMENT_PLAN.md` — Sprint roadmap (21 sprints complete)
+- `DEVELOPMENT_PLAN.md` — Sprint roadmap (24 sprints complete)
 - `docs/USER_GUIDE.md` — User guide for step-by-step usage
 - `.vscode/instructions/informatica-patterns.instructions.md` — Transformation patterns
 
@@ -83,5 +83,6 @@ When delegating to sub-agents, provide:
 | **8** | Migration engine | CLI orchestrator (`run_migration.py`), phase skip/only/resume |
 | **11** | CLI & config | YAML config, JSON logging, dry-run mode |
 | **17–21** | Quality & docs | 88% test coverage, E2E tests, IICS support, gap remediation, user guide |
+| **22–24** | Multi-DB & coverage | IICS DQ/AppIntegration, Teradata/DB2/MySQL/PostgreSQL support, 443 tests at 92% |
 
-**Success Criteria:** Orchestrate full migration (PowerCenter + IICS) from raw XML to validated Fabric artifacts with correct agent delegation order, schedule triggers, session config mapping, and accurate progress tracking. 333 tests at 88% coverage.
+**Success Criteria:** Orchestrate full migration (PowerCenter + IICS) from raw XML to validated Fabric artifacts with correct agent delegation order, schedule triggers, session config mapping, and accurate progress tracking. 443 tests at 92% coverage.

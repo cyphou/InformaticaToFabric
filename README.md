@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/agents-6-0078D4?style=flat-square" alt="Agents"/>
-  <img src="https://img.shields.io/badge/coverage-88%25-27AE60?style=flat-square" alt="88% coverage"/>
+  <img src="https://img.shields.io/badge/coverage-92%25-27AE60?style=flat-square" alt="92% coverage"/>
   <img src="https://img.shields.io/badge/target-Microsoft%20Fabric-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric"/>
   <img src="https://img.shields.io/badge/notebooks-PySpark-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/pipelines-Data%20Factory-0078D4?style=flat-square" alt="Pipelines"/>
@@ -102,8 +102,8 @@ Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email
 <td>
 
 ### 🗄️ SQL → Spark SQL / T-SQL
-All Oracle **and SQL Server** SQL is converted to Fabric-compatible SQL:
-SQL overrides, stored procedures, pre/post-session SQL, Oracle functions (NVL, DECODE, SYSDATE, ROWNUM, CONNECT BY, (+) joins), **Oracle analytics** (LEAD, LAG, DENSE_RANK, NTILE, ROW_NUMBER, FIRST_VALUE, LAST_VALUE), **SQL Server** (GETDATE, ISNULL, CROSS APPLY, STRING_AGG, TOP, etc.), **PL/SQL Package splitting**
+All Oracle, **SQL Server, Teradata, DB2, MySQL, and PostgreSQL** SQL is converted to Fabric-compatible SQL:
+SQL overrides, stored procedures, pre/post-session SQL, Oracle functions (NVL, DECODE, SYSDATE, ROWNUM, CONNECT BY, (+) joins), **Oracle analytics** (LEAD, LAG, DENSE_RANK, NTILE, ROW_NUMBER, FIRST_VALUE, LAST_VALUE), **SQL Server** (GETDATE, ISNULL, CROSS APPLY, STRING_AGG, TOP, etc.), **Teradata** (QUALIFY, SAMPLE, COLLECT STATISTICS, VOLATILE TABLE, ZEROIFNULL), **DB2** (FETCH FIRST, VALUE, RRN, WITH UR), **MySQL** (IFNULL, NOW(), GROUP_CONCAT, backtick identifiers), **PostgreSQL** (:: casts, ILIKE, SERIAL, ARRAY_AGG, ON CONFLICT), **PL/SQL Package splitting**
 
 </td>
 <td>
@@ -123,7 +123,7 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 
 | Source Platform | Assessment | SQL Conversion | Status |
 |---|---|---|---|
-| **Informatica PowerCenter** 9.x/10.x | ✅ Full XML parsing | ✅ Oracle + SQL Server | Production-ready |
+| **Informatica PowerCenter** 9.x/10.x | ✅ Full XML parsing | ✅ Oracle + SQL Server + Teradata + DB2 + MySQL + PostgreSQL | Production-ready |
 | **Informatica IICS** (Cloud) | ✅ Taskflows + Mappings + Sync/MassIngestion | ✅ Namespace-aware | Production-ready (Sprint 19) |
 | **Oracle** SQL overrides & stored procs | ✅ 43+ patterns | ✅ Full conversion + GTT/MV/DB links | Production-ready |
 | **SQL Server** SQL overrides & stored procs | ✅ 18 patterns | ✅ T-SQL → Spark SQL | Production-ready |
@@ -434,7 +434,7 @@ InformaticaToDBFabric/
 │   ├── workflows/                       #   Workflow XML exports
 │   ├── mappings/                        #   Mapping XML exports + .prm param files
 │   ├── sessions/                        #   Session XML exports
-│   └── sql/                             #   Oracle + SQL Server SQL / stored procs
+│   └── sql/                             #   Oracle/SQL Server/Teradata/DB2/MySQL/PostgreSQL SQL
 ├── output/                              # 📤 Generated Fabric artifacts
 │   ├── inventory/                       #   Assessment results (JSON/Markdown)
 │   ├── notebooks/                       #   Generated Fabric Notebooks (.py)
@@ -458,7 +458,7 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 Unit test suite (333 tests, 88% coverage)
+├── tests/                               # 🧪 Unit test suite (443 tests, 92% coverage)
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -539,7 +539,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 333 tests
+# Run all 443 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -558,7 +558,7 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 | `test_iics.py` | 23 | Sprint 19: IICS taskflow/sync/mass-ingestion/connection parsers |
 | `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
 
-**Overall:** 333 tests, 88% coverage (9s on Python 3.14)
+**Overall:** 443 tests, 92% coverage (7s on Python 3.14)
 
 ### Configuration
 

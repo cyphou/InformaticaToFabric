@@ -55,6 +55,8 @@ TRANSFORMATION_ABBREV = {
     "Association": "ASSOC",
     "Key Generator": "KEYGEN",
     "Address Validator": "ADDRVAL",
+    # Sprint 22 additions
+    "Data Quality": "DQ",
 }
 
 # Oracle-specific SQL constructs to flag
@@ -125,6 +127,67 @@ SQLSERVER_PATTERNS = {
     "CROSS APPLY": r"\bCROSS\s+APPLY\b",
     "OUTER APPLY": r"\bOUTER\s+APPLY\b",
     "STRING_AGG": r"\bSTRING_AGG\s*\(",
+}
+
+# Teradata-specific patterns (Sprint 23)
+TERADATA_PATTERNS = {
+    "QUALIFY": r"\bQUALIFY\b",
+    "SAMPLE": r"\bSAMPLE\s+\d+",
+    "SEL": r"(?:^|\n)\s*SEL\s+",
+    "COLLECT STATISTICS": r"\bCOLLECT\s+STAT(?:ISTIC)?S?\b",
+    "VOLATILE TABLE": r"\bVOLATILE\s+TABLE\b",
+    "MULTISET TABLE": r"\bMULTISET\s+TABLE\b",
+    "SET TABLE": r"\bSET\s+TABLE\b",
+    ".DATE": r"\bDATE\s*'",
+    "FORMAT": r"\bFORMAT\s+'[^']*'",
+    "CASESPECIFIC": r"\bCASESPECIFIC\b",
+    "TERADATA_CAST": r"\bCAST\s*\([^)]+AS\s+FORMAT\b",
+    "HASH": r"\bHASHROW\b|\bHASHBUCKET\b",
+    "ZEROIFNULL": r"\bZEROIFNULL\s*\(",
+    "NULLIFZERO": r"\bNULLIFZERO\s*\(",
+    "TITLE": r"\bTITLE\s+'[^']*'",
+}
+
+# DB2-specific patterns (Sprint 23)
+DB2_PATTERNS = {
+    "FETCH FIRST": r"\bFETCH\s+FIRST\s+\d+\s+ROWS?\s+ONLY\b",
+    "VALUE": r"\bVALUE\s*\(",
+    "CURRENT DATE": r"\bCURRENT\s+DATE\b",
+    "CURRENT TIMESTAMP": r"\bCURRENT\s+TIMESTAMP\b",
+    "RRN": r"\bRRN\s*\(",
+    "DECIMAL": r"\bDECIMAL\s*\(\d+,\s*\d+\)",
+    "WITH UR": r"\bWITH\s+UR\b",
+    "CONCAT": r"\bCONCAT\s*\(",
+    "DAYOFWEEK": r"\bDAYOFWEEK\s*\(",
+    "DAYS": r"\bDAYS\s*\(",
+}
+
+# MySQL-specific patterns (Sprint 23)
+MYSQL_PATTERNS = {
+    "IFNULL": r"\bIFNULL\s*\(",
+    "NOW": r"\bNOW\s*\(\s*\)",
+    "LIMIT": r"\bLIMIT\s+\d+",
+    "AUTO_INCREMENT": r"\bAUTO_INCREMENT\b",
+    "BACKTICK": r"`\w+`",
+    "GROUP_CONCAT": r"\bGROUP_CONCAT\s*\(",
+    "DATE_FORMAT": r"\bDATE_FORMAT\s*\(",
+    "STR_TO_DATE": r"\bSTR_TO_DATE\s*\(",
+    "DATEDIFF": r"\bDATEDIFF\s*\(",
+    "UNSIGNED": r"\bUNSIGNED\b",
+}
+
+# PostgreSQL-specific patterns (Sprint 23)
+POSTGRESQL_PATTERNS = {
+    "DOUBLE_COLON_CAST": r"::\w+",
+    "SERIAL": r"\bSERIAL\b|\bBIGSERIAL\b",
+    "ILIKE": r"\bILIKE\b",
+    "TEXT": r"\bTEXT\b",
+    "BOOLEAN": r"\bBOOLEAN\b",
+    "RETURNING": r"\bRETURNING\b",
+    "ARRAY_AGG": r"\bARRAY_AGG\s*\(",
+    "STRING_TO_ARRAY": r"\bSTRING_TO_ARRAY\s*\(",
+    "GENERATE_SERIES": r"\bGENERATE_SERIES\s*\(",
+    "PG_CATALOG": r"\bPG_CATALOG\b",
 }
 
 # Warnings and issues collectors
@@ -1311,6 +1374,162 @@ def parse_iics_connections(filepath):
 
 
 # =====================================================================
+# Sprint 22: IICS Data Quality Task + Application Integration parsers
+# =====================================================================
+
+def parse_iics_dq_tasks(filepath):
+    """Parse IICS Data Quality Task objects from export XML.
+    Returns a list of mapping-like dicts for inventory.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    tasks = []
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        if "dataqualitytask" not in obj_type and "dqtask" not in obj_type and "dataquality" not in obj_type:
+            continue
+        name = tmpl.get("name", "")
+        attrs = {}
+        sources = []
+        targets = []
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if child_tag == "dAttribute":
+                attrs[child.get("name", "")] = child.get("value", "")
+            elif child_tag == "dTemplate":
+                # Extract source/target connections from child fields
+                for sub in child:
+                    sub_tag = sub.tag.split("}")[-1] if "}" in sub.tag else sub.tag
+                    if sub_tag == "dAttribute":
+                        sub_name = sub.get("name", "")
+                        sub_val = sub.get("value", "")
+                        if sub_name == "sourceConnection" and sub_val:
+                            sources.append(sub_val)
+                        elif sub_name == "targetConnection" and sub_val:
+                            targets.append(sub_val)
+
+        source = attrs.get("sourceName", "")
+        target = attrs.get("targetName", "")
+        if source and source not in sources:
+            sources.append(source)
+        if target and target not in targets:
+            targets.append(target)
+        rule_set = attrs.get("ruleSet", attrs.get("ruleName", ""))
+        profile_name = attrs.get("profileName", "")
+
+        tasks.append({
+            "name": name,
+            "sources": sources,
+            "targets": targets,
+            "transformations": ["SQ", "DQ", "TGT"],
+            "has_sql_override": False,
+            "has_stored_proc": False,
+            "complexity": "Complex",
+            "sql_overrides": [],
+            "lookup_conditions": [],
+            "parameters": [],
+            "target_load_order": [],
+            "connector_count": 0,
+            "has_mapplet": False,
+            "format": "iics",
+            "iics_type": "DataQualityTask",
+            "rule_set": rule_set,
+            "profile_name": profile_name,
+        })
+    return tasks
+
+
+def parse_iics_app_integration(filepath):
+    """Parse IICS Application Integration (event-driven) objects from export XML.
+    Returns a list of workflow-like dicts for inventory.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    def find_all(tag):
+        results = list(root.iter(f"{ns}{tag}")) if ns else []
+        results.extend(root.iter(tag))
+        return results
+
+    integrations = []
+    for tmpl in find_all("dTemplate"):
+        obj_type = tmpl.get("objectType", "").lower()
+        if "appintegration" not in obj_type and "applicationintegration" not in obj_type and "serviceconnector" not in obj_type:
+            continue
+        name = tmpl.get("name", "")
+        attrs = {}
+        steps = []
+        links = []
+        session_to_mapping = {}
+
+        for child in tmpl:
+            child_tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+            if child_tag == "dAttribute":
+                attrs[child.get("name", "")] = child.get("value", "")
+            elif child_tag == "dTemplate":
+                child_type = child.get("objectType", "").lower()
+                child_name = child.get("name", "")
+                steps.append(child_name)
+                # Extract mapping references from step attributes
+                for sub in child:
+                    sub_tag = sub.tag.split("}")[-1] if "}" in sub.tag else sub.tag
+                    if sub_tag == "dAttribute":
+                        sub_name = sub.get("name", "")
+                        sub_val = sub.get("value", "")
+                        if sub_name == "mappingName" and sub_val:
+                            session_to_mapping[child_name] = sub_val
+            elif child_tag == "dLink":
+                from_task = child.get("from", "")
+                to_task = child.get("to", "")
+                links.append({"from": from_task, "to": to_task, "condition": ""})
+
+        event_type = attrs.get("eventType", attrs.get("triggerType", ""))
+        service_url = attrs.get("serviceUrl", attrs.get("endpoint", ""))
+
+        dependencies = {}
+        for link in links:
+            to_task = link["to"]
+            if to_task not in dependencies:
+                dependencies[to_task] = []
+            dependencies[to_task].append(link["from"])
+
+        integrations.append({
+            "name": name,
+            "sessions": steps,
+            "session_to_mapping": session_to_mapping,
+            "dependencies": dependencies,
+            "has_timer": False,
+            "has_decision": False,
+            "decision_tasks": [],
+            "email_tasks": [],
+            "pre_post_sql": [],
+            "links": links,
+            "schedule": "",
+            "format": "iics",
+            "iics_type": "ApplicationIntegration",
+            "event_type": event_type,
+            "service_url": service_url,
+        })
+    return integrations
+
+
+# =====================================================================
 # Sprint 7.6: Connection XML parser
 # =====================================================================
 
@@ -1354,28 +1573,30 @@ def parse_connection_objects(root):
 
 
 def detect_source_db_type(sql_content):
-    """Detect whether SQL content is Oracle, SQL Server, or other.
-    Returns 'oracle', 'sqlserver', or 'unknown'.
+    """Detect source DB type from SQL content.
+    Returns 'oracle', 'sqlserver', 'teradata', 'db2', 'mysql', 'postgresql', or 'unknown'.
     """
-    oracle_score = 0
-    mssql_score = 0
+    all_patterns = {
+        "oracle": ORACLE_PATTERNS,
+        "sqlserver": SQLSERVER_PATTERNS,
+        "teradata": TERADATA_PATTERNS,
+        "db2": DB2_PATTERNS,
+        "mysql": MYSQL_PATTERNS,
+        "postgresql": POSTGRESQL_PATTERNS,
+    }
+    scores = {}
+    for db_type, patterns in all_patterns.items():
+        score = 0
+        for pattern in patterns.values():
+            if re.search(pattern, sql_content, re.IGNORECASE):
+                score += 1
+        scores[db_type] = score
 
-    for pattern in ORACLE_PATTERNS.values():
-        if re.search(pattern, sql_content, re.IGNORECASE):
-            oracle_score += 1
-
-    for pattern in SQLSERVER_PATTERNS.values():
-        if re.search(pattern, sql_content, re.IGNORECASE):
-            mssql_score += 1
-
-    if oracle_score > mssql_score and oracle_score >= 2:
-        return "oracle"
-    if mssql_score > oracle_score and mssql_score >= 2:
-        return "sqlserver"
-    if oracle_score > 0:
-        return "oracle"
-    if mssql_score > 0:
-        return "sqlserver"
+    best = max(scores, key=scores.get)
+    if scores[best] >= 2:
+        return best
+    if scores[best] >= 1:
+        return best
     return "unknown"
 
 
@@ -1385,52 +1606,54 @@ def parse_sql_file(filepath):
 
     db_type = detect_source_db_type(content)
 
-    # Always check Oracle patterns
-    oracle_constructs = []
-    for construct_name, pattern in ORACLE_PATTERNS.items():
-        matches = list(re.finditer(pattern, content, re.IGNORECASE))
-        if matches:
-            lines = []
-            for m in matches:
-                line_num = content[:m.start()].count('\n') + 1
-                lines.append(line_num)
-            oracle_constructs.append({
-                "construct": construct_name,
-                "occurrences": len(matches),
-                "lines": lines,
-            })
+    all_pattern_sets = {
+        "oracle": ORACLE_PATTERNS,
+        "sqlserver": SQLSERVER_PATTERNS,
+        "teradata": TERADATA_PATTERNS,
+        "db2": DB2_PATTERNS,
+        "mysql": MYSQL_PATTERNS,
+        "postgresql": POSTGRESQL_PATTERNS,
+    }
 
-    # Also check SQL Server patterns
-    sqlserver_constructs = []
-    for construct_name, pattern in SQLSERVER_PATTERNS.items():
-        matches = list(re.finditer(pattern, content, re.IGNORECASE))
-        if matches:
-            lines = []
-            for m in matches:
-                line_num = content[:m.start()].count('\n') + 1
-                lines.append(line_num)
-            sqlserver_constructs.append({
-                "construct": construct_name,
-                "occurrences": len(matches),
-                "lines": lines,
-            })
+    constructs_by_db = {}
+    for db_name, patterns in all_pattern_sets.items():
+        found = []
+        for construct_name, pattern in patterns.items():
+            matches = list(re.finditer(pattern, content, re.IGNORECASE))
+            if matches:
+                lines = []
+                for m in matches:
+                    line_num = content[:m.start()].count('\n') + 1
+                    lines.append(line_num)
+                found.append({
+                    "construct": construct_name,
+                    "occurrences": len(matches),
+                    "lines": lines,
+                })
+        if found:
+            constructs_by_db[db_name] = found
 
     # Sprint 20: Detect advanced constructs
     global_temp_tables = detect_global_temp_tables(content)
     materialized_views = detect_materialized_views(content)
     db_links = detect_db_links(content)
 
-    return {
+    result = {
         "file": filepath.name,
         "path": str(filepath.relative_to(WORKSPACE)),
         "db_type": db_type,
-        "oracle_constructs": oracle_constructs,
-        "sqlserver_constructs": sqlserver_constructs,
+        "oracle_constructs": constructs_by_db.get("oracle", []),
+        "sqlserver_constructs": constructs_by_db.get("sqlserver", []),
+        "teradata_constructs": constructs_by_db.get("teradata", []),
+        "db2_constructs": constructs_by_db.get("db2", []),
+        "mysql_constructs": constructs_by_db.get("mysql", []),
+        "postgresql_constructs": constructs_by_db.get("postgresql", []),
         "global_temp_tables": global_temp_tables,
         "materialized_views": materialized_views,
         "db_links": db_links,
         "total_lines": content.count('\n') + 1,
     }
+    return result
 
 
 # =====================================================================
@@ -1673,6 +1896,18 @@ def main():
                     for mi in mi_tasks:
                         all_mappings.append(mi)
                         print(f"    [IICS MassIngestion] -> {mi['name']}")
+
+                    # Parse IICS Data Quality Tasks
+                    dq_tasks = parse_iics_dq_tasks(xml_file)
+                    for dq in dq_tasks:
+                        all_mappings.append(dq)
+                        print(f"    [IICS DQ Task] -> {dq['name']}")
+
+                    # Parse IICS Application Integration (event-driven)
+                    app_ints = parse_iics_app_integration(xml_file)
+                    for ai in app_ints:
+                        all_workflows.append(ai)
+                        print(f"    [IICS AppIntegration] -> {ai['name']}")
 
                     # Parse IICS Connections
                     iics_conns = parse_iics_connections(xml_file)
