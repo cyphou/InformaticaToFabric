@@ -1,9 +1,9 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-21%2F24%20complete-2980B9?style=for-the-badge" alt="21/24 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-24%2F30%20complete-2980B9?style=for-the-badge" alt="24/30 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
-  <img src="https://img.shields.io/badge/status-3%20planned-2980B9?style=for-the-badge" alt="3 Planned"/>
+  <img src="https://img.shields.io/badge/status-6%20planned-2980B9?style=for-the-badge" alt="6 Planned"/>
 </p>
 
 > This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
@@ -37,6 +37,12 @@
 - [Sprint 22 — IICS Gap Closure](#sprint-22--iics-gap-closure)
 - [Sprint 23 — Additional Source DB Support](#sprint-23--additional-source-db-support)
 - [Sprint 24 — Coverage to 95%+](#sprint-24--coverage-to-95)
+- [Sprint 25 — Lineage & Conversion Scoring](#sprint-25--lineage--conversion-scoring)
+- [Sprint 26 — Placeholder Transformation Templates](#sprint-26--placeholder-transformation-templates)
+- [Sprint 27 — Fabric Schema & Lakehouse Setup](#sprint-27--fabric-schema--lakehouse-setup)
+- [Sprint 28 — Migration Wave Planner](#sprint-28--migration-wave-planner)
+- [Sprint 29 — Data Validation Framework](#sprint-29--data-validation-framework)
+- [Sprint 30 — Production Hardening & Audit](#sprint-30--production-hardening--audit)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -633,6 +639,129 @@ gantt
 
 ---
 
+## Sprint 25 — Lineage & Conversion Scoring
+
+**Goal:** Add source-to-target lineage tracking per mapping and auto-conversion quality scoring so users can instantly see which mappings need manual attention.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 25.1 | Field-level lineage extractor | Assessment | `run_assessment.py` | For each mapping, produce a `lineage` list: `[{source_field, transformations[], target_field}]` from CONNECTOR elements |
+| 25.2 | Lineage JSON output | Assessment | `output/inventory/lineage.json` | Machine-readable lineage per mapping, compatible with visualization tools |
+| 25.3 | Conversion quality score | Assessment | `run_assessment.py` | Per-mapping score (0-100%) based on: % transformations with auto-conversion rules, % SQL overrides auto-convertible, presence of placeholders/gaps |
+| 25.4 | Inventory enrichment | Assessment | `output/inventory/inventory.json` | Each mapping gets `conversion_score`, `manual_effort_estimate`, `lineage_summary` fields |
+| 25.5 | Lineage Mermaid diagram generator | Assessment | `run_assessment.py` | Generate per-mapping Mermaid flowchart (source → transformations → target) in complexity report |
+| 25.6 | Tests for lineage & scoring | Validation | `tests/test_sprint25_30.py` | 20+ tests covering lineage extraction, score calculation, edge cases |
+
+**Sprint 25 Exit Criteria:**
+- [ ] Every mapping in inventory.json has a `conversion_score` (0-100%)
+- [ ] Lineage JSON tracks field-level source → target flow
+- [ ] Mermaid diagrams generated for top-10 complex mappings
+
+---
+
+## Sprint 26 — Placeholder Transformation Templates
+
+**Goal:** Convert the 6 placeholder-only transformations from TODO cells to meaningful PySpark conversion templates with guidance.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 26.1 | HTTP Transformation → `requests` UDF | Notebook | `run_notebook_migration.py`, templates | Generate PySpark UDF stub calling `requests.get/post()` with URL, headers, retry logic |
+| 26.2 | XML Parser → `spark.read.format("xml")` | Notebook | `run_notebook_migration.py` | Generate cell with `spark.read.format("com.databricks.spark.xml")` + schema inference |
+| 26.3 | XML Generator → `to_xml()` template | Notebook | `run_notebook_migration.py` | Generate cell with row-level XML construction using `concat()` / `format_string()` |
+| 26.4 | Transaction Control → Delta ACID pattern | Notebook | `run_notebook_migration.py` | Generate Delta `MERGE` with explicit commit/rollback pattern and retry logic |
+| 26.5 | Java Transformation → PySpark UDF stub | Notebook | `run_notebook_migration.py` | Generate Python UDF skeleton with input/output port mapping from Java transform metadata |
+| 26.6 | Custom Transformation → pandas UDF stub | Notebook | `run_notebook_migration.py` | Generate `@pandas_udf` skeleton with schema from custom transform ports |
+| 26.7 | Unconnected Lookup → broadcast join pattern | Notebook | `run_notebook_migration.py` | Generate `when().otherwise()` + broadcast join pattern for ULKP |
+| 26.8 | Template tests | Validation | `tests/test_sprint25_30.py` | 15+ tests verifying each template generates valid PySpark code |
+
+**Sprint 26 Exit Criteria:**
+- [ ] All 6 placeholder types generate meaningful PySpark code (not just TODO)
+- [ ] Unconnected Lookup promoted to fully covered
+- [ ] Generated code includes input/output port mapping from source metadata
+
+---
+
+## Sprint 27 — Fabric Schema & Lakehouse Setup
+
+**Goal:** Generate Delta Lake CREATE TABLE statements from mapping target definitions and produce Fabric workspace setup scripts.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 27.1 | Target schema extractor | Assessment | `run_assessment.py` | Extract target table definitions: columns, types, keys from mapping XML `<TARGET>` elements |
+| 27.2 | Informatica → Delta type mapping | SQL | `run_sql_migration.py` | Map Oracle/SQL Server/Teradata/DB2/MySQL/PostgreSQL types to Delta Lake types (STRING, INT, DECIMAL, TIMESTAMP, etc.) |
+| 27.3 | Schema DDL generator | SQL | `run_schema_generator.py` (new) | Generate `CREATE TABLE IF NOT EXISTS` Delta Lake DDL with partition keys, Z-ORDER hints |
+| 27.4 | Lakehouse folder structure | Orchestrator | `output/schema/` | Produce Bronze/Silver/Gold lakehouse DDL organized by layer |
+| 27.5 | Workspace setup script | Orchestrator | `output/schema/setup_workspace.py` | Generate PySpark notebook that creates all lakehouses, schemas, and tables |
+| 27.6 | Schema tests | Validation | `tests/test_sprint25_30.py` | 15+ tests covering type mapping, DDL generation, edge cases |
+
+**Sprint 27 Exit Criteria:**
+- [ ] Delta Lake DDL generated for every target table in inventory
+- [ ] Type mapping covers all 6 source DB dialects
+- [ ] Setup script is a runnable Fabric notebook
+
+---
+
+## Sprint 28 — Migration Wave Planner
+
+**Goal:** Use the dependency DAG to automatically plan migration waves — what to migrate first, what depends on what, and which mappings can run in parallel.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 28.1 | DAG topological sort | Assessment | `run_assessment.py` | Produce ordered list of migration waves from `dependency_dag.json` using topological sort |
+| 28.2 | Parallel group identification | Assessment | `run_assessment.py` | Within each wave, identify independent mappings that can migrate in parallel |
+| 28.3 | Wave plan output | Orchestrator | `output/inventory/wave_plan.json` | JSON with waves: `[{wave_number, mappings[], dependencies[], estimated_effort}]` |
+| 28.4 | Wave visualization | Orchestrator | `output/inventory/wave_plan.md` | Mermaid Gantt chart of migration waves with parallel tracks |
+| 28.5 | Critical path analysis | Assessment | `run_assessment.py` | Identify the longest dependency chain (critical path) and flag bottleneck mappings |
+| 28.6 | Wave planner tests | Validation | `tests/test_sprint25_30.py` | 15+ tests covering topological sort, parallel grouping, cycle detection |
+
+**Sprint 28 Exit Criteria:**
+- [ ] Automatic wave plan generated from any inventory
+- [ ] Parallel groups correctly identified (no dependency conflicts)
+- [ ] Critical path highlighted in wave plan
+
+---
+
+## Sprint 29 — Data Validation Framework
+
+**Goal:** Auto-generate runnable Fabric notebooks that compare source and target data post-migration — row counts, checksums, key field values, and transformation verification.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 29.1 | Row count comparison generator | Validation | `run_validation.py` | Generate PySpark cells that count source (via JDBC) and target (Delta), compare, report % diff |
+| 29.2 | Checksum comparison generator | Validation | `run_validation.py` | Generate hash-based comparison cells for key columns using SHA-256 |
+| 29.3 | Key field sampling | Validation | `run_validation.py` | Generate cells that sample N random keys and compare all columns (fuzzy match for floats) |
+| 29.4 | Transformation verification | Validation | `run_validation.py` | Re-derive expression transformations in PySpark and compare to target columns |
+| 29.5 | Validation report generator | Validation | `run_validation.py` | Produce HTML/Markdown validation report with pass/fail per mapping, per test level |
+| 29.6 | Validation tests | Validation | `tests/test_sprint25_30.py` | 15+ tests covering report generation, comparison logic, edge cases |
+
+**Sprint 29 Exit Criteria:**
+- [ ] Validation notebooks generated for every mapping with runnable PySpark cells
+- [ ] 5-level validation (row count, key unique, NULL, transform, aggregate) all auto-generated
+- [ ] HTML validation report with pass/fail summary
+
+---
+
+## Sprint 30 — Production Hardening & Audit
+
+**Goal:** Final production-readiness sprint — error recovery, audit trails, security review, and operational tooling.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 30.1 | Migration audit log | Orchestrator | `run_migration.py` | JSON-structured audit log: who, what, when, result for every artifact |
+| 30.2 | Error recovery improvements | Orchestrator | `run_migration.py` | Per-mapping error isolation — one failed mapping doesn't block batch |
+| 30.3 | Dry-run mode | Orchestrator | `run_migration.py` | `--dry-run` flag that validates config, parses input, reports what would be converted without writing files |
+| 30.4 | Security review | All | All scripts | Sanitize connection strings, mask credentials in logs, validate file paths |
+| 30.5 | Performance profiling | All | `run_migration.py` | Profile large inventory (100+ mappings): identify bottlenecks, add timing metrics |
+| 30.6 | Final test sweep | Validation | `tests/` | 500+ tests, 95%+ coverage, all edge cases from gap analysis covered |
+
+**Sprint 30 Exit Criteria:**
+- [ ] Audit log captures every migration action
+- [ ] `--dry-run` mode works end-to-end
+- [ ] 500+ tests at 95%+ coverage
+- [ ] No credentials exposed in logs or output files
+
+---
+
 ## Agent Development Plans
 
 ### 🔍 Assessment Agent — Development Roadmap
@@ -889,6 +1018,12 @@ pie title Sprint Effort Distribution
     "Sprint 22 — IICS Gaps" : 15
     "Sprint 23 — Source DBs" : 15
     "Sprint 24 — Coverage 95%" : 10
+    "Sprint 25 — Lineage" : 15
+    "Sprint 26 — Templates" : 15
+    "Sprint 27 — Schema" : 15
+    "Sprint 28 — Wave Planner" : 10
+    "Sprint 29 — Validation" : 15
+    "Sprint 30 — Production" : 10
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -914,6 +1049,12 @@ pie title Sprint Effort Distribution
 | **19** | Assessment, Pipeline (IICS) | IICS Taskflow/Sync/MassIngestion/Connection parsers, `tests/test_iics.py` | ✅ Complete |
 | **20** | Assessment, SQL, Pipeline (gaps) | Session config, scheduler cron, GTT/MV/DB links, `tests/test_gaps.py` | ✅ Complete |
 | **21** | All (docs) | `docs/USER_GUIDE.md`, `docs/TROUBLESHOOTING.md`, `CONTRIBUTING.md`, `docs/ADR/` | ✅ Complete |
-| **22** | Assessment, Notebook, Pipeline (IICS gaps) | DQ Task, App Integration, Taskflow edge cases | ⏳ Planned |
-| **23** | Assessment, SQL (source DBs) | Teradata, DB2, MySQL/PostgreSQL detection + conversion | ⏳ Planned |
-| **24** | All (coverage) | 95%+ coverage, 400+ tests, mutation testing | ⏳ Planned |
+| **22** | Assessment, Notebook, Pipeline (IICS gaps) | DQ Task, App Integration, Taskflow edge cases | ✅ Complete |
+| **23** | Assessment, SQL (source DBs) | Teradata, DB2, MySQL/PostgreSQL detection + conversion | ✅ Complete |
+| **24** | All (coverage) | 92% coverage, 443 tests, 110 new Sprint 22-24 tests | ✅ Complete |
+| **25** | Assessment (lineage) | Field-level lineage, conversion quality score, Mermaid diagrams | ⏳ Planned |
+| **26** | Notebook (templates) | HTTP/XML/TC/Java/Custom/ULKP → PySpark templates | ⏳ Planned |
+| **27** | SQL, Assessment (schema) | Delta Lake DDL, type mapping, workspace setup script | ⏳ Planned |
+| **28** | Assessment, Orchestrator (waves) | DAG topological sort, parallel groups, critical path | ⏳ Planned |
+| **29** | Validation (data) | Row count/checksum/sampling comparisons, HTML report | ⏳ Planned |
+| **30** | All (production) | Audit log, dry-run mode, security review, 500+ tests | ⏳ Planned |

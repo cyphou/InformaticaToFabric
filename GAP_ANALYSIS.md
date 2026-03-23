@@ -3,11 +3,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/objects_covered-92%25-27AE60?style=for-the-badge" alt="92% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_21_complete-27AE60?style=for-the-badge" alt="Sprint 21 complete"/>
+  <img src="https://img.shields.io/badge/status-sprint_24_complete-27AE60?style=for-the-badge" alt="Sprint 24 complete"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-03-23 (Sprint 17–21 remediation applied)  
+**Last Updated:** 2026-03-23 (Sprint 22–24 remediation applied)  
 **Scope:** Informatica PowerCenter 9.x/10.x + IICS → Microsoft Fabric  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
@@ -256,9 +256,10 @@ The project assumes **Oracle** as the source database. Other common Informatica 
 |-----------|-----------|-----------------|:------------:|
 | Oracle | ✅ Full | ✅ 43+ patterns | — |
 | SQL Server | ✅ **Full (Sprint 7)** | ✅ **18 detection patterns + 17 T-SQL→Spark SQL mappings** | ✅ Addressed |
-| Teradata | ❌ None | ❌ None | **P2** |
-| DB2 | ❌ None | ❌ None | **P2** |
-| MySQL/PostgreSQL | ❌ None | ❌ None | **P2** |
+| Teradata | ✅ **Full (Sprint 23)** | ✅ **15 detection + 18 conversion rules** | ✅ Addressed |
+| DB2 | ✅ **Full (Sprint 23)** | ✅ **10 detection + 16 conversion rules** | ✅ Addressed |
+| MySQL | ✅ **Full (Sprint 23)** | ✅ **10 detection + 17 conversion rules** | ✅ Addressed |
+| PostgreSQL | ✅ **Full (Sprint 23)** | ✅ **10 detection + 16 conversion rules** | ✅ Addressed |
 | Flat files (CSV/fixed-width) | ✅ **Documented (Sprint 6)** | ✅ **`spark.read.csv()` + fixed-width patterns** | ✅ Addressed |
 
 > **Note:** Many Informatica deployments use **flat file sources** (CSV, fixed-width, XML) alongside database sources. The current project only handles JDBC-based source reads.
@@ -278,8 +279,8 @@ The project detects IICS format XML and **has full IICS support** (Sprint 19). C
 | 3 | **Synchronization Task** | Session (simple) | ✅ **Parsed (Sprint 19)** — `parse_iics_sync_tasks()` as mappings | ✅ Addressed |
 | 4 | **Mass Ingestion Task** | Bulk load session | ✅ **Parsed (Sprint 19)** — `parse_iics_mass_ingestion()` | ✅ Addressed |
 | 5 | **Mapping Task** | Session | ✅ **Full (Sprint 19)** — Parsed within Taskflow as activities | ✅ Addressed |
-| 6 | **Data Quality Task** | DQ workflow | ❌ Not parsed | **P2** |
-| 7 | **Application Integration** | — (IICS-only) | ❌ Not parsed | **P2** |
+| 6 | **Data Quality Task** | DQ workflow | ✅ **Parsed (Sprint 22)** — `parse_iics_dq_tasks()` | ✅ Addressed |
+| 7 | **Application Integration** | — (IICS-only) | ✅ **Parsed (Sprint 22)** — `parse_iics_app_integration()` | ✅ Addressed |
 | 8 | **IICS Connections** | Connection objects | ✅ **Parsed (Sprint 19)** — `parse_iics_connections()` | ✅ Addressed |
 
 ### 5.2 IICS XML Structure Differences
