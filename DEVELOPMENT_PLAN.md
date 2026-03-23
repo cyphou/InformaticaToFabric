@@ -1,7 +1,7 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-8%2F8%20complete-27AE60?style=for-the-badge" alt="8/8 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-11%2F11%20complete-27AE60?style=for-the-badge" alt="11/11 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
 </p>
@@ -21,6 +21,9 @@
 - [Sprint 6 — Critical Gap Remediation](#sprint-6--critical-gap-remediation)
 - [Sprint 7 — Extended Coverage](#sprint-7--extended-coverage)
 - [Sprint 8 — Executable Migration Engine](#sprint-8--executable-migration-engine)
+- [Sprint 9 — Unit Test Suite](#sprint-9--unit-test-suite)
+- [Sprint 10 — Fabric Deployment](#sprint-10--fabric-deployment)
+- [Sprint 11 — CLI, Config & Logging](#sprint-11--cli-config--logging)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -302,6 +305,72 @@ gantt
 
 ---
 
+## Sprint 9 — Unit Test Suite ✅
+
+**Goal:** Build a comprehensive pytest test suite covering all migration scripts with 60+ automated tests.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 9.1 | SQL conversion unit tests (25 tests) | SQL | `tests/test_migration.py` | ✅ Oracle conversions (NVL, NVL2, DECODE, SYSDATE, SUBSTR, TO_NUMBER, VARCHAR2, date formats, DUAL, TRUNC, DBMS_OUTPUT, REGEXP_LIKE), SQL Server conversions (GETDATE, ISNULL, CHARINDEX, LEN, NOLOCK, NVARCHAR, BIT, IIF, CROSS APPLY), edge cases (empty, no-op, multi-conversion), file-level override conversion |
+| 9.2 | Notebook generation unit tests (8 tests) | Notebook | `tests/test_migration.py` | ✅ Simple/complex mapping content, source/target/audit cells, parameters, SQL override references, all 18+ TX types, end-to-end file write |
+| 9.3 | Pipeline generation unit tests (9 tests) | Pipeline | `tests/test_migration.py` | ✅ Pipeline structure, TridentNotebook activities, dependency chains, parameter propagation, annotations, JSON serializable, email→WebActivity, decision→IfCondition |
+| 9.4 | Validation generation unit tests (8 tests) | Validation | `tests/test_migration.py` | ✅ Target table inference (silver/gold), key column inference, source connection detection, notebook content (L1-L3), multi-target generation, end-to-end + test_matrix.md |
+| 9.5 | Orchestrator unit tests (9 tests) | Orchestrator | `tests/test_migration.py` | ✅ argparse --skip/--only/--verbose/--dry-run/--config/--log-format parsing, summary generation with emoji encoding, phases list completeness |
+| 9.6 | SQL end-to-end integration test (1 test) | SQL | `tests/test_migration.py` | ✅ Full SQL migration main() with tmp workspace, verifies standalone + override file output |
+| 9.7 | Test infrastructure | — | `pytest.ini`, `tests/__init__.py` | ✅ pytest configuration with -v --tb=short defaults, testpaths = tests |
+
+**Sprint 9 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ 64 tests across 6 test classes, all passing in < 1s
+- ✅ sys.argv isolation pattern for all integration tests
+- ✅ UTF-8 encoding handled for emoji output on Windows (cp1252)
+- ✅ pytest.ini configured with sensible defaults
+
+---
+
+## Sprint 10 — Fabric Deployment ✅
+
+**Goal:** Build a deployment script that pushes migration artifacts to Microsoft Fabric via REST API.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 10.1 | Azure Identity authentication | Orchestrator | `deploy_to_fabric.py` | ✅ `DefaultAzureCredential` from azure-identity with `https://api.fabric.microsoft.com/.default` scope |
+| 10.2 | Notebook deployment | Notebook | `deploy_to_fabric.py` | ✅ NB_*.py → Fabric Notebook items via POST /workspaces/{id}/items with base64-encoded payload |
+| 10.3 | Pipeline deployment | Pipeline | `deploy_to_fabric.py` | ✅ PL_*.json → Fabric DataPipeline items via POST |
+| 10.4 | SQL script deployment | SQL | `deploy_to_fabric.py` | ✅ SQL_*.sql → Fabric Notebooks with %%sql magic cells |
+| 10.5 | Dry-run mode | — | `deploy_to_fabric.py` | ✅ `--dry-run` lists all artifacts without deploying |
+| 10.6 | Rate limit handling | — | `deploy_to_fabric.py` | ✅ 429 status code retry with Retry-After header |
+| 10.7 | Deployment log | — | `deploy_to_fabric.py` | ✅ deployment_log.json with per-artifact status, timestamps, item IDs |
+
+**Sprint 10 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ Dry-run tested: 12 artifacts detected (6 notebooks, 1 pipeline, 5 SQL)
+- ✅ Rate limit retry with exponential backoff
+- ✅ 409 conflict handling for already-existing items
+- ✅ CLI: --workspace-id, --only (notebooks/pipelines/sql/all), --dry-run
+
+---
+
+## Sprint 11 — CLI, Config & Logging ✅
+
+**Goal:** Enhance the orchestrator with argparse CLI, YAML configuration, and structured logging.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 11.1 | argparse CLI enhancement | Orchestrator | `run_migration.py` | ✅ `--verbose`/`-v`, `--dry-run`, `--config path`, `--log-format text\|json` flags via `argparse.ArgumentParser` |
+| 11.2 | YAML configuration file | — | `migration.yaml` | ✅ Sections: fabric (workspace_id), sources (oracle/sqlserver JDBC), lakehouse (bronze/silver/gold), migration (load_mode, spark_pool, timeout, retry), paths, logging, alerting |
+| 11.3 | Structured logging (text) | Orchestrator | `run_migration.py` | ✅ `logging.getLogger("migration")` with configurable level (DEBUG if --verbose), timestamped `HH:MM:SS [LEVEL]` format, optional file handler from config |
+| 11.4 | Structured logging (JSON) | Orchestrator | `run_migration.py` | ✅ `JsonFormatter` outputs `{"ts", "level", "msg"}` JSON lines for machine-readable ingestion |
+| 11.5 | Config file loading | Orchestrator | `run_migration.py` | ✅ PyYAML-based `_load_config()` with import fallback if PyYAML not installed |
+| 11.6 | Dry-run preview | Orchestrator | `run_migration.py` | ✅ `--dry-run` lists all phases that would execute without running them |
+| 11.7 | UTF-8 stdout reconfigure | Orchestrator | `run_migration.py` | ✅ `sys.stdout.reconfigure(encoding="utf-8")` on Windows for box-drawing and emoji characters |
+
+**Sprint 11 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ `--dry-run --verbose` shows all 5 phases with timestamps and INFO logging
+- ✅ `--log-format json` outputs valid JSON lines with ISO timestamps
+- ✅ migration.yaml template covers all configuration sections
+- ✅ 64 tests still passing after CLI enhancements
+
+---
+
 ## Agent Development Plans
 
 ### 🔍 Assessment Agent — Development Roadmap
@@ -546,6 +615,9 @@ pie title Sprint Effort Distribution
     "Sprint 6 — Gap Remediation" : 15
     "Sprint 7 — Extended Coverage" : 10
     "Sprint 8 — Migration Engine" : 20
+    "Sprint 9 — Unit Tests" : 10
+    "Sprint 10 — Fabric Deploy" : 10
+    "Sprint 11 — CLI & Config" : 10
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -558,3 +630,6 @@ pie title Sprint Effort Distribution
 | **6** | Assessment, Notebook, Pipeline, SQL | Mapplet expansion, analytics, param files, templates | ✅ Complete |
 | **7** | Assessment, Notebook, Pipeline, SQL | IICS parser, SQL Server patterns, WSC/DM, PL/SQL split | ✅ Complete |
 | **8** | All (executable scripts) | `run_sql_migration.py`, `run_notebook_migration.py`, `run_pipeline_migration.py`, `run_validation.py`, `run_migration.py` | ✅ Complete |
+| **9** | All (testing) | `tests/test_migration.py`, `pytest.ini`, `tests/__init__.py` | ✅ Complete |
+| **10** | Orchestrator (deployment) | `deploy_to_fabric.py` | ✅ Complete |
+| **11** | Orchestrator (CLI/config) | `run_migration.py` (enhanced), `migration.yaml` | ✅ Complete |

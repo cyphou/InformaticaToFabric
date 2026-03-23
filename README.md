@@ -52,6 +52,15 @@ python run_migration.py --skip 0
 
 # Run only specific phases (e.g., SQL + notebooks)
 python run_migration.py --only 1 2
+
+# Preview without executing (dry-run)
+python run_migration.py --dry-run --verbose
+
+# Use a custom config file with JSON logging
+python run_migration.py --config migration.yaml --log-format json
+
+# Deploy generated artifacts to Fabric workspace
+python deploy_to_fabric.py --workspace-id <GUID> --dry-run
 ```
 
 > [!TIP]
@@ -430,9 +439,15 @@ InformaticaToDBFabric/
 ├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 3)
 ├── run_validation.py                    # ✅ Validation generation script (Phase 4)
 ├── run_migration.py                     # 🎯 End-to-end orchestrator (all phases)
+├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
 ├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
+├── migration.yaml                       # ⚙️ Configuration template (workspace, sources, logging)
+├── pytest.ini                           # 🧪 Test configuration
+├── tests/                               # 🧪 Unit test suite (64 tests)
+│   ├── __init__.py
+│   └── test_migration.py                # 6 test classes covering all phases
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (8 sprints)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (11 sprints)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis (82% coverage)
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -477,10 +492,58 @@ The orchestrator will:
 
 ### Fabric Deployment
 
-After generation, deploy artifacts to Fabric using:
+Deploy generated artifacts to Fabric using the included deployment script or manual methods:
+
+```bash
+# Dry-run: list what would be deployed
+python deploy_to_fabric.py --workspace-id <GUID> --dry-run
+
+# Deploy only notebooks
+python deploy_to_fabric.py --workspace-id <GUID> --only notebooks
+
+# Deploy everything (notebooks + pipelines + SQL scripts)
+python deploy_to_fabric.py --workspace-id <GUID>
+```
+
+Authentication uses `DefaultAzureCredential` (Azure CLI, Managed Identity, or environment variables). The script handles rate limiting (429 retries) and produces a `deployment_log.json` audit trail.
+
+Alternative deployment methods:
 - **Fabric Git Integration** — connect your repo to a Fabric workspace
 - **Manual Upload** — import notebooks and pipelines through the Fabric portal
-- **Fabric REST API** — automate deployment via API calls
+
+### Testing
+
+```bash
+# Run all 64 tests
+python -m pytest tests/ -v
+
+# Run specific test class
+python -m pytest tests/test_migration.py::TestSQLConversion -v
+```
+
+| Test Class | Tests | Covers |
+|------------|-------|--------|
+| `TestSQLConversion` | 25 | Oracle + SQL Server function mappings, edge cases |
+| `TestNotebookGeneration` | 8 | PySpark notebook content, all 18+ transformation types |
+| `TestPipelineGeneration` | 9 | Pipeline JSON structure, activities, dependencies |
+| `TestValidationGeneration` | 8 | Target inference, validation notebook L1-L3 checks |
+| `TestOrchestrator` | 9 | CLI arg parsing, summary generation, phase config |
+| `TestSQLEndToEnd` | 1 | Full SQL migration integration test |
+
+### Configuration
+
+Customize migration settings via `migration.yaml`:
+
+```yaml
+fabric:
+  workspace_id: "your-workspace-guid"
+sources:
+  oracle:
+    jdbc_url: "jdbc:oracle:thin:@host:1521:SID"
+logging:
+  level: INFO
+  format: text   # or json
+```
 
 ---
 
@@ -568,7 +631,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [README.md](README.md) | Project overview (this file) |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis (82% coverage) |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (8/8 sprints complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (11/11 sprints complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
 

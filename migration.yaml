@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────
+#  Informatica → Fabric Migration Configuration
+# ─────────────────────────────────────────────
+#
+# Copy this file and update values for your environment.
+# Referenced by: run_migration.py, deploy_to_fabric.py
+#
+
+# ── Fabric workspace ──
+fabric:
+  workspace_id: ""                          # Fabric workspace GUID (required for deploy)
+  # workspace_name: "Migration-Workspace"   # Optional display name for reports
+
+# ── Source connections (for validation notebooks) ──
+sources:
+  oracle:
+    jdbc_url: "jdbc:oracle:thin:@<host>:1521/<service>"
+    user: "<username>"
+    # password via Key Vault: dbutils.secrets.get("scope", "oracle-password")
+    driver: "oracle.jdbc.driver.OracleDriver"
+  sqlserver:
+    jdbc_url: "jdbc:sqlserver://<host>:1433;databaseName=<db>"
+    user: "<username>"
+    driver: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+
+# ── Lakehouse naming ──
+lakehouse:
+  bronze: "bronze"        # Raw ingestion layer
+  silver: "silver"        # Cleaned / conformed
+  gold:   "gold"          # Aggregated / business-ready
+
+# ── Migration options ──
+migration:
+  default_load_mode: "overwrite"      # overwrite | append | merge
+  spark_pool: "default"               # Spark pool name for notebooks
+  notebook_timeout: "0.02:00:00"      # Pipeline activity timeout
+  retry_count: 2                      # Pipeline retry count
+  retry_interval_seconds: 60
+
+# ── Paths (relative to project root) ──
+paths:
+  input_dir: "input"
+  output_dir: "output"
+  inventory: "output/inventory/inventory.json"
+
+# ── Logging ──
+logging:
+  level: "INFO"                       # DEBUG | INFO | WARNING | ERROR
+  format: "text"                      # text | json
+  file: ""                            # Empty = stdout only; set path for file logging
+
+# ── Alerting ──
+alerting:
+  webhook_url: ""                     # Logic App / Teams webhook for pipeline failure alerts
