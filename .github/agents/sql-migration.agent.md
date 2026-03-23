@@ -23,6 +23,9 @@ You are the **SQL migration agent**. You convert Oracle SQL code found in Inform
 3. Handle stored procedure migration
 4. Produce tested, clean SQL files
 
+## Reference
+Always consult `.vscode/instructions/informatica-patterns.instructions.md` for shared naming conventions, transformation patterns, and SQL conversion rules.
+
 ## SQL Sources in Informatica
 1. **Source Qualifier SQL Override** — Custom query replacing default `SELECT *`
 2. **Lookup SQL Override** — Custom lookup query
@@ -139,6 +142,49 @@ Include comments mapping back to the original Oracle SQL source.
 - Test complex conversions with sample data when possible
 - Flag any Oracle features that have no direct Spark equivalent with `-- TODO:` comments
 - For date format patterns: Oracle uses `YYYY`, Spark uses `yyyy` (lowercase)
+
+## Non-Convertible SQL Handling
+
+Some Oracle constructs cannot be automatically converted to Spark SQL. When encountered, preserve the original code and flag it for manual review.
+
+### Non-Convertible Constructs
+
+| Construct | Why | Suggested Manual Approach |
+|-----------|-----|--------------------------|
+| `CONNECT BY` / `START WITH` | Spark SQL recursive CTEs have limited depth | Rewrite with iterative PySpark DataFrame joins |
+| `CURSOR` + fetch loops | No direct equivalent | Use `.collect()` + Python loop (small data) or window functions |
+| `BULK COLLECT` / `FORALL` | PL/SQL bulk operations | Rewrite as DataFrame bulk operations |
+| `PACKAGE BODY` | Multi-procedure packages | Split into individual functions/notebooks |
+| Dynamic SQL (`EXECUTE IMMEDIATE`) | String-built SQL | Use Python f-string + `spark.sql()`, validate carefully |
+| `DBMS_*` / `UTL_*` packages | Oracle built-in packages | Find Python/PySpark equivalents case-by-case |
+| `PRAGMA` directives | PL/SQL compiler hints | Remove — not applicable in Spark |
+| `AUTONOMOUS_TRANSACTION` | Independent transaction commit | Not supported — restructure logic |
+| `%TYPE` / `%ROWTYPE` | PL/SQL type references | Replace with explicit types |
+
+### Output Format for Non-Convertible SQL
+
+When SQL cannot be converted, output this block:
+
+```sql
+-- ============================================================
+-- TODO: MANUAL CONVERSION REQUIRED
+-- Source: <original_file_or_override>
+-- Construct: <construct_name>
+-- ============================================================
+-- ORIGINAL ORACLE SQL (preserved for reference):
+-- <original_sql_block>
+-- ============================================================
+-- SUGGESTED APPROACH:
+-- <brief_guidance>
+-- ============================================================
+```
+
+### Rules for Non-Convertible SQL
+1. **Never silently drop SQL** — always preserve the original in a comment
+2. **Always add a TODO marker** — so it shows up in issue scanning
+3. **Provide guidance** — include a one-line suggestion for manual conversion
+4. **Track in issues** — add an entry to the structured issues list for `migration_issues.md`
+5. **Partial conversion is OK** — convert what you can, wrap the rest in TODO blocks
 
 ## Development Roadmap
 

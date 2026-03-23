@@ -188,6 +188,45 @@ You are the **pipeline migration agent**. You convert Informatica workflows into
 }
 ```
 
+### Worklet Nesting Depth
+
+Informatica Worklets can be nested (a Worklet containing another Worklet). Fabric pipelines support `ExecutePipeline` nesting, but **limit nesting to a reasonable depth** for maintainability and debuggability.
+
+#### Rules
+1. **Maximum nesting depth: 2 levels** — Parent → Child → Grandchild. Deeper nesting must be flattened.
+2. **Generate child pipelines** — Each Worklet becomes its own `PL_<worklet_name>.json` file.
+3. **Pass parameters through** — All parent parameters referenced by the child must be explicitly passed via the `ExecutePipeline` activity's `parameters` block.
+4. **Flatten beyond depth 2** — If a grandchild Worklet contains another Worklet (depth 3+), inline its activities into the grandchild pipeline instead of creating a great-grandchild pipeline.
+5. **Name child pipelines clearly** — `PL_<parent>_WKL_<worklet_name>` for child, `PL_<parent>_WKL_<worklet>_WKL_<sub>` for grandchild.
+
+#### Nesting Example (Depth 2)
+```
+WF_DAILY_LOAD (parent pipeline)
+  ├── s_LOAD_DIM  →  NB_M_LOAD_DIM  (notebook activity)
+  ├── WKL_FACT_LOAD  →  ExecutePipeline → PL_WF_DAILY_LOAD_WKL_FACT_LOAD
+  │     ├── s_LOAD_ORDERS  →  NB_M_LOAD_ORDERS
+  │     └── WKL_ORDER_DETAIL  →  ExecutePipeline → PL_..._WKL_ORDER_DETAIL
+  │           ├── s_LOAD_ORDER_LINES  →  NB_M_LOAD_ORDER_LINES  (flattened if depth 3+)
+  │           └── s_LOAD_ORDER_PAYMENTS  →  NB_M_LOAD_ORDER_PAYMENTS
+  └── s_POST_PROCESS  →  NB_M_POST_PROCESS
+```
+
+#### Parameter Pass-Through Template
+```json
+{
+  "name": "Invoke_PL_WKL_FACT_LOAD",
+  "type": "ExecutePipeline",
+  "typeProperties": {
+    "pipeline": { "referenceName": "PL_WF_DAILY_LOAD_WKL_FACT_LOAD" },
+    "parameters": {
+      "load_date": { "value": "@pipeline().parameters.load_date", "type": "string" },
+      "batch_id": { "value": "@pipeline().parameters.batch_id", "type": "string" }
+    },
+    "waitOnCompletion": true
+  }
+}
+```
+
 ## Scheduling
 - Informatica schedules → Fabric **Pipeline Triggers**
 - For cron-based schedules: use **Schedule Trigger**
@@ -198,6 +237,43 @@ You are the **pipeline migration agent**. You convert Informatica workflows into
 - Write pipeline JSON to `output/pipelines/PL_<workflow_name>.json`
 - One file per workflow
 - Follow naming conventions from shared instructions
+
+## Retry & Timeout Policies
+
+Every activity in a generated pipeline MUST include a `policy` block with retry and timeout settings.
+
+### Default Policies by Activity Type
+
+| Activity Type | Timeout | Retry | Retry Interval (sec) | Rationale |
+|---------------|---------|-------|---------------------|-----------|
+| NotebookActivity | `02:00:00` (2h) | 2 | 30 | Long-running transforms; allow retries for transient Spark failures |
+| ExecutePipeline | `04:00:00` (4h) | 1 | 60 | Child pipelines have their own retries; outer retry is last resort |
+| IfCondition | `00:10:00` (10m) | 0 | 0 | Evaluation-only; should never timeout |
+| Wait | (inherent) | 0 | 0 | Wait duration is the activity itself |
+| Web Activity | `00:10:00` (10m) | 3 | 10 | External calls; aggressive retry for transient HTTP errors |
+| SetVariable | `00:05:00` (5m) | 0 | 0 | Instant operation; no retry needed |
+
+### Policy JSON Template
+```json
+{
+  "name": "NB_<mapping_name>",
+  "type": "NotebookActivity",
+  "policy": {
+    "timeout": "02:00:00",
+    "retry": 2,
+    "retryIntervalInSeconds": 30,
+    "secureOutput": false,
+    "secureInput": false
+  },
+  "typeProperties": { }
+}
+```
+
+### Override Rules
+- If the original Informatica session had a custom timeout, convert it: Informatica timeout (seconds) → Fabric format `HH:MM:SS`
+- If a mapping is classified as **Complex** or **Custom**, increase notebook timeout to `04:00:00`
+- If the workflow has email-on-failure tasks, keep retry count at 1 for notebook activities (to fail fast and notify)
+- Document any timeout overrides in the pipeline description field
 
 ## Development Roadmap
 
@@ -217,3 +293,6 @@ You are the **pipeline migration agent**. You convert Informatica workflows into
 - Include the original Informatica workflow name in the pipeline description
 - Parameterize everything — no hardcoded values
 - If a workflow has a worklet, generate BOTH the parent pipeline and child pipeline
+
+## Reference
+Always consult `.vscode/instructions/informatica-patterns.instructions.md` for shared naming conventions, transformation patterns, and SQL conversion rules.

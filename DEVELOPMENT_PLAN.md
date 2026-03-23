@@ -207,21 +207,28 @@ gantt
 
 ---
 
-## Sprint 5 — Polish, Hardening & Documentation
+## Sprint 5 — Polish, Hardening & Documentation ✅
 
 **Goal:** Handle edge cases, improve error messages, and finalize documentation.
 
 | # | Task | Owner | Files | Acceptance Criteria |
 |---|------|-------|-------|-------------------|
-| 5.1 | Handle missing/malformed XML gracefully | Assessment | `assessment.agent.md` | Clear error messages, partial results saved |
-| 5.2 | Handle unsupported transformation types | Notebook | `notebook-migration.agent.md` | Placeholder cell with TODO comment |
-| 5.3 | Handle non-convertible Oracle SQL | SQL | `sql-migration.agent.md` | Comment with original + manual conversion note |
-| 5.4 | Handle complex Worklet nesting | Pipeline | `pipeline-migration.agent.md` | Nested pipelines up to 2 levels deep |
-| 5.5 | Add retry/timeout policies to all pipeline activities | Pipeline | `pipeline-migration.agent.md` | Configurable policies per activity |
-| 5.6 | Generate migration issues report | Orchestrator | `output/migration_issues.md` | All warnings and manual items catalogued |
-| 5.7 | Update README.md with final examples | — | `README.md` | Screenshots/examples of generated outputs |
-| 5.8 | Update shared instructions with lessons learned | — | `.vscode/instructions/` | New patterns documented |
-| 5.9 | Final review of all agent `.md` files | All | `.github/agents/` | Consistent format, complete instructions |
+| 5.1 | Handle missing/malformed XML gracefully | Assessment | `run_assessment.py` | ✅ IICS detection, safe_parse_xml, per-mapping try/except, partial results |
+| 5.2 | Handle unsupported transformation types | Notebook | `notebook-migration.agent.md` | ✅ Placeholder cell template with TODO + 6 unsupported types documented |
+| 5.3 | Handle non-convertible Oracle SQL | SQL | `sql-migration.agent.md` | ✅ 9 non-convertible constructs documented with TODO block template |
+| 5.4 | Handle complex Worklet nesting | Pipeline | `pipeline-migration.agent.md` | ✅ Max 2-level nesting, flatten rules, parameter pass-through |
+| 5.5 | Add retry/timeout policies to all pipeline activities | Pipeline | `pipeline-migration.agent.md` | ✅ 6 activity types with default policies + override rules |
+| 5.6 | Generate migration issues report | Orchestrator | `output/migration_issues.md` | ✅ 6 issues (2 P0, 3 P1, 1 P2) with resolution tracking |
+| 5.7 | Update README.md with final examples | — | `README.md` | ✅ 4 code excerpts (notebook, SQL, pipeline, validation) |
+| 5.8 | Update shared instructions with lessons learned | — | `.vscode/instructions/` | ✅ 10 lessons across 5 categories |
+| 5.9 | Final review of all agent `.md` files | All | `.github/agents/` | ✅ Reference sections added, Sprint 5 labels unified, ordering fixed |
+
+**Sprint 5 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ Malformed XML handled gracefully with partial results saved
+- ✅ All unsupported types documented with placeholder/TODO patterns
+- ✅ Agent files have consistent structure (Reference, Output, Rules, Roadmap)
+- ✅ README has generated output examples
+- ✅ Shared instructions updated with lessons learned
 
 ---
 

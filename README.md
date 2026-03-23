@@ -413,7 +413,84 @@ After generation, deploy artifacts to Fabric using:
 
 ---
 
-## 📝 Documentation
+## � Generated Output Examples
+
+Here are excerpts from actual generated artifacts to illustrate what the agents produce.
+
+### PySpark Notebook (Simple Mapping)
+
+From `output/notebooks/NB_M_LOAD_CUSTOMERS.py`:
+
+```python
+# --- Transformation: EXP_DERIVE_FIELDS (Expression) ---
+df = df_source.withColumn(
+    "FULL_NAME", concat_ws(" ", col("FIRST_NAME"), col("LAST_NAME"))
+).withColumn(
+    "LOAD_DATE", current_timestamp()
+)
+
+# --- Transformation: FIL_ACTIVE_ONLY (Filter) ---
+df = df.filter(col("STATUS") == "ACTIVE")
+
+# Write to target — silver.dim_customer
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true") \
+    .saveAsTable("silver.dim_customer")
+```
+
+### SQL Conversion (Oracle → Spark SQL)
+
+From `output/sql/SQL_SP_UPDATE_ORDER_STATS.sql`:
+
+```sql
+-- Oracle: NVL(discount, 0)        → Spark: COALESCE(discount, 0)
+-- Oracle: SYSDATE                 → Spark: current_timestamp()
+-- Oracle: DECODE(status, 'A', 1)  → Spark: CASE WHEN status = 'A' THEN 1 ... END
+
+MERGE INTO silver.order_stats AS t
+USING staging_order_agg AS s
+ON t.order_date = s.order_date
+WHEN MATCHED THEN UPDATE SET
+    t.total_amount = s.total_amount,
+    t.updated_at = current_timestamp()
+WHEN NOT MATCHED THEN INSERT *;
+```
+
+### Pipeline JSON (Workflow → Fabric Pipeline)
+
+From `output/pipelines/PL_WF_DAILY_SALES_LOAD.json`:
+
+```json
+{
+  "name": "NB_M_LOAD_ORDERS",
+  "type": "NotebookActivity",
+  "dependsOn": [
+    { "activity": "NB_M_LOAD_CUSTOMERS", "dependencyConditions": ["Succeeded"] }
+  ],
+  "typeProperties": {
+    "notebook": { "referenceName": "NB_M_LOAD_ORDERS", "type": "NotebookReference" },
+    "parameters": {
+      "load_date": { "value": "@pipeline().parameters.load_date", "type": "string" }
+    }
+  }
+}
+```
+
+### Validation Notebook (Row Count Check)
+
+From `output/validation/VAL_FACT_ORDERS.py`:
+
+```python
+# Level 1: Row Count Comparison
+src_count = df_oracle.count()
+tgt_count = spark.table("silver.fact_orders").count()
+row_count_match = src_count == tgt_count
+results.append(("Row Count", "PASS" if row_count_match else "FAIL",
+                f"Source: {src_count}, Target: {tgt_count}"))
+```
+
+---
+
+## �📝 Documentation
 
 | Document | Description |
 |----------|-------------|

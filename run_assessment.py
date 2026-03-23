@@ -8,6 +8,8 @@ import xml.etree.ElementTree as ET
 import json
 import os
 import re
+import sys
+import traceback
 from pathlib import Path
 from collections import OrderedDict
 
@@ -17,6 +19,10 @@ OUTPUT_DIR = WORKSPACE / "output" / "inventory"
 
 # Ensure output directory exists
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# IICS (Informatica Intelligent Cloud Services) root tags for format detection
+IICS_ROOT_TAGS = {"exportMetadata", "weightedCSPackage", "dTemplate", "design"}
+POWERCENTER_ROOT_TAGS = {"POWERMART", "REPOSITORY", "FOLDER", "MAPPING", "WORKFLOW"}
 
 # Transformation type abbreviation mapping
 TRANSFORMATION_ABBREV = {
@@ -77,19 +83,97 @@ ORACLE_PATTERNS = {
     "CREATE OR REPLACE": r"\bCREATE\s+OR\s+REPLACE\b",
 }
 
-# Warnings collector
+# Warnings and issues collectors
 warnings = []
+issues = []  # Structured issues for migration_issues.md
+
+
+def detect_xml_format(filepath):
+    """Detect whether an XML file is PowerCenter or IICS format.
+    Returns 'powercenter', 'iics', or 'unknown'.
+    """
+    try:
+        for event, elem in ET.iterparse(filepath, events=("start",)):
+            tag = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
+            if tag in POWERCENTER_ROOT_TAGS:
+                return "powercenter"
+            if tag in IICS_ROOT_TAGS:
+                return "iics"
+            return "unknown"
+    except ET.ParseError:
+        return "unknown"
+    return "unknown"
+
+
+def safe_parse_xml(filepath):
+    """Safely parse an XML file, handling encoding issues and malformed XML.
+    Returns (tree, root) or (None, None) on failure.
+    """
+    # Try standard parse first
+    try:
+        tree = ET.parse(filepath)
+        return tree, tree.getroot()
+    except ET.ParseError as e:
+        warnings.append(f"XML parse error in {filepath.name}: {e}")
+    except Exception as e:
+        warnings.append(f"Unexpected error reading {filepath.name}: {e}")
+
+    # Fallback: read as text, strip invalid chars, re-parse
+    try:
+        content = filepath.read_text(encoding="utf-8", errors="replace")
+        # Remove XML declaration if malformed
+        content = re.sub(r'<\?xml[^?]*\?>', '<?xml version="1.0" encoding="UTF-8"?>', content, count=1)
+        # Remove null bytes
+        content = content.replace("\x00", "")
+        root = ET.fromstring(content)
+        warnings.append(f"Recovered {filepath.name} after cleaning invalid characters")
+        return ET.ElementTree(root), root
+    except Exception as e2:
+        warnings.append(f"FATAL: Cannot parse {filepath.name} even after cleanup: {e2}")
+        issues.append({
+            "type": "parse_error",
+            "severity": "ERROR",
+            "file": str(filepath.name),
+            "detail": str(e2),
+            "action": "Fix XML manually or re-export from Informatica"
+        })
+        return None, None
 
 
 def abbrev(tx_type):
-    """Abbreviate transformation type."""
-    return TRANSFORMATION_ABBREV.get(tx_type, tx_type)
+    """Abbreviate transformation type. Unknown types are flagged."""
+    short = TRANSFORMATION_ABBREV.get(tx_type)
+    if short is None:
+        warnings.append(f"Unknown transformation type: '{tx_type}' — using raw name")
+        issues.append({
+            "type": "unsupported_transformation",
+            "severity": "WARNING",
+            "detail": f"Transformation type '{tx_type}' not in known mapping",
+            "action": "Review manually — may need custom PySpark logic"
+        })
+        return tx_type
+    return short
 
 
 def parse_mapping_xml(filepath):
     """Parse a single Informatica mapping XML file."""
-    tree = ET.parse(filepath)
-    root = tree.getroot()
+    fmt = detect_xml_format(filepath)
+    if fmt == "iics":
+        warnings.append(f"IICS format detected in {filepath.name} — IICS parsing not yet supported")
+        issues.append({
+            "type": "unsupported_format",
+            "severity": "WARNING",
+            "file": str(filepath.name),
+            "detail": "IICS (Cloud) format detected. Only PowerCenter XML is currently supported.",
+            "action": "Export as PowerCenter XML or implement IICS parser"
+        })
+        return []
+    if fmt == "unknown":
+        warnings.append(f"Unrecognized XML format in {filepath.name} — attempting PowerCenter parse")
+
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []  # Partial results — file skipped
 
     mappings = []
 
@@ -109,6 +193,7 @@ def parse_mapping_xml(filepath):
         mapping_elements = list(root.iter("MAPPING"))
 
     for mapping_el in mapping_elements:
+      try:
         m_name = mapping_el.get("NAME", os.path.basename(filepath).replace(".xml", ""))
 
         # Sources — look both inside MAPPING and at FOLDER level (sibling of MAPPING)
@@ -237,6 +322,16 @@ def parse_mapping_xml(filepath):
         }
 
         mappings.append(mapping_info)
+      except Exception as e:
+        warnings.append(f"Error parsing mapping element in {filepath.name}: {e}")
+        issues.append({
+            "type": "mapping_parse_error",
+            "severity": "WARNING",
+            "file": str(filepath.name),
+            "detail": str(e),
+            "action": "Review mapping XML element manually"
+        })
+        continue
 
     if not mappings:
         warnings.append(f"WARNING: No <MAPPING> elements found in {filepath.name}")
@@ -294,8 +389,9 @@ def classify_complexity(transformations, sql_overrides, sources, targets, has_st
 
 def parse_workflow_xml(filepath):
     """Parse a workflow XML file."""
-    tree = ET.parse(filepath)
-    root = tree.getroot()
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
 
     workflows = []
 
@@ -718,8 +814,8 @@ def main():
                 all_mappings.extend(mappings)
                 for m in mappings:
                     print(f"    -> {m['name']} ({m['complexity']}) -- {len(m['transformations'])} transformations")
-            except ET.ParseError as e:
-                warnings.append(f"XML parse error in {xml_file.name}: {e}")
+            except Exception as e:
+                warnings.append(f"Error processing {xml_file.name}: {e}")
                 print(f"    ERROR: {e}")
     print(f"  Total mappings found: {len(all_mappings)}")
     print()
@@ -736,8 +832,8 @@ def main():
                 all_workflows.extend(workflows)
                 for wf in workflows:
                     print(f"    -> {wf['name']} -- {len(wf['sessions'])} sessions, {len(wf['links'])} links")
-            except ET.ParseError as e:
-                warnings.append(f"XML parse error in {xml_file.name}: {e}")
+            except Exception as e:
+                warnings.append(f"Error processing {xml_file.name}: {e}")
                 print(f"    ERROR: {e}")
     print(f"  Total workflows found: {len(all_workflows)}")
     print()
@@ -797,13 +893,33 @@ def main():
         for w in warnings:
             print(f"    - {w}")
 
+    if issues:
+        print()
+        print(f"  ISSUES REQUIRING ATTENTION: {len(issues)}")
+        for i in issues:
+            print(f"    [{i['severity']}] {i['type']}: {i.get('detail', '')}")
+
+        # Write structured issues file for migration_issues.md generation
+        issues_path = OUTPUT_DIR / "parse_issues.json"
+        with open(issues_path, "w", encoding="utf-8") as f:
+            json.dump(issues, f, indent=2, ensure_ascii=False)
+        print(f"  Written: {issues_path}")
+
     print()
     print("=" * 60)
     print("  Outputs written to: output/inventory/")
     print("    - inventory.json")
     print("    - complexity_report.md")
     print("    - dependency_dag.json")
+    if issues:
+        print("    - parse_issues.json")
     print("=" * 60)
+
+    # Return non-zero exit code if there were errors (not just warnings)
+    error_count = sum(1 for i in issues if i["severity"] == "ERROR")
+    if error_count:
+        print(f"\n  Completed with {error_count} error(s). Partial results saved.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

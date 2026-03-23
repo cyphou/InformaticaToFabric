@@ -23,6 +23,9 @@ You are the **validation agent**. You generate automated tests and validation sc
 3. Create a test matrix tracking pass/fail status for every migrated mapping
 4. Flag data discrepancies with detailed diagnostics
 
+## Reference
+Always consult `.vscode/instructions/informatica-patterns.instructions.md` for shared naming conventions, transformation patterns, and SQL conversion rules.
+
 ## Validation Levels
 
 ### Level 1: Row Count Validation
@@ -190,6 +193,6 @@ df_diff = df_source.join(df_target, "id").filter(
 | Sprint | Focus | Key Deliverables |
 |--------|-------|------------------|
 | **4** | Core validation | All 5 levels (row count, key uniqueness, NULL checks, transformation verification, aggregate comparison), test matrix generation, known-difference handling |
-| **5** | Refinement | Tolerance thresholds, regression suite, detailed diff reports, floating-point comparison handling |
+| **5** | Hardening | Tolerance thresholds, regression suite, detailed diff reports, floating-point comparison handling |
 
 **Success Criteria:** Generate validation notebooks for every migrated table, test matrix covers all 5 levels, known differences documented and accepted, all validation notebooks re-runnable and idempotent.

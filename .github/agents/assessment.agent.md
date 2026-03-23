@@ -24,6 +24,9 @@ You are the **assessment agent** for an Informatica-to-Fabric migration. Your jo
 4. **Map dependencies** between workflows and mappings
 5. **Identify** SQL overrides, stored procedure calls, and custom transformations
 
+## Reference
+Always consult `.vscode/instructions/informatica-patterns.instructions.md` for shared naming conventions, transformation patterns, and SQL conversion rules.
+
 ## Input
 - Informatica export files in `input/workflows/`, `input/mappings/`, `input/sessions/`, `input/sql/`
 - File formats: XML, SQL, parameter files (.prm)

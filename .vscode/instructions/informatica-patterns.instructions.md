@@ -156,3 +156,27 @@ df = df.withColumn("rank", row_number().over(window))
 - All notebooks should use try/except blocks for critical operations
 - Pipeline-level: use `On Failure` dependency paths
 - Log errors to a `_migration_log` Delta table in Gold lakehouse
+
+## Lessons Learned (from migration execution)
+
+### XML Parsing Pitfalls
+- **SOURCE/TARGET at FOLDER level:** Some Informatica XML exports place `<SOURCE>` and `<TARGET>` elements as siblings of `<MAPPING>` at the `<FOLDER>` level, not nested inside `<MAPPING>`. Always search both locations.
+- **IICS vs PowerCenter format:** IICS (Cloud) exports use different root tags (`exportMetadata`, `dTemplate`). Detect format before parsing; PowerCenter uses `POWERMART`, `REPOSITORY`, `FOLDER`.
+- **Encoding issues:** Some exports include null bytes or invalid UTF-8. Use `errors="replace"` and strip `\x00`.
+
+### Complexity Classification Insights
+- **Update Strategy = Complex:** UPD transformations always require Delta MERGE, which is inherently complex. Weight UPD at 2 in complexity scoring, not 1.
+- **SQL overrides escalate complexity:** Any mapping with SQL overrides should be at least Medium, even if transformations are simple.
+
+### SQL Conversion Patterns
+- **Oracle DATE includes time:** Oracle `DATE` type stores both date and time. Map to Spark `TIMESTAMP`, not `DATE`.
+- **DECODE nesting:** Deeply nested `DECODE()` calls should be converted to `CASE WHEN` chains, not nested ternaries.
+- **Post-session SQL:** `EXEC <stored_proc>` in post-session SQL needs special handling — it doesn't convert to a simple `%%sql` cell. Consider a separate notebook activity in the pipeline.
+
+### Pipeline Generation
+- **Retry policies are required:** Every activity must have a `policy` block. Fabric defaults may not match Informatica behavior.
+- **Worklet nesting:** Limit to 2 levels of `ExecutePipeline` nesting for maintainability. Flatten deeper hierarchies.
+
+### Agent Collaboration
+- **Sub-agents cannot write to arbitrary paths:** Each agent should only write to its designated output folder. Cross-agent file access is read-only.
+- **Partial results are better than no results:** If one mapping fails to parse, save the rest. Use per-element try/except, not per-file.

@@ -138,6 +138,50 @@ print(f"Rows written: {df_final.count()}")
 - Handle both full-load and incremental patterns appropriately
 - Test-friendly: notebooks should be parameterizable for different environments
 
+## Unsupported & Custom Transformations
+
+When a mapping contains a transformation type that cannot be auto-converted, generate a **placeholder cell** instead of skipping it.
+
+### Placeholder Cell Template
+```python
+# ============================================================
+# TODO: MANUAL CONVERSION REQUIRED
+# Transformation: <tx_name> (Type: <tx_type>)
+# Original Informatica logic could not be auto-converted.
+# ============================================================
+# Reason: <reason>
+#
+# Original ports:
+#   Input:  <list of input port names>
+#   Output: <list of output port names>
+#
+# Action required:
+#   1. Review the original Informatica transformation logic
+#   2. Implement equivalent PySpark logic below
+#   3. Ensure output columns match: <output_port_list>
+#   4. Remove this TODO block after implementation
+#
+# df = df  # <-- Replace with actual transformation logic
+# ============================================================
+```
+
+### Types Requiring Placeholder Cells
+
+| Informatica Type | Abbrev | Reason | Guidance |
+|-----------------|--------|--------|----------|
+| Java Transformation | JTX | Embedded Java code | Rewrite in PySpark; if complex, consider a Python UDF |
+| Custom Transformation | CT | Custom C/C++ code | Rewrite in PySpark; if no Python equivalent, use subprocess or Spark UDF |
+| HTTP Transformation | HTTP | External API call | Use `requests` library in a UDF or move to pipeline Web Activity |
+| XML Generator | XMLG | XML construction | Use `to_xml()` or string templates in PySpark |
+| XML Parser | XMLP | XML parsing | Use `spark.read.format("xml")` or `xmltodict` in a UDF |
+| Stored Procedure | SP | Database procedure call | Convert to Spark SQL or call via JDBC; hand off to @sql-migration |
+
+### Rules for Placeholder Generation
+1. **Always include the placeholder** — never silently skip a transformation
+2. **Preserve the data flow** — pass through input columns so downstream transformations still work
+3. **Log a warning** — print a message so the notebook execution log highlights manual items
+4. **Mark complexity as Custom** — if a mapping has any placeholder cells, flag it in the inventory
+
 ## Development Roadmap
 
 > See `DEVELOPMENT_PLAN.md` for full sprint details.
