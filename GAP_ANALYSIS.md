@@ -1,13 +1,13 @@
 # Informatica to Fabric — Object Inventory & Gap Analysis
 
 <p align="center">
-  <img src="https://img.shields.io/badge/objects_covered-82%25-27AE60?style=for-the-badge" alt="82% covered"/>
+  <img src="https://img.shields.io/badge/objects_covered-88%25-27AE60?style=for-the-badge" alt="88% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_7_complete-27AE60?style=for-the-badge" alt="Sprint 7 complete"/>
+  <img src="https://img.shields.io/badge/status-sprint_21_complete-27AE60?style=for-the-badge" alt="Sprint 21 complete"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-03-23 (Sprint 6+7 remediation applied)  
+**Last Updated:** 2026-03-23 (Sprint 17–21 remediation applied)  
 **Scope:** Informatica PowerCenter 9.x/10.x + IICS → Microsoft Fabric  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
@@ -31,8 +31,8 @@
 
 ```mermaid
 pie title Informatica Object Migration Coverage
-    "Fully Covered" : 43
-    "Partially Covered" : 8
+    "Fully Covered" : 51
+    "Partially Covered" : 4
     "Placeholder Only" : 6
     "Not Covered (Gap)" : 7
 ```
@@ -40,12 +40,12 @@ pie title Informatica Object Migration Coverage
 | Category | Total Objects | Covered | Partial | Placeholder | Gap |
 |----------|:------------:|:-------:|:-------:|:-----------:|:---:|
 | **Transformations** | 30 | 14 | 1 | 6 | 9 |
-| **Workflow Elements** | 14 | 10 | 3 | 0 | 1 |
+| **Workflow Elements** | 14 | 12 | 1 | 0 | 1 |
 | **Repository Objects** | 8 | 5 | 1 | 0 | 2 |
 | **SQL Constructs** | 30 | 30 | 0 | 0 | 0 |
-| **IICS Objects** | 8 | 2 | 2 | 0 | 4 |
+| **IICS Objects** | 8 | 5 | 1 | 0 | 2 |
 | **Infrastructure** | 6 | 0 | 0 | 0 | 6 |
-| **Total** | **96** | **61** | **7** | **6** | **22** |
+| **Total** | **96** | **66** | **4** | **6** | **20** |
 
 **Coverage legend:**
 - ✅ **Covered** — Full conversion logic documented and implemented
@@ -136,13 +136,15 @@ These Informatica transformation types are **not recognized** by the project. If
 | 8 | Workflow Link (unconditional) | `dependsOn: Succeeded` | ✅ | ✅ |
 | 9 | Workflow Link (conditional) | IfCondition wrapping | ✅ | ✅ |
 
-### 2.2 Partially Covered (3)
+### 2.2 Partially Covered (1)
 
 | # | Informatica Element | What's Covered | What's Missing |
 |---|---|---|---|
-| 10 | Scheduler | Name extracted | Cron expression / repeat interval parsing |
+| 10 | ~~Scheduler~~ | ✅ **Full (Sprint 20)** — Schedule type → cron expression, pipeline ScheduleTrigger | ✅ Addressed |
 | 11 | Event Wait | Documented mapping | No XML parsing for event conditions |
 | 12 | Event Raise | Documented mapping | No XML parsing for event definitions |
+
+> **Promoted to Fully Covered (Sprint 20):** Scheduler — cron expression parsing (DAILY/HOURLY/WEEKLY/MONTHLY → cron) + pipeline ScheduleTrigger generation
 
 ### 2.3 Gap — Not Covered (1)
 
@@ -265,20 +267,20 @@ The project assumes **Oracle** as the source database. Other common Informatica 
 
 ## 5. IICS (Cloud) Objects
 
-The project detects IICS format XML and **can now parse Cloud Mappings** (Sprint 7). Taskflows and other IICS object types remain partially covered.
+The project detects IICS format XML and **has full IICS support** (Sprint 19). Cloud Mappings, Taskflows, Sync/Mass Ingestion tasks, and Connections are all parsed.
 
 ### 5.1 IICS Object Types
 
 | # | IICS Object | PowerCenter Equivalent | Covered | Priority |
 |---|---|---|---|---|
 | 1 | **Cloud Mapping** | Mapping | ✅ **Parsed (Sprint 7)** — `parse_iics_mapping()` with namespace support | ✅ Addressed |
-| 2 | **Taskflow** | Workflow | 🟡 **Partial (Sprint 7)** — Element mapping documented in pipeline agent | **P1** |
-| 3 | **Synchronization Task** | Session (simple) | ❌ Not parsed | **P1** |
-| 4 | **Mass Ingestion Task** | Bulk load session | ❌ Not parsed | **P1** |
-| 5 | **Mapping Task** | Session | 🟡 **Partial** — Mapped via Taskflow guidance | **P1** |
+| 2 | **Taskflow** | Workflow | ✅ **Full (Sprint 19)** — `parse_iics_taskflow()` with mapping tasks, commands, gateways, timer events | ✅ Addressed |
+| 3 | **Synchronization Task** | Session (simple) | ✅ **Parsed (Sprint 19)** — `parse_iics_sync_tasks()` as mappings | ✅ Addressed |
+| 4 | **Mass Ingestion Task** | Bulk load session | ✅ **Parsed (Sprint 19)** — `parse_iics_mass_ingestion()` | ✅ Addressed |
+| 5 | **Mapping Task** | Session | ✅ **Full (Sprint 19)** — Parsed within Taskflow as activities | ✅ Addressed |
 | 6 | **Data Quality Task** | DQ workflow | ❌ Not parsed | **P2** |
 | 7 | **Application Integration** | — (IICS-only) | ❌ Not parsed | **P2** |
-| 8 | **IICS Connections** | Connection objects | ❌ Not parsed | **P1** |
+| 8 | **IICS Connections** | Connection objects | ✅ **Parsed (Sprint 19)** — `parse_iics_connections()` | ✅ Addressed |
 
 ### 5.2 IICS XML Structure Differences
 
@@ -410,6 +412,24 @@ quadrantChart
 | 7.5 | ~~Data Masking support~~ | Notebook | 3 masking approaches (hash, partial, Fabric DDM) | ✅ Done |
 | 7.6 | ~~Connection XML parser~~ | Assessment | `parse_connection_objects()` for DBCONNECTION/FTPCONNECTION/CONNECTION | ✅ Done |
 | 7.7 | ~~PL/SQL Package splitter~~ | SQL | Splitting strategy + output structure documented | ✅ Done |
+
+### Sprint 19 — IICS Full Support ✅ COMPLETE
+
+| # | Task | Owner | Deliverable | Status |
+|---|------|-------|-------------|--------|
+| 19.1 | ~~IICS Taskflow parser~~ | Assessment | `parse_iics_taskflow()` with mapping tasks, commands, gateways, timer events | ✅ Done |
+| 19.2 | ~~IICS Sync Task parser~~ | Assessment | `parse_iics_sync_tasks()` as mappings | ✅ Done |
+| 19.3 | ~~IICS Mass Ingestion parser~~ | Assessment | `parse_iics_mass_ingestion()` | ✅ Done |
+| 19.4 | ~~IICS Connection parser~~ | Assessment | `parse_iics_connections()` | ✅ Done |
+| 19.5 | ~~XML namespace fix~~ | Assessment | Handle `xmlns=""` clearing namespace | ✅ Done |
+
+### Sprint 20 — Gap Remediation P1/P2 ✅ COMPLETE
+
+| # | Task | Owner | Deliverable | Status |
+|---|------|-------|-------------|--------|
+| 20.1 | ~~Session config parser~~ | Assessment | DTM buffer, commit interval, cache sizes → Spark config | ✅ Done |
+| 20.2 | ~~Scheduler cron converter~~ | Assessment + Pipeline | DAILY/HOURLY/WEEKLY/MONTHLY → cron expression + ScheduleTrigger | ✅ Done |
+| 20.3 | ~~GTT / MV / DB Link detection~~ | Assessment + SQL | Detection functions with line tracking; GTT → temp view, MV → TODO, DB link → TODO JDBC | ✅ Done |
 
 ---
 

@@ -1,9 +1,9 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-21%2F21%20complete-27AE60?style=for-the-badge" alt="21/21 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-21%2F24%20complete-2980B9?style=for-the-badge" alt="21/24 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
-  <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
+  <img src="https://img.shields.io/badge/status-3%20planned-2980B9?style=for-the-badge" alt="3 Planned"/>
 </p>
 
 > This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
@@ -34,6 +34,9 @@
 - [Sprint 19 — IICS Full Support](#sprint-19--iics-full-support)
 - [Sprint 20 — Gap Remediation P1/P2](#sprint-20--gap-remediation-p1p2)
 - [Sprint 21 — User Guide & Onboarding](#sprint-21--user-guide--onboarding)
+- [Sprint 22 — IICS Gap Closure](#sprint-22--iics-gap-closure)
+- [Sprint 23 — Additional Source DB Support](#sprint-23--additional-source-db-support)
+- [Sprint 24 — Coverage to 95%+](#sprint-24--coverage-to-95)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -570,6 +573,66 @@ gantt
 
 ---
 
+## Sprint 22 — IICS Gap Closure
+
+**Goal:** Close remaining IICS gaps — Data Quality Task, Application Integration, and improve Taskflow edge-case coverage.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 22.1 | IICS Data Quality Task parser | Assessment | `run_assessment.py` | Parse DQ tasks from IICS exports, classify complexity, add to inventory |
+| 22.2 | IICS Application Integration parser | Assessment | `run_assessment.py` | Parse Application Integration (event-driven) tasks, add to inventory |
+| 22.3 | Taskflow edge cases | Assessment + Pipeline | `run_assessment.py`, `run_pipeline_migration.py` | Handle nested subflows, parallel gateways with >2 branches, timer events with custom durations |
+| 22.4 | IICS-specific notebook generation | Notebook | `run_notebook_migration.py` | Generate notebooks from IICS mapping metadata (field-level lineage) |
+| 22.5 | IICS test suite expansion | Validation | `tests/test_iics.py` | 15+ new IICS tests covering DQ, App Integration, edge cases |
+
+**Sprint 22 Exit Criteria:**
+- [ ] Data Quality Task and Application Integration parsed from IICS exports
+- [ ] Taskflow edge cases (nested subflows, multi-branch gateways) handled
+- [ ] 23+ new IICS tests added
+
+---
+
+## Sprint 23 — Additional Source DB Support
+
+**Goal:** Add detection and conversion rules for Teradata, DB2, and MySQL/PostgreSQL source databases.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 23.1 | Teradata detection patterns | Assessment | `run_assessment.py` | 15+ Teradata SQL patterns (QUALIFY, SAMPLE, FORMAT, SEL, COLLECT STATISTICS, VOLATILE TABLE, .DATE, CASESPECIFIC) |
+| 23.2 | Teradata → Spark SQL conversion | SQL | `run_sql_migration.py` | QUALIFY→Window+filter, SAMPLE→TABLESAMPLE, volatile→temp view, FORMAT→date_format, CASESPECIFIC→COLLATE |
+| 23.3 | DB2 detection patterns | Assessment | `run_assessment.py` | 10+ DB2 patterns (FETCH FIRST, VALUE, CURRENT DATE, RRN, DECIMAL) |
+| 23.4 | DB2 → Spark SQL conversion | SQL | `run_sql_migration.py` | FETCH FIRST→LIMIT, VALUE→COALESCE, CURRENT DATE→current_date() |
+| 23.5 | MySQL/PostgreSQL detection | Assessment | `run_assessment.py` | 10+ patterns per dialect (LIMIT, IFNULL, NOW(), INTERVAL, ::type→CAST) |
+| 23.6 | MySQL/PostgreSQL → Spark SQL | SQL | `run_sql_migration.py` | IFNULL→COALESCE, NOW()→current_timestamp(), ::→CAST |
+| 23.7 | Source DB test suite | Validation | `tests/test_gaps.py` | 30+ tests covering all new DB patterns |
+
+**Sprint 23 Exit Criteria:**
+- [ ] `detect_source_db_type()` identifies Teradata, DB2, MySQL, PostgreSQL
+- [ ] 40+ new conversion rules across 4 DB dialects
+- [ ] 30+ new tests covering all new patterns
+
+---
+
+## Sprint 24 — Coverage to 95%+
+
+**Goal:** Push test coverage from 88% to 95%+ with targeted tests for remaining uncovered paths.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 24.1 | Deploy script full coverage | Validation | `tests/test_coverage.py` | Cover auth flow, rate-limit retry, 409 conflict handling, deployment log |
+| 24.2 | Dashboard edge cases | Validation | `tests/test_coverage.py` | Cover empty workspace, missing files, JSON output, browser open |
+| 24.3 | Assessment deep paths | Validation | `tests/test_coverage.py` | Cover malformed XML recovery, IICS namespace edge cases, empty inventories |
+| 24.4 | Pipeline edge cases | Validation | `tests/test_coverage.py` | Cover >2-level nesting warning, empty workflows, event-based triggers |
+| 24.5 | Orchestrator full coverage | Validation | `tests/test_coverage.py` | Cover --resume with stale checkpoint, --config with invalid YAML, JSON logging edge cases |
+| 24.6 | Mutation testing | Validation | `tests/` | Run mutmut or cosmic-ray to find weak assertions |
+
+**Sprint 24 Exit Criteria:**
+- [ ] 95%+ overall coverage
+- [ ] 400+ tests passing
+- [ ] No critical uncovered paths in migration scripts
+
+---
+
 ## Agent Development Plans
 
 ### 🔍 Assessment Agent — Development Roadmap
@@ -822,6 +885,10 @@ pie title Sprint Effort Distribution
     "Sprint 14 — Coverage" : 10
     "Sprint 15 — Incremental" : 10
     "Sprint 16 — Dashboard" : 10
+    "Sprint 17-21 — Quality & Docs" : 30
+    "Sprint 22 — IICS Gaps" : 15
+    "Sprint 23 — Source DBs" : 15
+    "Sprint 24 — Coverage 95%" : 10
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -842,3 +909,11 @@ pie title Sprint Effort Distribution
 | **14** | All (coverage) | `tests/test_extended.py`, coverage config | ✅ Complete |
 | **15** | Orchestrator (incremental) | `--resume`, `--reset`, `.checkpoint.json` | ✅ Complete |
 | **16** | All (dashboard) | `dashboard.py`, `output/dashboard.html` | ✅ Complete |
+| **17** | All (coverage) | `tests/test_coverage.py`, 239 tests, 85% coverage | ✅ Complete |
+| **18** | All (E2E) | `tests/test_e2e.py`, 19 E2E integration tests | ✅ Complete |
+| **19** | Assessment, Pipeline (IICS) | IICS Taskflow/Sync/MassIngestion/Connection parsers, `tests/test_iics.py` | ✅ Complete |
+| **20** | Assessment, SQL, Pipeline (gaps) | Session config, scheduler cron, GTT/MV/DB links, `tests/test_gaps.py` | ✅ Complete |
+| **21** | All (docs) | `docs/USER_GUIDE.md`, `docs/TROUBLESHOOTING.md`, `CONTRIBUTING.md`, `docs/ADR/` | ✅ Complete |
+| **22** | Assessment, Notebook, Pipeline (IICS gaps) | DQ Task, App Integration, Taskflow edge cases | ⏳ Planned |
+| **23** | Assessment, SQL (source DBs) | Teradata, DB2, MySQL/PostgreSQL detection + conversion | ⏳ Planned |
+| **24** | All (coverage) | 95%+ coverage, 400+ tests, mutation testing | ⏳ Planned |

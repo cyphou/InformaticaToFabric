@@ -350,7 +350,7 @@ InformaticaToDBFabric/
 │   └── test_gaps.py                     #   Gap remediation tests
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
-├── DEVELOPMENT_PLAN.md                  # 📝 21-sprint development plan
+├── DEVELOPMENT_PLAN.md                  # 📝 21-sprint dev plan + 3 planned
 ├── GAP_ANALYSIS.md                      # 📊 Gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Migration strategy
 ├── README.md                            # 📖 Project overview
