@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE POWERMART SYSTEM "powrmart.dtd">
+<POWERMART CREATION_DATE="03/23/2026 10:00:00" REPOSITORY_VERSION="186.90">
+<REPOSITORY NAME="PROD_REPO" VERSION="186" DATABASETYPE="Oracle">
+<FOLDER NAME="SHARED_CONFIGS" GROUP="" OWNER="admin" SHARED="SHARED" DESCRIPTION="Shared session configurations">
+
+<!-- ============================================================ -->
+<!-- SESSION CONFIG: default_session_config                        -->
+<!-- Standard configuration for most ETL sessions                  -->
+<!-- ============================================================ -->
+<CONFIG DESCRIPTION="Default session configuration for standard loads" NAME="default_session_config" OBJECTVERSION="1" VERSIONNUMBER="1">
+  <ATTRIBUTE NAME="DTM buffer size" VALUE="64000000"/>
+  <ATTRIBUTE NAME="Commit Interval" VALUE="10000"/>
+  <ATTRIBUTE NAME="Commit Type" VALUE="Source"/>
+  <ATTRIBUTE NAME="Error handling" VALUE="Stop On Errors"/>
+  <ATTRIBUTE NAME="Maximum Percentage of Errors" VALUE="0"/>
+  <ATTRIBUTE NAME="Stop On" VALUE="0"/>
+  <ATTRIBUTE NAME="Override Tracing" VALUE="None"/>
+  <ATTRIBUTE NAME="Session Log File directory" VALUE="$PMSessionLogDir"/>
+  <ATTRIBUTE NAME="Parameter Filename" VALUE=""/>
+  <ATTRIBUTE NAME="Write Backward Compatible Session Log File" VALUE="NO"/>
+  <ATTRIBUTE NAME="Session Log File Name" VALUE="$PMSessionLogDir/$PMSessionLogFile"/>
+  <ATTRIBUTE NAME="Session Sort Order" VALUE="Binary"/>
+  <ATTRIBUTE NAME="Treat source rows as" VALUE="Insert"/>
+  <ATTRIBUTE NAME="Is Finite" VALUE="NO"/>
+  <ATTRIBUTE NAME="Pushdown Optimization" VALUE="None"/>
+  <ATTRIBUTE NAME="Recovery Strategy" VALUE="Restart task"/>
+  <ATTRIBUTE NAME="Java Classpath" VALUE=""/>
+
+  <!-- Performance settings -->
+  <ATTRIBUTE NAME="Line Sequential Buffer Length" VALUE="1024"/>
+  <ATTRIBUTE NAME="Maximum Memory Allowed" VALUE="Auto"/>
+  <ATTRIBUTE NAME="Maximum Percentage Memory" VALUE="Auto"/>
+
+  <!-- Lookup Cache -->
+  <ATTRIBUTE NAME="Lookup Cache Directory" VALUE="$PMCacheDir"/>
+  <ATTRIBUTE NAME="Lookup Cache Size" VALUE="2000000"/>
+  <ATTRIBUTE NAME="Lookup Data Cache Size" VALUE="2000000"/>
+  <ATTRIBUTE NAME="Lookup Index Cache Size" VALUE="1000000"/>
+
+  <!-- Sorter Cache -->
+  <ATTRIBUTE NAME="Sorter Cache Size" VALUE="4000000"/>
+
+  <!-- Aggregator Cache -->
+  <ATTRIBUTE NAME="Aggregator Cache Size" VALUE="4000000"/>
+  <ATTRIBUTE NAME="Aggregator Data Cache Size" VALUE="4000000"/>
+  <ATTRIBUTE NAME="Aggregator Index Cache Size" VALUE="2000000"/>
+
+  <!-- Joiner Cache -->
+  <ATTRIBUTE NAME="Joiner Cache Size" VALUE="4000000"/>
+  <ATTRIBUTE NAME="Joiner Data Cache Size" VALUE="4000000"/>
+  <ATTRIBUTE NAME="Joiner Index Cache Size" VALUE="2000000"/>
+
+  <!-- Target -->
+  <ATTRIBUTE NAME="Target Load Type" VALUE="Bulk"/>
+  <ATTRIBUTE NAME="Truncate Target Table Option" VALUE="NO"/>
+  <ATTRIBUTE NAME="Datetime Format String" VALUE="MM/DD/YYYY HH24:MI:SS"/>
+</CONFIG>
+
+<!-- ============================================================ -->
+<!-- SESSION CONFIG: high_perf_session_config                      -->
+<!-- High-performance configuration for large data volumes         -->
+<!-- ============================================================ -->
+<CONFIG DESCRIPTION="High-performance session config for large volumes" NAME="high_perf_session_config" OBJECTVERSION="1" VERSIONNUMBER="1">
+  <ATTRIBUTE NAME="DTM buffer size" VALUE="256000000"/>
+  <ATTRIBUTE NAME="Commit Interval" VALUE="100000"/>
+  <ATTRIBUTE NAME="Commit Type" VALUE="Target"/>
+  <ATTRIBUTE NAME="Error handling" VALUE="Stop On Errors"/>
+  <ATTRIBUTE NAME="Maximum Percentage of Errors" VALUE="5"/>
+  <ATTRIBUTE NAME="Stop On" VALUE="0"/>
+  <ATTRIBUTE NAME="Override Tracing" VALUE="Terse"/>
+  <ATTRIBUTE NAME="Session Log File directory" VALUE="$PMSessionLogDir"/>
+  <ATTRIBUTE NAME="Session Sort Order" VALUE="Binary"/>
+  <ATTRIBUTE NAME="Treat source rows as" VALUE="Insert"/>
+  <ATTRIBUTE NAME="Recovery Strategy" VALUE="Resume from last checkpoint"/>
+  <ATTRIBUTE NAME="Pushdown Optimization" VALUE="Full"/>
+
+  <!-- Large caches for high-volume joins and lookups -->
+  <ATTRIBUTE NAME="Lookup Cache Size" VALUE="16000000"/>
+  <ATTRIBUTE NAME="Lookup Data Cache Size" VALUE="16000000"/>
+  <ATTRIBUTE NAME="Lookup Index Cache Size" VALUE="8000000"/>
+  <ATTRIBUTE NAME="Sorter Cache Size" VALUE="32000000"/>
+  <ATTRIBUTE NAME="Aggregator Cache Size" VALUE="32000000"/>
+  <ATTRIBUTE NAME="Aggregator Data Cache Size" VALUE="32000000"/>
+  <ATTRIBUTE NAME="Aggregator Index Cache Size" VALUE="16000000"/>
+  <ATTRIBUTE NAME="Joiner Cache Size" VALUE="32000000"/>
+  <ATTRIBUTE NAME="Joiner Data Cache Size" VALUE="32000000"/>
+  <ATTRIBUTE NAME="Joiner Index Cache Size" VALUE="16000000"/>
+
+  <!-- Maximum Memory -->
+  <ATTRIBUTE NAME="Maximum Memory Allowed" VALUE="512000000"/>
+
+  <!-- Target -->
+  <ATTRIBUTE NAME="Target Load Type" VALUE="Bulk"/>
+  <ATTRIBUTE NAME="Truncate Target Table Option" VALUE="YES"/>
+  <ATTRIBUTE NAME="Datetime Format String" VALUE="YYYY-MM-DD HH24:MI:SS"/>
+</CONFIG>
+
+</FOLDER>
+</REPOSITORY>
+</POWERMART>

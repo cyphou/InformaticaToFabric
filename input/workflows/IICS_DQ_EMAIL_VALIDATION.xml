@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+<weightedCSPackage xmlns="" name="IICS_DQ_EMAIL_VALIDATION" description="Data Quality profiling and validation for email addresses">
+
+  <!-- ============================================================ -->
+  <!-- IICS Data Quality Task: Email Validation Pipeline             -->
+  <!-- Tests: DQ task parsing, rule references, profile/cleanse ops  -->
+  <!-- ============================================================ -->
+
+  <!-- Data Quality Task: Profile and validate emails -->
+  <dTemplate name="DQ_VALIDATE_EMAILS" objectType="com.infa.deployment.dqtask">
+    <dAttribute name="description" value="Profile and validate customer email addresses"/>
+    <dAttribute name="mappingName" value="m_email_quality_check"/>
+    <dAttribute name="connectionName" value="CONN_ORACLE_CRM"/>
+    <dAttribute name="sourceObject" value="CRM.CUSTOMER_CONTACTS"/>
+    <dAttribute name="targetObject" value="DQ_RESULTS.EMAIL_VALIDATION_RESULTS"/>
+
+    <!-- DQ Rules -->
+    <dAttribute name="ruleType" value="Profiling"/>
+    <dAttribute name="profileFields" value="EMAIL,PHONE,POSTAL_CODE"/>
+    <dAttribute name="nullCheckFields" value="EMAIL,FIRST_NAME,LAST_NAME"/>
+    <dAttribute name="patternCheckField" value="EMAIL"/>
+    <dAttribute name="patternRegex" value="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"/>
+
+    <!-- Cleansing -->
+    <dAttribute name="cleanseType" value="Standardize"/>
+    <dAttribute name="cleanseFields" value="EMAIL,PHONE"/>
+    <dAttribute name="deduplicateFields" value="EMAIL"/>
+    <dAttribute name="deduplicateMatchLevel" value="Fuzzy"/>
+    <dAttribute name="deduplicateThreshold" value="0.85"/>
+
+    <!-- Scoring -->
+    <dAttribute name="scoreField" value="DQ_SCORE"/>
+    <dAttribute name="scoringRules" value="completeness:0.3,validity:0.4,uniqueness:0.3"/>
+    <dAttribute name="failThreshold" value="0.5"/>
+    <dAttribute name="warnThreshold" value="0.7"/>
+  </dTemplate>
+
+  <!-- Data Quality Task: Address standardization -->
+  <dTemplate name="DQ_STANDARDIZE_ADDRESSES" objectType="com.infa.deployment.dqtask">
+    <dAttribute name="description" value="Standardize and geocode customer addresses"/>
+    <dAttribute name="mappingName" value="m_address_standardize"/>
+    <dAttribute name="connectionName" value="CONN_ORACLE_CRM"/>
+    <dAttribute name="ruleType" value="Cleansing"/>
+    <dAttribute name="cleanseType" value="AddressStandardize"/>
+    <dAttribute name="cleanseFields" value="STREET,CITY,STATE,POSTAL_CODE,COUNTRY"/>
+  </dTemplate>
+
+  <!-- Taskflow wrapping DQ tasks with conditional logic -->
+  <dTemplate name="TF_DATA_QUALITY_PIPELINE" objectType="com.infa.deployment.taskflow">
+
+    <!-- Run email validation first -->
+    <dTemplate name="mt_email_validation" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_email_quality_check"/>
+      <dAttribute name="connectionName" value="CONN_ORACLE_CRM"/>
+    </dTemplate>
+
+    <!-- Run address standardization -->
+    <dTemplate name="mt_address_standard" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_address_standardize"/>
+      <dAttribute name="connectionName" value="CONN_ORACLE_CRM"/>
+    </dTemplate>
+
+    <!-- Notification on quality issues -->
+    <dTemplate name="notify_dq_issues" objectType="com.infa.deployment.notificationtask">
+      <dAttribute name="recipients" value="data-quality@example.com"/>
+      <dAttribute name="subject" value="Data Quality Issues Detected — $$RUN_DATE"/>
+    </dTemplate>
+
+    <!-- Gateway: check DQ score threshold -->
+    <dTemplate name="gw_dq_threshold" objectType="com.infa.deployment.exclusivegateway">
+      <dAttribute name="condition" value="dq_score >= 0.7"/>
+    </dTemplate>
+
+    <!-- Links -->
+    <dLink from="Start" to="mt_email_validation"/>
+    <dLink from="mt_email_validation" to="gw_dq_threshold" condition="$mt_email_validation.status = SUCCEEDED"/>
+    <dLink from="gw_dq_threshold" to="mt_address_standard" condition="dq_score >= 0.7"/>
+    <dLink from="gw_dq_threshold" to="notify_dq_issues" condition="dq_score &lt; 0.7"/>
+    <dLink from="mt_address_standard" to="notify_dq_issues"/>
+
+    <dParameter name="$$RUN_DATE" type="date" defaultValue="sysdate"/>
+  </dTemplate>
+
+  <!-- Connection -->
+  <dTemplate name="CONN_ORACLE_CRM" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Oracle"/>
+    <dAttribute name="host" value="oracle-crm.example.com:1521/ORCL"/>
+    <dAttribute name="schema" value="CRM"/>
+  </dTemplate>
+
+</weightedCSPackage>
+</exportMetadata>

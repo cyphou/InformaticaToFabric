@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+<weightedCSPackage xmlns="" name="IICS_AI_ORDER_EVENTS" description="Application Integration process for real-time order events">
+
+  <!-- ============================================================ -->
+  <!-- IICS Application Integration: Order Event Processing          -->
+  <!-- Tests: AI process parsing, service connectors, event triggers -->
+  <!-- ============================================================ -->
+
+  <!-- Application Integration Process -->
+  <dTemplate name="AI_PROCESS_ORDER_EVENTS" objectType="com.infa.deployment.appintegration">
+    <dAttribute name="description" value="Real-time order event intake from REST API, transform, and route to targets"/>
+    <dAttribute name="processType" value="ServiceProcess"/>
+    <dAttribute name="triggerType" value="REST"/>
+    <dAttribute name="httpMethod" value="POST"/>
+    <dAttribute name="endpointPath" value="/api/v1/orders/events"/>
+
+    <!-- Input fields (from REST payload) -->
+    <dAttribute name="inputField" value="order_id"/>
+    <dAttribute name="inputFieldType" value="string"/>
+    <dAttribute name="inputField" value="event_type"/>
+    <dAttribute name="inputFieldType" value="string"/>
+    <dAttribute name="inputField" value="customer_id"/>
+    <dAttribute name="inputFieldType" value="integer"/>
+    <dAttribute name="inputField" value="amount"/>
+    <dAttribute name="inputFieldType" value="decimal"/>
+    <dAttribute name="inputField" value="timestamp"/>
+    <dAttribute name="inputFieldType" value="datetime"/>
+    <dAttribute name="inputField" value="payload"/>
+    <dAttribute name="inputFieldType" value="json"/>
+
+    <!-- Service Connector: Lookup customer -->
+    <dTemplate name="svc_lookup_customer" objectType="com.infa.deployment.serviceconnector">
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+      <dAttribute name="operationType" value="Lookup"/>
+      <dAttribute name="objectName" value="Contact"/>
+      <dAttribute name="filterField" value="customer_id"/>
+    </dTemplate>
+
+    <!-- Service Connector: Create case on high-value order -->
+    <dTemplate name="svc_create_case" objectType="com.infa.deployment.serviceconnector">
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+      <dAttribute name="operationType" value="Create"/>
+      <dAttribute name="objectName" value="Case"/>
+      <dAttribute name="fieldMapping" value="Subject=order_id,Description=payload,ContactId=sf_contact_id"/>
+    </dTemplate>
+
+    <!-- Service Connector: Write to Kafka topic -->
+    <dTemplate name="svc_publish_event" objectType="com.infa.deployment.serviceconnector">
+      <dAttribute name="connectionName" value="CONN_KAFKA_CLUSTER"/>
+      <dAttribute name="operationType" value="Publish"/>
+      <dAttribute name="topicName" value="order-events-processed"/>
+      <dAttribute name="keyField" value="order_id"/>
+    </dTemplate>
+
+    <!-- Mapping Task: Persist to lakehouse -->
+    <dTemplate name="mt_persist_event" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_order_event_to_lakehouse"/>
+      <dAttribute name="connectionName" value="CONN_LAKEHOUSE"/>
+    </dTemplate>
+
+    <!-- Decision: Route by event type -->
+    <dTemplate name="gw_event_router" objectType="com.infa.deployment.exclusivegateway">
+      <dAttribute name="condition" value="event_type == 'HIGH_VALUE'"/>
+    </dTemplate>
+
+    <!-- Links -->
+    <dLink from="Start" to="svc_lookup_customer"/>
+    <dLink from="svc_lookup_customer" to="gw_event_router"/>
+    <dLink from="gw_event_router" to="svc_create_case" condition="event_type == 'HIGH_VALUE'"/>
+    <dLink from="gw_event_router" to="svc_publish_event" condition="event_type != 'HIGH_VALUE'"/>
+    <dLink from="svc_create_case" to="mt_persist_event"/>
+    <dLink from="svc_publish_event" to="mt_persist_event"/>
+
+    <!-- Process Parameters -->
+    <dParameter name="$$API_VERSION" type="string" defaultValue="v1"/>
+    <dParameter name="$$HIGH_VALUE_THRESHOLD" type="decimal" defaultValue="10000"/>
+  </dTemplate>
+
+  <!-- Second AI Process: Batch file watcher -->
+  <dTemplate name="AI_WATCH_ORDER_FILES" objectType="com.infa.deployment.appintegration">
+    <dAttribute name="description" value="Watch S3 bucket for order batch files and trigger processing"/>
+    <dAttribute name="processType" value="EventProcess"/>
+    <dAttribute name="triggerType" value="FileEvent"/>
+    <dAttribute name="filePattern" value="orders_batch_*.json"/>
+    <dAttribute name="sourcePath" value="s3://data-landing/orders/"/>
+
+    <dTemplate name="mt_process_batch" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_batch_order_ingest"/>
+      <dAttribute name="connectionName" value="CONN_S3_LANDING"/>
+    </dTemplate>
+
+    <dTemplate name="notify_batch_complete" objectType="com.infa.deployment.notificationtask">
+      <dAttribute name="recipients" value="order-ops@example.com"/>
+      <dAttribute name="subject" value="Order Batch Processed — $$BATCH_FILE"/>
+    </dTemplate>
+
+    <dLink from="Start" to="mt_process_batch"/>
+    <dLink from="mt_process_batch" to="notify_batch_complete"/>
+  </dTemplate>
+
+  <!-- Connections -->
+  <dTemplate name="CONN_SALESFORCE_PROD" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Salesforce"/>
+    <dAttribute name="host" value="https://login.salesforce.com"/>
+    <dAttribute name="authType" value="OAuth2"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_KAFKA_CLUSTER" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Kafka"/>
+    <dAttribute name="bootstrapServers" value="kafka-01.example.com:9092,kafka-02.example.com:9092"/>
+    <dAttribute name="securityProtocol" value="SASL_SSL"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_LAKEHOUSE" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Lakehouse"/>
+    <dAttribute name="workspace" value="ws_orders"/>
+    <dAttribute name="lakehouse" value="lh_bronze"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_S3_LANDING" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="S3"/>
+    <dAttribute name="bucket" value="data-landing"/>
+    <dAttribute name="region" value="us-east-1"/>
+  </dTemplate>
+
+</weightedCSPackage>
+</exportMetadata>
