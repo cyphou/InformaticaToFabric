@@ -37,6 +37,56 @@ You are the **pipeline migration agent**. You convert Informatica workflows into
 | Assignment | **Set Variable Activity** |
 | Email Task | **Web Activity** (call Logic App / Power Automate webhook) |
 | Worklet | **Invoke Pipeline Activity** (child pipeline) |
+| Control Task (Abort/Fail) | **Fail Activity** |
+
+### Control Task → Fail Activity
+
+Informatica Control Tasks with `ABORT` or `FAIL` actions map to the Fabric **Fail Activity**, which stops pipeline execution and reports an error.
+
+```json
+{
+  "name": "Abort_OnError",
+  "type": "Fail",
+  "dependsOn": [
+    { "activity": "NB_PrevStep", "dependencyConditions": ["Failed"] }
+  ],
+  "typeProperties": {
+    "message": {
+      "value": "Pipeline aborted: @{activity('NB_PrevStep').error.message}",
+      "type": "Expression"
+    },
+    "errorCode": "CTRL_ABORT"
+  }
+}
+```
+
+**Rules for Control Task conversion:**
+- `ABORT` action → `Fail Activity` with error code from original task name
+- `FAIL PARENT` action → `Fail Activity` in child pipeline (propagates to parent via `ExecutePipeline`)
+- Control Tasks with conditional links → wrap in `IfCondition` before the `Fail Activity`
+- Always include the original Informatica message/description in the `message` property
+
+### IICS Taskflow → Fabric Pipeline
+
+IICS Taskflows use a different orchestration model than PowerCenter workflows. When converting IICS Taskflows:
+
+| IICS Element | Fabric Activity |
+|---|---|
+| Mapping Task | **Notebook Activity** (references migrated notebook) |
+| Command Task | **Script Activity** or **Notebook Activity** |
+| Human Task | **Web Activity** (webhook to approval flow) |
+| Notification Task | **Web Activity** (email/Teams webhook) |
+| Subflow | **Execute Pipeline Activity** (child pipeline) |
+| Start/End Events | Pipeline start/completion (implicit) |
+| Exclusive Gateway | **If Condition Activity** |
+| Parallel Gateway | Multiple activities with same `dependsOn` |
+| Timer Event | **Wait Activity** |
+
+**IICS-specific rules:**
+1. IICS Taskflows allow richer expressions — simplify to Fabric expression language
+2. IICS "in-out parameters" → pipeline parameters with default values
+3. IICS "data objects" → pipeline variables
+4. IICS "connections" → Fabric linked services or notebook connection params
 
 ### Link Conditions
 | Informatica Link | Fabric Dependency |

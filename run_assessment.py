@@ -47,6 +47,16 @@ TRANSFORMATION_ABBREV = {
     "XML Parser": "XMLP",
     "HTTP Transformation": "HTTP",
     "Unconnected Lookup": "ULKP",
+    # Sprint 6 additions
+    "Mapplet": "MPLT",
+    "SQL Transformation": "SQLT",
+    "Data Masking": "DM",
+    "External Procedure": "EP",
+    "Advanced External Procedure": "AEP",
+    "Web Service Consumer": "WSC",
+    "Association": "ASSOC",
+    "Key Generator": "KEYGEN",
+    "Address Validator": "ADDRVAL",
 }
 
 # Oracle-specific SQL constructs to flag
@@ -81,6 +91,42 @@ ORACLE_PATTERNS = {
     "SEQUENCE.NEXTVAL": r"\w+\.NEXTVAL\b",
     "PACKAGE BODY": r"\bPACKAGE\s+BODY\b",
     "CREATE OR REPLACE": r"\bCREATE\s+OR\s+REPLACE\b",
+    # Sprint 6: Oracle analytic / window functions
+    "LEAD": r"\bLEAD\s*\(",
+    "LAG": r"\bLAG\s*\(",
+    "DENSE_RANK": r"\bDENSE_RANK\s*\(",
+    "NTILE": r"\bNTILE\s*\(",
+    "FIRST_VALUE": r"\bFIRST_VALUE\s*\(",
+    "LAST_VALUE": r"\bLAST_VALUE\s*\(",
+    "ROW_NUMBER": r"\bROW_NUMBER\s*\(",
+    "OVER": r"\bOVER\s*\(",
+    "PARTITION BY": r"\bPARTITION\s+BY\b",
+    # Sprint 7: Global temp tables, materialized views, DB links
+    "GLOBAL TEMPORARY TABLE": r"\bGLOBAL\s+TEMPORARY\s+TABLE\b",
+    "MATERIALIZED VIEW": r"\bMATERIALIZED\s+VIEW\b",
+    "DB_LINK": r"@\w+",
+}
+
+# SQL Server-specific patterns (Sprint 7.3)
+SQLSERVER_PATTERNS = {
+    "GETDATE": r"\bGETDATE\s*\(",
+    "ISNULL": r"\bISNULL\s*\(",
+    "CHARINDEX": r"\bCHARINDEX\s*\(",
+    "LEN": r"\bLEN\s*\(",
+    "CONVERT": r"\bCONVERT\s*\(",
+    "CAST": r"\bCAST\s*\(",
+    "TOP": r"\bSELECT\s+TOP\b",
+    "IDENTITY": r"\bIDENTITY\s*\(",
+    "NOLOCK": r"\(NOLOCK\)",
+    "@@": r"@@\w+",
+    "NVARCHAR": r"\bNVARCHAR\b",
+    "DATETIME": r"\bDATETIME\b",
+    "BIT": r"\bBIT\b",
+    "EXEC/EXECUTE": r"\bEXEC(?:UTE)?\s+",
+    "CTE": r"\bWITH\s+\w+\s+AS\s*\(",
+    "CROSS APPLY": r"\bCROSS\s+APPLY\b",
+    "OUTER APPLY": r"\bOUTER\s+APPLY\b",
+    "STRING_AGG": r"\bSTRING_AGG\s*\(",
 }
 
 # Warnings and issues collectors
@@ -518,31 +564,6 @@ def parse_workflow_xml(filepath):
     return workflows
 
 
-def parse_sql_file(filepath):
-    """Parse Oracle SQL file and identify Oracle-specific constructs."""
-    content = filepath.read_text(encoding="utf-8", errors="replace")
-
-    oracle_constructs = []
-    for construct_name, pattern in ORACLE_PATTERNS.items():
-        matches = list(re.finditer(pattern, content, re.IGNORECASE))
-        if matches:
-            lines = []
-            for m in matches:
-                line_num = content[:m.start()].count('\n') + 1
-                lines.append(line_num)
-            oracle_constructs.append({
-                "construct": construct_name,
-                "occurrences": len(matches),
-                "lines": lines,
-            })
-
-    return {
-        "file": filepath.name,
-        "path": str(filepath.relative_to(WORKSPACE)),
-        "oracle_constructs": oracle_constructs,
-        "total_lines": content.count('\n') + 1,
-    }
-
 
 def extract_connections_from_mappings(all_mappings):
     """Infer connection info from sources/targets."""
@@ -796,21 +817,375 @@ def write_dependency_dag(dag):
     print(f"  Written: {out_path}")
 
 
+# =====================================================================
+# Sprint 6: Mapplet expansion
+# =====================================================================
+
+def parse_mapplets(root):
+    """Parse all MAPPLET definitions from a root XML element.
+    Returns dict: mapplet_name -> list of transformation dicts.
+    """
+    mapplets = {}
+    for mplt_el in root.iter("MAPPLET"):
+        name = mplt_el.get("NAME", "")
+        if not name:
+            continue
+        txs = []
+        for tx in mplt_el.iter("TRANSFORMATION"):
+            tx_type = tx.get("TYPE", "Unknown")
+            tx_name = tx.get("NAME", "")
+            short = abbrev(tx_type)
+            txs.append({"name": tx_name, "type": tx_type, "abbrev": short})
+        mapplets[name] = txs
+    return mapplets
+
+
+def expand_mapplet_refs(mapping_info, mapplets_dict):
+    """Expand Mapplet references in a mapping's transformation chain.
+    Modifies mapping_info in place.
+    """
+    expanded_tx = []
+    expanded_details = []
+    has_mapplet = False
+
+    for td in mapping_info.get("transformation_details", []):
+        if td["abbrev"] == "MPLT":
+            has_mapplet = True
+            mplt_name = td["name"]
+            # Try to resolve — MAPPLETNAME may be stored in the name
+            resolved = mapplets_dict.get(mplt_name, [])
+            if resolved:
+                for inner_tx in resolved:
+                    if inner_tx["abbrev"] not in expanded_tx:
+                        expanded_tx.append(inner_tx["abbrev"])
+                    expanded_details.append({
+                        "name": f"{mplt_name}.{inner_tx['name']}",
+                        "type": inner_tx["type"],
+                        "abbrev": inner_tx["abbrev"],
+                        "from_mapplet": mplt_name,
+                    })
+            else:
+                # Unresolved mapplet — keep the MPLT reference and warn
+                if "MPLT" not in expanded_tx:
+                    expanded_tx.append("MPLT")
+                expanded_details.append(td)
+                warnings.append(f"Unresolved Mapplet reference: '{mplt_name}' in mapping '{mapping_info['name']}'")
+                issues.append({
+                    "type": "unresolved_mapplet",
+                    "severity": "WARNING",
+                    "detail": f"Mapplet '{mplt_name}' referenced but not found in parsed files",
+                    "action": "Ensure the Mapplet XML file is in input/mappings/"
+                })
+        else:
+            if td["abbrev"] not in expanded_tx:
+                expanded_tx.append(td["abbrev"])
+            expanded_details.append(td)
+
+    if has_mapplet:
+        mapping_info["transformations"] = expanded_tx
+        mapping_info["transformation_details"] = expanded_details
+        mapping_info["has_mapplet"] = True
+    else:
+        mapping_info["has_mapplet"] = False
+
+
+# =====================================================================
+# Sprint 6: Parameter file (.prm) parser
+# =====================================================================
+
+def parse_parameter_files(prm_dir):
+    """Parse Informatica .prm parameter files.
+    Returns list of dicts with section, key-value pairs.
+    """
+    param_files = []
+    if not prm_dir.exists():
+        return param_files
+
+    for prm_file in sorted(prm_dir.glob("*.prm")):
+        try:
+            content = prm_file.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            warnings.append(f"Cannot read parameter file {prm_file.name}: {e}")
+            continue
+
+        sections = {}
+        current_section = "Global"
+
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            # Section header: [SectionName]
+            section_match = re.match(r'^\[(.+)\]$', line)
+            if section_match:
+                current_section = section_match.group(1)
+                continue
+            # Key=Value pair
+            if "=" in line:
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip()
+                if current_section not in sections:
+                    sections[current_section] = {}
+                sections[current_section][key] = value
+
+        param_files.append({
+            "file": prm_file.name,
+            "path": str(prm_file.relative_to(WORKSPACE)),
+            "sections": sections,
+            "total_params": sum(len(v) for v in sections.values()),
+        })
+        print(f"  Parsing: {prm_file.name} ({sum(len(v) for v in sections.values())} params)")
+
+    return param_files
+
+
+# =====================================================================
+# Sprint 7.1: IICS XML parser
+# =====================================================================
+
+def parse_iics_mapping(filepath):
+    """Parse an IICS (Cloud) mapping export file.
+    IICS uses a completely different XML schema than PowerCenter.
+    """
+    tree, root = safe_parse_xml(filepath)
+    if root is None:
+        return []
+
+    # Detect namespace from root tag (IICS exports often have xmlns)
+    ns = ""
+    if "}" in root.tag:
+        ns = root.tag.split("}")[0] + "}"
+
+    dt_tag = f"{ns}dTemplate"
+
+    mappings = []
+
+    # IICS exports use dTemplate elements with objectType attributes
+    for tmpl in root.iter(dt_tag):
+        obj_type = tmpl.get("objectType", "")
+        name = tmpl.get("name", "")
+
+        if "mapping" not in obj_type.lower():
+            continue
+
+        # Extract transformations from nested dTemplate elements
+        transformations = []
+        tx_details = []
+        sources = []
+        targets = []
+
+        for child in tmpl.iter(dt_tag):
+            child_type = child.get("objectType", "").lower()
+            child_name = child.get("name", "")
+
+            if "source" in child_type or "reader" in child_type:
+                sources.append(child_name)
+            elif "target" in child_type or "writer" in child_type:
+                targets.append(child_name)
+            elif child_type and child != tmpl:
+                # Map IICS object types to familiar abbreviations
+                tx_type = child_type.split(".")[-1] if "." in child_type else child_type
+                short = _iics_type_to_abbrev(tx_type)
+                if short not in transformations:
+                    transformations.append(short)
+                tx_details.append({"name": child_name, "type": tx_type, "abbrev": short})
+
+        if not transformations and not sources:
+            continue
+
+        complexity = classify_complexity(transformations, [], sources, targets, False, [])
+
+        mappings.append({
+            "name": name,
+            "sources": sources,
+            "targets": targets,
+            "transformations": transformations,
+            "transformation_details": tx_details,
+            "has_sql_override": False,
+            "has_stored_proc": False,
+            "complexity": complexity,
+            "sql_overrides": [],
+            "lookup_conditions": [],
+            "parameters": [],
+            "target_load_order": [],
+            "connector_count": 0,
+            "has_mapplet": False,
+            "format": "iics",
+        })
+
+    if not mappings:
+        warnings.append(f"WARNING: No IICS mapping objects found in {filepath.name}")
+
+    return mappings
+
+
+def _iics_type_to_abbrev(iics_type):
+    """Map common IICS transformation type names to our abbreviations."""
+    iics_type_lower = iics_type.lower()
+    mapping = {
+        "source": "SQ", "reader": "SQ", "sourcetransformation": "SQ",
+        "target": "TGT", "writer": "TGT", "targettransformation": "TGT",
+        "expression": "EXP", "filter": "FIL", "aggregator": "AGG",
+        "joiner": "JNR", "lookup": "LKP", "router": "RTR",
+        "updatestrategy": "UPD", "sequencegenerator": "SEQ",
+        "sorter": "SRT", "rank": "RNK", "union": "UNI",
+        "normalizer": "NRM", "sqlparser": "SQLT", "sql": "SQLT",
+        "java": "JTX", "custom": "CT", "http": "HTTP",
+        "datamasking": "DM", "webserviceconsumer": "WSC",
+    }
+    for key, val in mapping.items():
+        if key in iics_type_lower:
+            return val
+    return iics_type
+
+
+# =====================================================================
+# Sprint 7.6: Connection XML parser
+# =====================================================================
+
+def parse_connection_objects(root):
+    """Parse PowerCenter connection objects from XML.
+    Extracts DBCONNECTION, FTPCONNECTION, etc.
+    """
+    parsed_connections = []
+
+    # Database connections
+    for conn in root.iter("DBCONNECTION"):
+        parsed_connections.append({
+            "name": conn.get("NAME", ""),
+            "type": "Database",
+            "subtype": conn.get("DBTYPE", conn.get("DATABASETYPE", "")),
+            "connect_string": conn.get("CONNECTSTRING", ""),
+            "user": conn.get("USERNAME", ""),
+            "code_page": conn.get("CODEPAGE", ""),
+        })
+
+    # FTP connections
+    for conn in root.iter("FTPCONNECTION"):
+        parsed_connections.append({
+            "name": conn.get("NAME", ""),
+            "type": "FTP",
+            "host": conn.get("HOSTNAME", ""),
+            "remote_dir": conn.get("REMOTEDIRECTORY", ""),
+        })
+
+    # Generic connection objects (various types)
+    for conn in root.iter("CONNECTION"):
+        conn_name = conn.get("NAME", "")
+        conn_type = conn.get("TYPE", conn.get("CONNECTIONTYPE", ""))
+        if conn_name and not any(c["name"] == conn_name for c in parsed_connections):
+            parsed_connections.append({
+                "name": conn_name,
+                "type": conn_type or "Unknown",
+            })
+
+    return parsed_connections
+
+
+def detect_source_db_type(sql_content):
+    """Detect whether SQL content is Oracle, SQL Server, or other.
+    Returns 'oracle', 'sqlserver', or 'unknown'.
+    """
+    oracle_score = 0
+    mssql_score = 0
+
+    for pattern in ORACLE_PATTERNS.values():
+        if re.search(pattern, sql_content, re.IGNORECASE):
+            oracle_score += 1
+
+    for pattern in SQLSERVER_PATTERNS.values():
+        if re.search(pattern, sql_content, re.IGNORECASE):
+            mssql_score += 1
+
+    if oracle_score > mssql_score and oracle_score >= 2:
+        return "oracle"
+    if mssql_score > oracle_score and mssql_score >= 2:
+        return "sqlserver"
+    if oracle_score > 0:
+        return "oracle"
+    if mssql_score > 0:
+        return "sqlserver"
+    return "unknown"
+
+
+def parse_sql_file(filepath):
+    """Parse SQL file, detect DB type, and identify DB-specific constructs."""
+    content = filepath.read_text(encoding="utf-8", errors="replace")
+
+    db_type = detect_source_db_type(content)
+
+    # Always check Oracle patterns
+    oracle_constructs = []
+    for construct_name, pattern in ORACLE_PATTERNS.items():
+        matches = list(re.finditer(pattern, content, re.IGNORECASE))
+        if matches:
+            lines = []
+            for m in matches:
+                line_num = content[:m.start()].count('\n') + 1
+                lines.append(line_num)
+            oracle_constructs.append({
+                "construct": construct_name,
+                "occurrences": len(matches),
+                "lines": lines,
+            })
+
+    # Also check SQL Server patterns
+    sqlserver_constructs = []
+    for construct_name, pattern in SQLSERVER_PATTERNS.items():
+        matches = list(re.finditer(pattern, content, re.IGNORECASE))
+        if matches:
+            lines = []
+            for m in matches:
+                line_num = content[:m.start()].count('\n') + 1
+                lines.append(line_num)
+            sqlserver_constructs.append({
+                "construct": construct_name,
+                "occurrences": len(matches),
+                "lines": lines,
+            })
+
+    return {
+        "file": filepath.name,
+        "path": str(filepath.relative_to(WORKSPACE)),
+        "db_type": db_type,
+        "oracle_constructs": oracle_constructs,
+        "sqlserver_constructs": sqlserver_constructs,
+        "total_lines": content.count('\n') + 1,
+    }
+
+
 def main():
     print("=" * 60)
     print("  Informatica-to-Fabric Assessment")
     print("=" * 60)
     print()
 
-    # 1. Parse Mappings
-    print("[1/6] Parsing mapping XML files...")
+    all_mapplets = {}  # Collected from all XML files for expansion
+
+    # 1. Parse Mappings (PowerCenter + IICS)
+    print("[1/9] Parsing mapping XML files...")
     mapping_dir = INPUT_DIR / "mappings"
     all_mappings = []
     if mapping_dir.exists():
         for xml_file in sorted(mapping_dir.glob("*.xml")):
             print(f"  Parsing: {xml_file.name}")
             try:
-                mappings = parse_mapping_xml(xml_file)
+                fmt = detect_xml_format(xml_file)
+                if fmt == "iics":
+                    mappings = parse_iics_mapping(xml_file)
+                    print(f"    [IICS format]")
+                else:
+                    mappings = parse_mapping_xml(xml_file)
+
+                # Collect Mapplet definitions from the same file
+                tree, root = safe_parse_xml(xml_file)
+                if root is not None:
+                    file_mapplets = parse_mapplets(root)
+                    all_mapplets.update(file_mapplets)
+                    if file_mapplets:
+                        print(f"    Mapplets found: {', '.join(file_mapplets.keys())}")
+
                 all_mappings.extend(mappings)
                 for m in mappings:
                     print(f"    -> {m['name']} ({m['complexity']}) -- {len(m['transformations'])} transformations")
@@ -820,8 +1195,19 @@ def main():
     print(f"  Total mappings found: {len(all_mappings)}")
     print()
 
-    # 2. Parse Workflows
-    print("[2/6] Parsing workflow XML files...")
+    # 2. Expand Mapplet references
+    print("[2/9] Expanding Mapplet references...")
+    mplt_count = 0
+    for m in all_mappings:
+        expand_mapplet_refs(m, all_mapplets)
+        if m.get("has_mapplet"):
+            mplt_count += 1
+            print(f"  Expanded: {m['name']} (Mapplet references resolved)")
+    print(f"  Mapplets defined: {len(all_mapplets)}, Mappings with Mapplet refs: {mplt_count}")
+    print()
+
+    # 3. Parse Workflows
+    print("[3/9] Parsing workflow XML files...")
     workflow_dir = INPUT_DIR / "workflows"
     all_workflows = []
     if workflow_dir.exists():
@@ -838,8 +1224,8 @@ def main():
     print(f"  Total workflows found: {len(all_workflows)}")
     print()
 
-    # 3. Parse SQL files
-    print("[3/6] Parsing SQL files...")
+    # 4. Parse SQL files (Oracle + SQL Server detection)
+    print("[4/9] Parsing SQL files...")
     sql_dir = INPUT_DIR / "sql"
     sql_files = []
     if sql_dir.exists():
@@ -847,27 +1233,64 @@ def main():
             print(f"  Parsing: {sql_file.name}")
             analysis = parse_sql_file(sql_file)
             sql_files.append(analysis)
+            db = analysis.get("db_type", "unknown")
             constructs = [oc["construct"] for oc in analysis["oracle_constructs"]]
-            print(f"    -> Oracle constructs: {', '.join(constructs) if constructs else 'none'}")
+            ss_constructs = [oc["construct"] for oc in analysis.get("sqlserver_constructs", [])]
+            print(f"    -> DB type: {db} | Oracle: {', '.join(constructs) if constructs else 'none'} | MSSQL: {', '.join(ss_constructs) if ss_constructs else 'none'}")
     print(f"  Total SQL files analyzed: {len(sql_files)}")
     print()
 
-    # 4. Extract connections
-    print("[4/6] Inferring connections...")
-    connections = extract_connections_from_mappings(all_mappings)
-    print(f"  Connections inferred: {len(connections)}")
+    # 5. Parse Parameter files
+    print("[5/9] Parsing parameter files...")
+    param_files = parse_parameter_files(INPUT_DIR)
+    # Also check common sub-folders
+    for subdir in ["params", "parameters", "prm", "mappings", "workflows", "sessions"]:
+        param_files.extend(parse_parameter_files(INPUT_DIR / subdir))
+    print(f"  Total parameter files: {len(param_files)}, Total params: {sum(pf['total_params'] for pf in param_files)}")
     print()
 
-    # 5. Write outputs
-    print("[5/6] Writing output files...")
+    # 6. Extract connections (inferred + XML-parsed)
+    print("[6/9] Extracting connections...")
+    connections = extract_connections_from_mappings(all_mappings)
+    # Parse connection objects from all XML files
+    xml_connections = []
+    for xml_dir_name in ["mappings", "workflows", "sessions"]:
+        xml_dir = INPUT_DIR / xml_dir_name
+        if xml_dir.exists():
+            for xml_file in xml_dir.glob("*.xml"):
+                tree, root = safe_parse_xml(xml_file)
+                if root is not None:
+                    xml_connections.extend(parse_connection_objects(root))
+    # Deduplicate by name
+    seen_conn_names = {c["name"] for c in connections}
+    for xc in xml_connections:
+        if xc["name"] and xc["name"] not in seen_conn_names:
+            connections.append(xc)
+            seen_conn_names.add(xc["name"])
+
+    print(f"  Connections found: {len(connections)} (inferred + XML-parsed)")
+    print()
+
+    # 7. Write outputs
+    print("[7/9] Writing output files...")
     inventory = write_inventory_json(all_mappings, all_workflows, connections, sql_files)
+    # Add param_files and mapplets to inventory
+    inventory["parameter_files"] = param_files
+    inventory["mapplets"] = {name: [t["abbrev"] for t in txs] for name, txs in all_mapplets.items()}
+    inventory["summary"]["total_parameter_files"] = len(param_files)
+    inventory["summary"]["total_mapplets"] = len(all_mapplets)
+    # Re-write with augmented data
+    out_path = OUTPUT_DIR / "inventory.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(inventory, f, indent=2, ensure_ascii=False)
+
     write_complexity_report(inventory)
     dag = build_dependency_dag(all_workflows)
     write_dependency_dag(dag)
     print()
 
-    # 6. Summary
-    print("[6/6] Assessment complete!")
+    # 8. Summary
+    print("[8/9] Assessment complete!")
     print()
     print("=" * 60)
     cb = inventory["summary"]["complexity_breakdown"]
@@ -875,6 +1298,8 @@ def main():
     print(f"  Workflows:    {inventory['summary']['total_workflows']}")
     print(f"  Sessions:     {inventory['summary']['total_sessions']}")
     print(f"  SQL files:    {inventory['summary']['total_sql_files']}")
+    print(f"  Param files:  {len(param_files)}")
+    print(f"  Mapplets:     {len(all_mapplets)}")
     print(f"  Connections:  {len(connections)}")
     print()
     print("  Complexity breakdown:")
@@ -884,8 +1309,15 @@ def main():
 
     total_overrides = sum(len(m["sql_overrides"]) for m in all_mappings)
     total_oracle = sum(len(sf["oracle_constructs"]) for sf in sql_files)
+    total_mssql = sum(len(sf.get("sqlserver_constructs", [])) for sf in sql_files)
     print(f"  SQL overrides in mappings: {total_overrides}")
     print(f"  Oracle constructs in SQL files: {total_oracle}")
+    if total_mssql:
+        print(f"  SQL Server constructs in SQL files: {total_mssql}")
+
+    # 9. Warnings and issues
+    print()
+    print("[9/9] Final report...")
 
     if warnings:
         print()

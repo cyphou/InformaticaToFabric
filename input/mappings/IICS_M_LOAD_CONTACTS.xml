@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================ -->
+<!-- IICS (Informatica Cloud) Export — Mapping: m_load_contacts       -->
+<!-- Format: exportMetadata → dTemplate hierarchy                     -->
+<!-- Tests: IICS XML parsing, format detection, type mapping          -->
+<!-- ================================================================ -->
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+  <weightedCSPackage>
+
+    <!-- Cloud Mapping: m_load_contacts -->
+    <dTemplate name="m_load_contacts" objectType="com.infa.deployment.mapping" description="Cloud mapping to load contacts from Salesforce to Lakehouse">
+
+      <field name="transformations">
+
+        <!-- Source: Salesforce Contacts -->
+        <dTemplate name="src_sf_contacts" objectType="com.infa.adapter.salesforce.reader" description="Read from Salesforce Contact object">
+          <field name="connectionReference" value="CONN_SALESFORCE_PROD"/>
+          <field name="object" value="Contact"/>
+        </dTemplate>
+
+        <!-- Expression: Derive computed fields -->
+        <dTemplate name="exp_derive_contact" objectType="com.infa.adapter.expression" description="Derive full name and region">
+          <field name="expression">
+            <dTemplate name="full_name_expr" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="FirstName || ' ' || LastName"/>
+              <field name="datatype" value="string"/>
+            </dTemplate>
+            <dTemplate name="region_expr" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(Country IN ('US','CA'), 'NA', IIF(Country IN ('GB','FR','DE'), 'EMEA', 'APAC'))"/>
+              <field name="datatype" value="string"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Filter: Active contacts only -->
+        <dTemplate name="fil_active" objectType="com.infa.adapter.filter" description="Filter for active contacts">
+          <field name="condition" value="IsDeleted = false AND Email IS NOT NULL"/>
+        </dTemplate>
+
+        <!-- Lookup: Account details -->
+        <dTemplate name="lkp_account" objectType="com.infa.adapter.lookup" description="Lookup account name from AccountId">
+          <field name="lookupObject" value="Account"/>
+          <field name="condition" value="AccountId = Account.Id"/>
+          <field name="connectionReference" value="CONN_SALESFORCE_PROD"/>
+        </dTemplate>
+
+        <!-- Aggregator: Count by region -->
+        <dTemplate name="agg_by_region" objectType="com.infa.adapter.aggregator" description="Count contacts by region">
+          <field name="groupBy" value="region"/>
+        </dTemplate>
+
+        <!-- Data Masking: Mask email addresses -->
+        <dTemplate name="dm_mask_email" objectType="com.infa.adapter.datamasking" description="Mask emails for non-prod environments">
+          <field name="maskingType" value="substitution"/>
+          <field name="column" value="Email"/>
+        </dTemplate>
+
+        <!-- Target: Lakehouse contacts table -->
+        <dTemplate name="tgt_lh_contacts" objectType="com.infa.adapter.lakehouse.writer" description="Write to Fabric Lakehouse">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="silver.dim_contact"/>
+          <field name="writeMode" value="overwrite"/>
+        </dTemplate>
+
+      </field>
+    </dTemplate>
+
+    <!-- Cloud Mapping: m_sync_accounts (simple) -->
+    <dTemplate name="m_sync_accounts" objectType="com.infa.deployment.mapping" description="Simple sync of Salesforce accounts">
+      <field name="transformations">
+        <dTemplate name="src_accounts" objectType="com.infa.adapter.salesforce.reader" description="Read accounts"/>
+        <dTemplate name="exp_trim_names" objectType="com.infa.adapter.expression" description="Trim whitespace"/>
+        <dTemplate name="tgt_accounts" objectType="com.infa.adapter.lakehouse.writer" description="Write accounts"/>
+      </field>
+    </dTemplate>
+
+  </weightedCSPackage>
+</exportMetadata>

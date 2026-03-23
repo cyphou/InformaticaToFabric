@@ -4,6 +4,49 @@
   "target_platform": "Microsoft Fabric",
   "mappings": [
     {
+      "name": "m_load_contacts",
+      "sources": [
+        "src_sf_contacts"
+      ],
+      "targets": [
+        "tgt_lh_contacts"
+      ],
+      "transformations": [
+        "EXP",
+        "port",
+        "FIL",
+        "LKP",
+        "AGG",
+        "DM"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Medium",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": []
+    },
+    {
+      "name": "m_sync_accounts",
+      "sources": [
+        "src_accounts"
+      ],
+      "targets": [
+        "tgt_accounts"
+      ],
+      "transformations": [
+        "EXP"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Simple",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": []
+    },
+    {
       "name": "M_LOAD_CUSTOMERS",
       "sources": [
         "Oracle.SALES.CUSTOMERS"
@@ -24,6 +67,54 @@
       "parameters": [],
       "target_load_order": [
         "DIM_CUSTOMER"
+      ]
+    },
+    {
+      "name": "M_LOAD_EMPLOYEES",
+      "sources": [
+        "Oracle.HR.EMPLOYEES"
+      ],
+      "targets": [
+        "DIM_EMPLOYEE"
+      ],
+      "transformations": [
+        "SQ",
+        "EXP",
+        "FIL",
+        "SRT",
+        "LKP",
+        "SQLT"
+      ],
+      "has_sql_override": true,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [
+        {
+          "type": "Sql Query",
+          "value": "SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, DEPARTMENT, MONTHLY_SALARY, HIRE_DATE, STATUS FROM HR.EMPLOYEES WHERE STATUS = 'ACTIVE' AND HIRE_DATE >= ADD_MONTHS(SYSDATE, -120)"
+        },
+        {
+          "type": "Lookup Sql Override",
+          "value": "SELECT DEPT_NAME, MANAGER_NAME FROM HR.DEPARTMENTS WHERE ACTIVE = 'Y'"
+        },
+        {
+          "type": "Sql Query",
+          "value": "SELECT EMPLOYEE_ID, DENSE_RANK() OVER (PARTITION BY DEPARTMENT ORDER BY ANNUAL_SALARY DESC) AS DEPT_SALARY_RANK FROM HR.EMPLOYEES"
+        }
+      ],
+      "lookup_conditions": [
+        {
+          "lookup": "LKP_DEPT_MGR",
+          "sql": "SELECT DEPT_NAME, MANAGER_NAME FROM HR.DEPARTMENTS WHERE ACTIVE = 'Y'"
+        },
+        {
+          "lookup": "LKP_DEPT_MGR",
+          "condition": "IN_DEPARTMENT = DEPT_NAME"
+        }
+      ],
+      "parameters": [],
+      "target_load_order": [
+        "DIM_EMPLOYEE"
       ]
     },
     {
@@ -156,12 +247,391 @@
       "name": "CONN_SALES",
       "type": "Oracle",
       "schema": "SALES"
+    },
+    {
+      "name": "CONN_HR",
+      "type": "Oracle",
+      "schema": "HR"
+    },
+    {
+      "name": "ORACLE_HR",
+      "type": "Database",
+      "subtype": "Oracle",
+      "connect_string": "hr_prod.example.com:1521/HRDB",
+      "user": "hr_etl",
+      "code_page": "UTF-8"
+    },
+    {
+      "name": "FTP_HR_FILES",
+      "type": "FTP",
+      "host": "ftp.hr.example.com",
+      "remote_dir": "/data/exports"
     }
   ],
   "sql_files": [
     {
+      "file": "SP_CALC_RANKINGS.sql",
+      "path": "input\\sql\\SP_CALC_RANKINGS.sql",
+      "db_type": "oracle",
+      "oracle_constructs": [
+        {
+          "construct": "MERGE",
+          "occurrences": 1,
+          "lines": [
+            13
+          ]
+        },
+        {
+          "construct": "DECODE",
+          "occurrences": 1,
+          "lines": [
+            70
+          ]
+        },
+        {
+          "construct": "NVL",
+          "occurrences": 1,
+          "lines": [
+            35
+          ]
+        },
+        {
+          "construct": "SYSDATE",
+          "occurrences": 5,
+          "lines": [
+            10,
+            50,
+            56,
+            82,
+            86
+          ]
+        },
+        {
+          "construct": "TO_CHAR",
+          "occurrences": 3,
+          "lines": [
+            79,
+            83,
+            86
+          ]
+        },
+        {
+          "construct": "DBMS_",
+          "occurrences": 2,
+          "lines": [
+            86,
+            92
+          ]
+        },
+        {
+          "construct": "EXCEPTION WHEN",
+          "occurrences": 1,
+          "lines": [
+            89
+          ]
+        },
+        {
+          "construct": "CREATE OR REPLACE",
+          "occurrences": 1,
+          "lines": [
+            8
+          ]
+        },
+        {
+          "construct": "LEAD",
+          "occurrences": 2,
+          "lines": [
+            30,
+            69
+          ]
+        },
+        {
+          "construct": "LAG",
+          "occurrences": 4,
+          "lines": [
+            29,
+            31,
+            68,
+            71
+          ]
+        },
+        {
+          "construct": "DENSE_RANK",
+          "occurrences": 1,
+          "lines": [
+            18
+          ]
+        },
+        {
+          "construct": "NTILE",
+          "occurrences": 1,
+          "lines": [
+            19
+          ]
+        },
+        {
+          "construct": "FIRST_VALUE",
+          "occurrences": 1,
+          "lines": [
+            21
+          ]
+        },
+        {
+          "construct": "LAST_VALUE",
+          "occurrences": 1,
+          "lines": [
+            25
+          ]
+        },
+        {
+          "construct": "ROW_NUMBER",
+          "occurrences": 1,
+          "lines": [
+            20
+          ]
+        },
+        {
+          "construct": "OVER",
+          "occurrences": 11,
+          "lines": [
+            18,
+            19,
+            20,
+            21,
+            25,
+            29,
+            30,
+            31,
+            68,
+            69,
+            71
+          ]
+        },
+        {
+          "construct": "PARTITION BY",
+          "occurrences": 3,
+          "lines": [
+            68,
+            69,
+            71
+          ]
+        }
+      ],
+      "sqlserver_constructs": [],
+      "total_lines": 96
+    },
+    {
+      "file": "SP_REFRESH_DASHBOARD.sql",
+      "path": "input\\sql\\SP_REFRESH_DASHBOARD.sql",
+      "db_type": "sqlserver",
+      "oracle_constructs": [
+        {
+          "construct": "ROWNUM",
+          "occurrences": 1,
+          "lines": [
+            101
+          ]
+        },
+        {
+          "construct": "LEAD",
+          "occurrences": 1,
+          "lines": [
+            100
+          ]
+        },
+        {
+          "construct": "LAG",
+          "occurrences": 1,
+          "lines": [
+            99
+          ]
+        },
+        {
+          "construct": "ROW_NUMBER",
+          "occurrences": 1,
+          "lines": [
+            101
+          ]
+        },
+        {
+          "construct": "OVER",
+          "occurrences": 4,
+          "lines": [
+            97,
+            99,
+            100,
+            101
+          ]
+        },
+        {
+          "construct": "PARTITION BY",
+          "occurrences": 4,
+          "lines": [
+            97,
+            99,
+            100,
+            101
+          ]
+        },
+        {
+          "construct": "DB_LINK",
+          "occurrences": 12,
+          "lines": [
+            13,
+            14,
+            15,
+            30,
+            51,
+            61,
+            61,
+            83,
+            87,
+            87,
+            87,
+            122
+          ]
+        }
+      ],
+      "sqlserver_constructs": [
+        {
+          "construct": "GETDATE",
+          "occurrences": 3,
+          "lines": [
+            13,
+            58,
+            77
+          ]
+        },
+        {
+          "construct": "ISNULL",
+          "occurrences": 3,
+          "lines": [
+            25,
+            25,
+            110
+          ]
+        },
+        {
+          "construct": "CHARINDEX",
+          "occurrences": 1,
+          "lines": [
+            94
+          ]
+        },
+        {
+          "construct": "LEN",
+          "occurrences": 1,
+          "lines": [
+            93
+          ]
+        },
+        {
+          "construct": "CONVERT",
+          "occurrences": 1,
+          "lines": [
+            37
+          ]
+        },
+        {
+          "construct": "CAST",
+          "occurrences": 5,
+          "lines": [
+            23,
+            26,
+            27,
+            31,
+            111
+          ]
+        },
+        {
+          "construct": "TOP",
+          "occurrences": 2,
+          "lines": [
+            72,
+            114
+          ]
+        },
+        {
+          "construct": "NOLOCK",
+          "occurrences": 2,
+          "lines": [
+            28,
+            42
+          ]
+        },
+        {
+          "construct": "@@",
+          "occurrences": 1,
+          "lines": [
+            61
+          ]
+        },
+        {
+          "construct": "NVARCHAR",
+          "occurrences": 1,
+          "lines": [
+            27
+          ]
+        },
+        {
+          "construct": "DATETIME",
+          "occurrences": 1,
+          "lines": [
+            13
+          ]
+        },
+        {
+          "construct": "BIT",
+          "occurrences": 1,
+          "lines": [
+            111
+          ]
+        },
+        {
+          "construct": "EXEC/EXECUTE",
+          "occurrences": 2,
+          "lines": [
+            121,
+            122
+          ]
+        },
+        {
+          "construct": "CTE",
+          "occurrences": 1,
+          "lines": [
+            21
+          ]
+        },
+        {
+          "construct": "CROSS APPLY",
+          "occurrences": 2,
+          "lines": [
+            63,
+            71
+          ]
+        },
+        {
+          "construct": "OUTER APPLY",
+          "occurrences": 2,
+          "lines": [
+            105,
+            113
+          ]
+        },
+        {
+          "construct": "STRING_AGG",
+          "occurrences": 1,
+          "lines": [
+            27
+          ]
+        }
+      ],
+      "total_lines": 126
+    },
+    {
       "file": "SP_UPDATE_ORDER_STATS.sql",
       "path": "input\\sql\\SP_UPDATE_ORDER_STATS.sql",
+      "db_type": "oracle",
       "oracle_constructs": [
         {
           "construct": "MERGE",
@@ -230,19 +700,68 @@
           ]
         }
       ],
+      "sqlserver_constructs": [],
       "total_lines": 83
     }
   ],
   "summary": {
-    "total_mappings": 3,
+    "total_mappings": 6,
     "total_workflows": 1,
     "total_sessions": 3,
-    "total_sql_files": 1,
+    "total_sql_files": 3,
     "complexity_breakdown": {
-      "Simple": 1,
-      "Medium": 0,
-      "Complex": 2,
+      "Simple": 2,
+      "Medium": 1,
+      "Complex": 3,
       "Custom": 0
+    },
+    "total_parameter_files": 1,
+    "total_mapplets": 2
+  },
+  "parameter_files": [
+    {
+      "file": "params_daily_load.prm",
+      "path": "input\\mappings\\params_daily_load.prm",
+      "sections": {
+        "Global": {
+          "$$DB_CONNECTION": "ORACLE_PROD",
+          "$$SCHEMA_NAME": "SALES",
+          "$$LOAD_DATE": "2026-03-23",
+          "$$BATCH_SIZE": "10000",
+          "$$LOG_LEVEL": "INFO",
+          "$$ENVIRONMENT": "PRODUCTION"
+        },
+        "WF_DAILY_SALES_LOAD.s_M_LOAD_CUSTOMERS": {
+          "$$TARGET_SCHEMA": "SILVER",
+          "$$TARGET_TABLE": "DIM_CUSTOMER",
+          "$$TRUNCATE_FLAG": "N",
+          "$$FILTER_COUNTRY": "ALL"
+        },
+        "WF_DAILY_SALES_LOAD.s_M_LOAD_ORDERS": {
+          "$$TARGET_SCHEMA": "SILVER",
+          "$$TARGET_TABLE": "FACT_ORDERS",
+          "$$TRUNCATE_FLAG": "Y",
+          "$$MIN_ORDER_DATE": "2025-01-01",
+          "$$MAX_DISCOUNT_PCT": "50"
+        },
+        "WF_DAILY_SALES_LOAD.s_M_UPSERT_INVENTORY": {
+          "$$TARGET_SCHEMA": "SILVER",
+          "$$TARGET_TABLE": "DIM_INVENTORY",
+          "$$MERGE_KEY": "PRODUCT_ID",
+          "$$UPDATE_COLUMNS": "STOCK_QTY,LAST_RESTOCK_DATE"
+        }
+      },
+      "total_params": 19
     }
+  ],
+  "mapplets": {
+    "MPLT_COMMON_DERIVE": [
+      "EXP",
+      "FIL"
+    ],
+    "MPLT_SALARY_CALC": [
+      "EXP",
+      "SRT"
+    ]
   }
 }

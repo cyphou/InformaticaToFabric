@@ -65,6 +65,80 @@ Look for these key XML elements:
 - `<SESSTRANSFORMATIONINST>` — Session-level overrides
 - SQL overrides in `<ATTRIBUTE NAME="Sql Query">` elements
 
+### Mapplet XML Structure
+Mapplets are reusable transformation fragments referenced inside mappings.
+
+- `<MAPPLET>` — Root Mapplet element, attribute `NAME` is the Mapplet name
+- Contains inner `<TRANSFORMATION>` elements (same structure as in `<MAPPING>`)
+- Mappings reference Mapplets via `<TRANSFORMATION TYPE="Mapplet" MAPPLETNAME="..."/>`
+- **Expansion:** When a mapping references a Mapplet, the assessment must:
+  1. Find the `<MAPPLET>` definition (same file or separate file)
+  2. Extract inner transformations from the Mapplet
+  3. Inject them into the mapping's transformation chain
+  4. Flag the mapping with `has_mapplet: true`
+
+```xml
+<!-- Mapplet definition -->
+<MAPPLET NAME="MPLT_COMMON_DERIVE">
+  <TRANSFORMATION NAME="EXP_DERIVE" TYPE="Expression" .../>
+  <TRANSFORMATION NAME="FIL_VALID" TYPE="Filter" .../>
+</MAPPLET>
+
+<!-- Mapping referencing the Mapplet -->
+<MAPPING NAME="M_LOAD_CUSTOMERS">
+  <TRANSFORMATION NAME="MPLT_COMMON_DERIVE" TYPE="Mapplet" MAPPLETNAME="MPLT_COMMON_DERIVE"/>
+  ... other transformations ...
+</MAPPING>
+```
+
+### Parameter File (.prm) Structure
+Informatica parameter files use an INI-like format with section headers.
+
+```
+[Global]
+$$DB_CONNECTION=ORACLE_PROD
+$$SCHEMA_NAME=SALES
+$$LOAD_DATE=2026-03-23
+
+[WF_DAILY_LOAD.s_M_LOAD_ORDERS]
+$$TARGET_SCHEMA=SILVER
+$$TRUNCATE_FLAG=Y
+```
+
+- `[Global]` section — parameters applied to all workflows
+- `[workflow.session]` section — parameters scoped to a specific session
+- The assessment parser reads `.prm` files and outputs them in `inventory.json` under `parameter_files`
+
+### IICS (Cloud) XML Structure
+IICS exports use a different XML schema than PowerCenter.
+
+```xml
+<exportMetadata>
+  <weightedCSPackage>
+    <dTemplate name="m_load_customers" objectType="com.infa.deployment.mapping">
+      <field name="transformations">
+        <dTemplate objectType="com.infa.adapter.source">...</dTemplate>
+        <dTemplate objectType="com.infa.adapter.expression">...</dTemplate>
+      </field>
+    </dTemplate>
+  </weightedCSPackage>
+</exportMetadata>
+```
+
+- `<dTemplate>` elements replace `<TRANSFORMATION>` elements
+- `objectType` attribute maps to transformation types via `_iics_type_to_abbrev()`
+- The `detect_xml_format()` function in `run_assessment.py` auto-detects IICS format
+- IICS mappings are included in the same `inventory.json` with `format: "iics"`
+
+### Connection XML Structure
+Connection objects may be defined in XML alongside mappings and workflows.
+
+- `<DBCONNECTION>` — Database connections (Oracle, SQL Server, etc.)
+- `<FTPCONNECTION>` — FTP/SFTP connections
+- `<CONNECTION>` (generic) — Other connection types
+- Key attributes: `NAME`, `DBTYPE`, `DBNAME`, `CODEPAGE`
+- The assessment parser extracts connections from both inferred source/target metadata and explicit XML connection objects
+
 ## Complexity Classification
 
 ### Simple (Auto-generate)

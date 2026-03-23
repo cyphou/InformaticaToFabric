@@ -58,6 +58,31 @@ df_source = (
 
 # For Lakehouse sources:
 # df_source = spark.table("bronze.raw_table")
+
+# For flat file (CSV) sources:
+# df_source = (
+#     spark.read.format("csv")
+#     .option("header", "true")
+#     .option("inferSchema", "true")
+#     .option("delimiter", ",")
+#     .option("quote", '"')
+#     .option("escape", '"')
+#     .load("Files/raw/customers.csv")
+# )
+
+# For fixed-width flat file sources:
+# from pyspark.sql.types import StructType, StructField, StringType
+# schema = StructType([
+#     StructField("customer_id", StringType(), True),   # positions 1-10
+#     StructField("name", StringType(), True),           # positions 11-40
+# ])
+# df_source = (
+#     spark.read.format("text").load("Files/raw/customers.dat")
+# )
+# df_source = df_source.select(
+#     df_source.value.substr(1, 10).alias("customer_id"),
+#     df_source.value.substr(11, 30).alias("name"),
+# )
 ```
 
 ### Cell 3-N: Transformations
@@ -98,6 +123,49 @@ print(f"Rows written: {df_final.count()}")
 3. **Broadcast small lookups** — Use `broadcast()` for lookup tables < 100MB
 4. **Preserve column names** — Match Informatica target column names unless renaming is documented
 5. **Handle NULLs correctly** — Informatica treats empty strings and NULLs differently; match the behavior
+
+### Normalizer (NRM) Conversion
+- **Pattern:** One-to-many row expansion (denormalized → normalized)
+- **PySpark:** Use `.select(explode())` or `.select(explode_outer())`
+```python
+# --- Transformation: NRM_EXPAND_PHONES (from Informatica Normalizer) ---
+# Normalizer expands repeated groups into individual rows
+from pyspark.sql.functions import explode, array, struct, col, lit
+
+# Build array from repeated columns
+df = df.withColumn("phone_entries", array(
+    struct(lit("HOME").alias("phone_type"), col("home_phone").alias("phone_number")),
+    struct(lit("WORK").alias("phone_type"), col("work_phone").alias("phone_number")),
+    struct(lit("MOBILE").alias("phone_type"), col("mobile_phone").alias("phone_number")),
+))
+df_normalized = df.select("customer_id", "name", explode("phone_entries").alias("phone")) \
+    .select("customer_id", "name", col("phone.phone_type"), col("phone.phone_number")) \
+    .filter(col("phone_number").isNotNull())
+```
+
+### Sorter (SRT) Conversion
+- **PySpark:** `.orderBy()` / `.sort()`
+- Preserve sort key order and direction from Informatica Sorter properties
+- `DISTINCT` property on Sorter → `.dropDuplicates()`
+```python
+# --- Transformation: SRT_BY_DATE_DESC (from Informatica Sorter) ---
+df = df.orderBy(col("load_date").desc(), col("customer_id").asc())
+
+# If Sorter has DISTINCT = Yes:
+# df = df.dropDuplicates(["customer_id"]).orderBy(col("load_date").desc())
+```
+
+### Union (UNI) Conversion
+- **PySpark:** `.unionByName()` (preferred) or `.union()`
+- Use `unionByName(allowMissingColumns=True)` if schemas may differ
+- Preserve Informatica Union group order
+```python
+# --- Transformation: UNI_COMBINE_SOURCES (from Informatica Union) ---
+df_combined = df_source_a.unionByName(df_source_b, allowMissingColumns=True)
+
+# For multiple inputs:
+# df_combined = df_a.unionByName(df_b).unionByName(df_c)
+```
 
 ### Expression (EXP) Conversion
 - `IIF(condition, true_val, false_val)` → `when(condition, true_val).otherwise(false_val)`
@@ -175,6 +243,52 @@ When a mapping contains a transformation type that cannot be auto-converted, gen
 | XML Generator | XMLG | XML construction | Use `to_xml()` or string templates in PySpark |
 | XML Parser | XMLP | XML parsing | Use `spark.read.format("xml")` or `xmltodict` in a UDF |
 | Stored Procedure | SP | Database procedure call | Convert to Spark SQL or call via JDBC; hand off to @sql-migration |
+| Data Masking | DM | Data obfuscation/tokenization | Use PySpark UDF with `sha2()`/`regexp_replace()` or Fabric Dynamic Data Masking. See Data Masking section below. |
+| Web Service Consumer | WSC | External API call during transform | Move to pipeline Web Activity or wrap in PySpark UDF with `requests`. See Web Service Consumer section below. |
+
+### Data Masking (DM) Conversion
+
+When Informatica uses Data Masking transformations for PII/compliance, convert to PySpark masking functions.
+
+```python
+# --- Transformation: DM_MASK_SSN (from Informatica Data Masking) ---
+from pyspark.sql.functions import sha2, regexp_replace, lit, concat, substring
+
+# Option 1: Hash-based masking (irreversible)
+df = df.withColumn("ssn_masked", sha2(col("ssn"), 256))
+
+# Option 2: Partial masking (show last 4 digits)
+df = df.withColumn("ssn_masked", concat(lit("XXX-XX-"), substring(col("ssn"), 8, 4)))
+
+# Option 3: Fabric Dynamic Data Masking (applied at storage level)
+# Configure via Fabric workspace security settings instead of notebook logic
+```
+
+### Web Service Consumer (WSC) Conversion
+
+Informatica Web Service Consumer transformations call external APIs during data flow. In Fabric, prefer pipeline-level Web Activities. For row-level API calls, use a PySpark UDF.
+
+```python
+# --- Transformation: WSC_ENRICH_ADDRESS (from Informatica Web Service Consumer) ---
+# OPTION A: Pipeline Web Activity (preferred for batch/single calls)
+# → Move this logic to the pipeline as a Web Activity before/after the notebook
+
+# OPTION B: PySpark UDF for row-level API calls (use sparingly)
+import requests
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StringType
+
+@udf(returnType=StringType())
+def call_api(input_value):
+    try:
+        resp = requests.get(f"https://api.example.com/enrich?q={input_value}", timeout=10)
+        return resp.json().get("result", None)
+    except Exception:
+        return None
+
+# df = df.withColumn("enriched", call_api(col("address")))
+# WARNING: UDF API calls are slow — consider batching or caching results
+```
 
 ### Rules for Placeholder Generation
 1. **Always include the placeholder** — never silently skip a transformation

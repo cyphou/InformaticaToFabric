@@ -72,6 +72,23 @@ Always consult `.vscode/instructions/informatica-patterns.instructions.md` for s
 | `a, b WHERE a.id(+) = b.id` | `a RIGHT JOIN b ON a.id = b.id` |
 | Comma-separated tables with WHERE | Explicit `JOIN ... ON` syntax |
 
+### Analytic / Window Functions
+| Oracle | Spark SQL | Notes |
+|---|---|---|
+| `ROW_NUMBER() OVER (...)` | `ROW_NUMBER() OVER (...)` | Identical syntax |
+| `RANK() OVER (...)` | `RANK() OVER (...)` | Identical |
+| `DENSE_RANK() OVER (...)` | `DENSE_RANK() OVER (...)` | Identical |
+| `LEAD(col, n, default) OVER (...)` | `LEAD(col, n, default) OVER (...)` | Identical |
+| `LAG(col, n, default) OVER (...)` | `LAG(col, n, default) OVER (...)` | Identical |
+| `NTILE(n) OVER (...)` | `NTILE(n) OVER (...)` | Identical |
+| `FIRST_VALUE(col) OVER (...)` | `FIRST_VALUE(col) OVER (...)` | Identical |
+| `LAST_VALUE(col) OVER (...)` | `LAST_VALUE(col) OVER (...)` | Add `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING` if Oracle relied on default window frame |
+| `RATIO_TO_REPORT(col) OVER (...)` | `col / SUM(col) OVER (...)` | No direct equivalent |
+| `KEEP (DENSE_RANK FIRST/LAST ...)` | Use `FIRST_VALUE`/`LAST_VALUE` with window | Rewrite required |
+| `OVER (PARTITION BY ... ORDER BY ...)` | `OVER (PARTITION BY ... ORDER BY ...)` | Identical syntax |
+
+> **Key difference:** Oracle's default window frame for `LAST_VALUE` is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`, which often surprises developers. Spark SQL has the same default. Always add explicit frame clause if the intent is full partition.
+
 ### Hierarchical Queries
 | Oracle | Spark SQL |
 |---|---|
@@ -142,6 +159,93 @@ Include comments mapping back to the original Oracle SQL source.
 - Test complex conversions with sample data when possible
 - Flag any Oracle features that have no direct Spark equivalent with `-- TODO:` comments
 - For date format patterns: Oracle uses `YYYY`, Spark uses `yyyy` (lowercase)
+- Detect source DB type (`detect_source_db_type` in assessment) and apply the correct conversion rules
+
+## SQL Server → Spark SQL Conversion Rules
+
+When the source database is **SQL Server** (T-SQL), use these conversion rules instead of the Oracle rules above.
+
+### Functions
+| SQL Server | Spark SQL |
+|---|---|
+| `GETDATE()` | `current_timestamp()` |
+| `SYSDATETIME()` | `current_timestamp()` |
+| `ISNULL(a, b)` | `COALESCE(a, b)` |
+| `CHARINDEX(sub, str)` | `LOCATE(sub, str)` |
+| `LEN(s)` | `LENGTH(RTRIM(s))` — SQL Server `LEN` trims trailing spaces |
+| `DATALENGTH(s)` | `LENGTH(s)` |
+| `CONVERT(type, val, style)` | `CAST(val AS type)` — style requires format mapping |
+| `CAST(val AS NVARCHAR(n))` | `CAST(val AS STRING)` |
+| `TOP n` (in SELECT) | `LIMIT n` |
+| `STRING_AGG(col, ',')` | `CONCAT_WS(',', COLLECT_LIST(col))` |
+| `IIF(cond, true, false)` | `IF(cond, true, false)` or `CASE WHEN cond THEN true ELSE false END` |
+| `STUFF(str, start, len, rep)` | `CONCAT(SUBSTRING(str, 1, start-1), rep, SUBSTRING(str, start+len))` |
+| `DATEADD(unit, n, date)` | `date_add(date, n)` (days) / `add_months(date, n)` (months) |
+| `DATEDIFF(unit, d1, d2)` | `datediff(d2, d1)` (days) / `months_between(d2, d1)` |
+| `FORMAT(date, 'fmt')` | `date_format(date, 'fmt')` — adjust format codes |
+| `@@IDENTITY` / `SCOPE_IDENTITY()` | `monotonically_increasing_id()` or Delta identity |
+| `NEWID()` | `uuid()` |
+
+### T-SQL Constructs
+| SQL Server | Spark SQL |
+|---|---|
+| `WITH cte AS (...)` | `WITH cte AS (...)` — identical syntax |
+| `CROSS APPLY` | `LATERAL VIEW EXPLODE` or lateral join |
+| `OUTER APPLY` | `LATERAL VIEW OUTER EXPLODE` |
+| `NOLOCK` hint | Remove — not applicable in Spark |
+| `EXEC sp_name` | Convert SP logic inline; hand off to @sql-migration |
+| `IDENTITY(1,1)` column | Delta identity column or `monotonically_increasing_id()` |
+| `NVARCHAR` / `NCHAR` | `STRING` |
+| `BIT` | `BOOLEAN` |
+| `DATETIME` / `DATETIME2` | `TIMESTAMP` |
+| `MONEY` / `SMALLMONEY` | `DECIMAL(19,4)` / `DECIMAL(10,4)` |
+| `UNIQUEIDENTIFIER` | `STRING` |
+
+### T-SQL Date Format Codes
+| SQL Server Style | Spark Format |
+|---|---|
+| `101` (MM/dd/yyyy) | `MM/dd/yyyy` |
+| `103` (dd/MM/yyyy) | `dd/MM/yyyy` |
+| `104` (dd.MM.yyyy) | `dd.MM.yyyy` |
+| `120` (yyyy-MM-dd HH:mm:ss) | `yyyy-MM-dd HH:mm:ss` |
+| `126` (ISO 8601) | `yyyy-MM-dd'T'HH:mm:ss` |
+
+## PL/SQL Package Splitting Strategy
+
+When a PL/SQL `PACKAGE BODY` is encountered, it must be split into individual functions/procedures, each becoming a separate notebook or SQL cell.
+
+### Strategy
+1. **Parse the package** — identify all `PROCEDURE` and `FUNCTION` definitions
+2. **Identify dependencies** — which procedures call which (intra-package calls)
+3. **Map shared state** — package-level variables/cursors become notebook-level variables or Delta tables
+4. **Split into units:**
+   - Each `PROCEDURE`/`FUNCTION` → one notebook cell or separate utility notebook
+   - Package initialization block → first cell in a "package init" notebook
+   - Shared constants → a common parameters cell imported by all split notebooks
+5. **Resolve cross-references** — intra-package calls become notebook `%run` references or function calls
+
+### Output Structure
+```
+output/sql/
+├── SQL_PKG_<package_name>_INIT.sql     # Package initialization
+├── SQL_PKG_<package_name>_P_<proc1>.sql # Individual procedure
+├── SQL_PKG_<package_name>_P_<proc2>.sql
+├── SQL_PKG_<package_name>_F_<func1>.sql # Individual function
+└── SQL_PKG_<package_name>_README.md     # Dependency map and migration notes
+```
+
+### Example
+```sql
+-- ORIGINAL: CREATE OR REPLACE PACKAGE BODY pkg_order_utils AS
+--   PROCEDURE update_totals(p_order_id NUMBER) IS ...
+--   FUNCTION calc_tax(p_amount NUMBER) RETURN NUMBER IS ...
+-- END pkg_order_utils;
+
+-- SPLIT INTO:
+-- SQL_PKG_ORDER_UTILS_P_UPDATE_TOTALS.sql
+-- SQL_PKG_ORDER_UTILS_F_CALC_TAX.sql
+-- SQL_PKG_ORDER_UTILS_README.md (dependency: update_totals calls calc_tax)
+```
 
 ## Non-Convertible SQL Handling
 

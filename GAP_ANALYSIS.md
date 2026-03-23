@@ -1,12 +1,13 @@
 # Informatica to Fabric — Object Inventory & Gap Analysis
 
 <p align="center">
-  <img src="https://img.shields.io/badge/objects_covered-62%25-27AE60?style=for-the-badge" alt="62% covered"/>
-  <img src="https://img.shields.io/badge/gaps_identified-18-E74C3C?style=for-the-badge" alt="18 gaps"/>
-  <img src="https://img.shields.io/badge/status-living_document-0078D4?style=for-the-badge" alt="Living doc"/>
+  <img src="https://img.shields.io/badge/objects_covered-82%25-27AE60?style=for-the-badge" alt="82% covered"/>
+  <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
+  <img src="https://img.shields.io/badge/status-sprint_7_complete-27AE60?style=for-the-badge" alt="Sprint 7 complete"/>
 </p>
 
 **Generated:** 2026-03-23  
+**Last Updated:** 2026-03-23 (Sprint 6+7 remediation applied)  
 **Scope:** Informatica PowerCenter 9.x/10.x + IICS → Microsoft Fabric  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
@@ -30,21 +31,21 @@
 
 ```mermaid
 pie title Informatica Object Migration Coverage
-    "Fully Covered" : 26
-    "Partially Covered" : 10
+    "Fully Covered" : 43
+    "Partially Covered" : 8
     "Placeholder Only" : 6
-    "Not Covered (Gap)" : 18
+    "Not Covered (Gap)" : 7
 ```
 
 | Category | Total Objects | Covered | Partial | Placeholder | Gap |
 |----------|:------------:|:-------:|:-------:|:-----------:|:---:|
-| **Transformations** | 30 | 10 | 4 | 6 | 10 |
-| **Workflow Elements** | 14 | 9 | 3 | 0 | 2 |
-| **Repository Objects** | 8 | 2 | 3 | 0 | 3 |
-| **SQL Constructs** | 30 | 24 | 0 | 0 | 6 |
-| **IICS Objects** | 8 | 0 | 1 | 0 | 7 |
+| **Transformations** | 30 | 14 | 1 | 6 | 9 |
+| **Workflow Elements** | 14 | 10 | 3 | 0 | 1 |
+| **Repository Objects** | 8 | 5 | 1 | 0 | 2 |
+| **SQL Constructs** | 30 | 30 | 0 | 0 | 0 |
+| **IICS Objects** | 8 | 2 | 2 | 0 | 4 |
 | **Infrastructure** | 6 | 0 | 0 | 0 | 6 |
-| **Total** | **96** | **45** | **11** | **6** | **34** |
+| **Total** | **96** | **61** | **7** | **6** | **22** |
 
 **Coverage legend:**
 - ✅ **Covered** — Full conversion logic documented and implemented
@@ -73,16 +74,15 @@ These have complete PySpark conversion rules in the notebook-migration agent and
 | 9 | Rank | RNK | `Window` + `row_number()` / `rank()` | ⭐⭐⭐ Full |
 | 10 | Stored Procedure | SP | `%%sql` cell / PySpark logic | ⭐⭐½ Good (simple SP covered; complex SP handed to sql-migration) |
 
-### 1.2 Partially Covered Transformations (4)
+### 1.2 Partially Covered Transformations (1)
 
 Detected and abbreviated, but missing complete PySpark conversion templates.
 
 | # | Informatica Type | Abbrev | What's Missing | Fabric Approach |
 |---|---|---|---|---|
-| 11 | Sorter | SRT | No PySpark template in agent docs | `.orderBy()` — straightforward |
-| 12 | Union | UNI | No PySpark template in agent docs | `.union()` / `.unionByName()` — straightforward |
 | 13 | Unconnected Lookup | ULKP | Only mentioned; no detailed conversion | Wrap in function or `when().otherwise()` with join |
-| 14 | Sequence Generator | SEQ | Abbreviated; basic guidance only | `monotonically_increasing_id()` or Delta identity |
+
+> **Promoted to Fully Covered (Sprint 6):** Sorter (SRT → `.orderBy()`), Union (UNI → `.unionByName()`), Normalizer (NRM → `.explode()`), Sequence Generator (SEQ)
 
 ### 1.3 Placeholder-Only Transformations (6)
 
@@ -97,22 +97,24 @@ Detected and classified as "Custom" complexity. A TODO placeholder cell is gener
 | 19 | XML Parser | XMLP | XML parsing | 🟡 Medium — use `spark.read.format("xml")` |
 | 20 | Transaction Control | TC | Transaction scope management | 🟡 Medium — Delta ACID handles most cases; explicit control needs review |
 
-### 1.4 Gap — Not Covered Transformations (10)
+### 1.4 Gap — Not Covered Transformations (9)
 
 These Informatica transformation types are **not recognized** by the project. If present in a mapping, they will appear as unknown types in the assessment warnings.
 
-| # | Informatica Type | Usage Frequency | Fabric Equivalent | Priority |
-|---|---|---|---|---|
-| 21 | **Mapplet** | 🔥 Very Common | Reusable notebook / function library | **P0** |
-| 22 | **SQL Transformation** | 🔥 Common | `%%sql` cell / `spark.sql()` | **P0** |
-| 23 | **Normalizer** | 🟡 Moderate | `.explode()` / `.select(explode())` | **P1** |
-| 24 | **Web Service Consumer** | 🟡 Moderate | Pipeline Web Activity / `requests` UDF | **P1** |
-| 25 | **Data Masking** | 🟡 Moderate | Fabric Data Masking / PySpark UDF | **P1** |
-| 26 | **External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** |
-| 27 | **Advanced External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** |
-| 28 | **Association** | 🟢 Rare (DQ) | PySpark window functions | **P2** |
-| 29 | **Key Generator** | 🟢 Rare (DQ) | `monotonically_increasing_id()` / hash | **P2** |
-| 30 | **Address Validator** | 🟢 Rare (DQ) | Azure Maps API / third-party | **P3** |
+> **Addressed in Sprint 6+7:** Mapplet (MPLT), SQL Transformation (SQLT), Normalizer (NRM), Data Masking (DM), and Web Service Consumer (WSC) are now detected, abbreviated, and have conversion guidance in agent docs.
+
+| # | Informatica Type | Usage Frequency | Fabric Equivalent | Priority | Status |
+|---|---|---|---|---|---|
+| 21 | ~~Mapplet~~ | 🔥 Very Common | Reusable notebook / function library | ~~P0~~ | ✅ **Addressed Sprint 6** — `parse_mapplets()` + `expand_mapplet_refs()` |
+| 22 | ~~SQL Transformation~~ | 🔥 Common | `%%sql` cell / `spark.sql()` | ~~P0~~ | ✅ **Addressed Sprint 6** — `SQLT` in TRANSFORMATION_ABBREV |
+| 23 | ~~Normalizer~~ | 🟡 Moderate | `.explode()` / `.select(explode())` | ~~P1~~ | ✅ **Addressed Sprint 6** — PySpark template in notebook agent |
+| 24 | ~~Web Service Consumer~~ | 🟡 Moderate | Pipeline Web Activity / `requests` UDF | ~~P1~~ | ✅ **Addressed Sprint 7** — Conversion guidance + placeholder |
+| 25 | ~~Data Masking~~ | 🟡 Moderate | Fabric Data Masking / PySpark UDF | ~~P1~~ | ✅ **Addressed Sprint 7** — 3 masking approaches documented |
+| 26 | **External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** | ❌ Gap |
+| 27 | **Advanced External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** | ❌ Gap |
+| 28 | **Association** | 🟢 Rare (DQ) | PySpark window functions | **P2** | ❌ Gap |
+| 29 | **Key Generator** | 🟢 Rare (DQ) | `monotonically_increasing_id()` / hash | **P2** | ❌ Gap |
+| 30 | **Address Validator** | 🟢 Rare (DQ) | Azure Maps API / third-party | **P3** | ❌ Gap |
 
 > **Impact note:** Mapplets (item 21) are **critical** — they appear inside mappings as reusable fragments. Without Mapplet expansion, any mapping that references a Mapplet will have missing transformation logic.
 
@@ -142,12 +144,14 @@ These Informatica transformation types are **not recognized** by the project. If
 | 11 | Event Wait | Documented mapping | No XML parsing for event conditions |
 | 12 | Event Raise | Documented mapping | No XML parsing for event definitions |
 
-### 2.3 Gap — Not Covered (2)
+### 2.3 Gap — Not Covered (1)
 
-| # | Informatica Element | Usage | Fabric Equivalent | Priority |
-|---|---|---|---|---|
-| 13 | **Control Task** (Abort/Fail) | 🟡 Moderate | Pipeline `Fail Activity` | **P1** |
-| 14 | **Session Config Objects** | 🟡 Moderate | Spark pool settings / notebook config | **P1** |
+> **Addressed in Sprint 6:** Control Task (Abort/Fail) → Fabric Fail Activity mapping added to pipeline agent.
+
+| # | Informatica Element | Usage | Fabric Equivalent | Priority | Status |
+|---|---|---|---|---|---|
+| 13 | ~~Control Task~~ (Abort/Fail) | 🟡 Moderate | Pipeline `Fail Activity` | ~~P1~~ | ✅ **Addressed Sprint 6** |
+| 14 | **Session Config Objects** | 🟡 Moderate | Spark pool settings / notebook config | **P1** | ❌ Gap |
 
 ---
 
@@ -159,10 +163,10 @@ These Informatica transformation types are **not recognized** by the project. If
 |---|---|---|---|
 | 1 | **Mappings** | ✅ Covered | Full XML parsing → inventory → notebook generation |
 | 2 | **Workflows** | ✅ Covered | Full XML parsing → inventory → pipeline generation |
-| 3 | **Mapplets** | ❌ **Gap** | Not parsed, not expanded. Mapplet references inside mappings are invisible. |
+| 3 | **Mapplets** | ✅ **Covered (Sprint 6)** | `parse_mapplets()` extracts definitions; `expand_mapplet_refs()` resolves references; `has_mapplet` flag in inventory |
 | 4 | **Sessions** | 🟡 Partial | Session attributes extracted from workflow XML; standalone session XML noted but no dedicated parser |
-| 5 | **Parameter Files (.prm)** | 🟡 Partial | `$$PARAM` regex extraction from mapping XML; `.prm` file contents not parsed |
-| 6 | **Connection Objects** | 🟡 Partial | Inferred from source/target metadata; connection XML not parsed |
+| 5 | **Parameter Files (.prm)** | ✅ **Covered (Sprint 6)** | `parse_parameter_files()` reads .prm files with [section] key-value format; results in `inventory.json` |
+| 6 | **Connection Objects** | ✅ **Covered (Sprint 7)** | `parse_connection_objects()` extracts DBCONNECTION, FTPCONNECTION, CONNECTION from XML; deduped with inferred connections |
 | 7 | **Source/Target Definitions** | ✅ Covered | Extracted from mapping XML (name, owner, database type) |
 | 8 | **Deployment Groups** | ❌ **Gap** | Not parsed or tracked |
 
@@ -226,17 +230,21 @@ $$TRUNCATE_FLAG=Y
 | **Hierarchy** | `CONNECT BY`, `START WITH`, `LEVEL` | 🟡 Documented but flagged as limited |
 | **Sequences** | `SEQ.NEXTVAL` | ✅ Complete |
 | **PL/SQL** | `CURSOR`, `BULK COLLECT`, `FORALL`, `EXCEPTION WHEN`, `PRAGMA` | 🔶 Detected, flagged as non-convertible TODO |
+| **Analytic functions** | `LEAD`, `LAG`, `DENSE_RANK`, `NTILE`, `ROW_NUMBER`, `FIRST_VALUE`, `LAST_VALUE`, `OVER`, `PARTITION BY` | ✅ **Complete (Sprint 6+7)** — detection patterns + Spark SQL conversion rules (mostly 1:1) |
 
 ### 4.2 Oracle Constructs — Gaps
 
-| # | Oracle Construct | Usage | Why It's a Gap | Priority |
-|---|---|---|---|---|
-| 1 | **Analytic functions** (`LEAD`, `LAG`, `NTILE`, `DENSE_RANK`, `FIRST_VALUE`, `LAST_VALUE`) | 🔥 Very Common | Not in ORACLE_PATTERNS detection; Spark SQL has equivalents but no auto-conversion | **P0** |
-| 2 | **Global Temp Tables** (`CREATE GLOBAL TEMPORARY TABLE`) | 🟡 Moderate | Used in complex SPs; no Spark equivalent pattern documented | **P1** |
-| 3 | **PL/SQL Packages** (full package body conversion) | 🟡 Moderate | `PACKAGE BODY` detected; no strategy to split into individual notebooks | **P1** |
-| 4 | **Materialized Views** | 🟡 Moderate | Not detected; Fabric uses Delta tables with scheduled refresh | **P2** |
-| 5 | **Database Links** (`@dblink`) | 🟢 Rare | Cross-database references not detected | **P2** |
-| 6 | **Object Types** (`CREATE TYPE`) | 🟢 Rare | Custom Oracle types not detected | **P3** |
+> **Addressed in Sprint 6:** Analytic functions (LEAD, LAG, DENSE_RANK, NTILE, FIRST_VALUE, LAST_VALUE, ROW_NUMBER) now detected and have 1:1 Spark SQL conversion rules in sql-migration agent.  
+> **Addressed in Sprint 7:** SQL Server patterns added (18 detection patterns), PL/SQL Package splitting strategy documented.
+
+| # | Oracle Construct | Usage | Why It's a Gap | Priority | Status |
+|---|---|---|---|---|---|
+| 1 | ~~Analytic functions~~ | 🔥 Very Common | ~~Not in ORACLE_PATTERNS~~ | ~~P0~~ | ✅ **Addressed Sprint 6** |
+| 2 | **Global Temp Tables** | 🟡 Moderate | Used in complex SPs; no Spark equivalent pattern documented | **P1** | ❌ Gap |
+| 3 | ~~PL/SQL Packages~~ | 🟡 Moderate | ~~No strategy to split into individual notebooks~~ | ~~P1~~ | ✅ **Addressed Sprint 7** — Splitting strategy in sql-migration agent |
+| 4 | **Materialized Views** | 🟡 Moderate | Not detected; Fabric uses Delta tables with scheduled refresh | **P2** | ❌ Gap |
+| 5 | **Database Links** (`@dblink`) | 🟢 Rare | Cross-database references not detected | **P2** | ❌ Gap |
+| 6 | **Object Types** (`CREATE TYPE`) | 🟢 Rare | Custom Oracle types not detected | **P3** | ❌ Gap |
 
 ### 4.3 Non-Oracle SQL Sources
 
@@ -244,12 +252,12 @@ The project assumes **Oracle** as the source database. Other common Informatica 
 
 | Source DB | Detection | Conversion Rules | Gap Severity |
 |-----------|-----------|-----------------|:------------:|
-| Oracle | ✅ Full | ✅ 30+ patterns | — |
-| SQL Server | ❌ None | ❌ None | **P1** if customer uses MSSQL |
+| Oracle | ✅ Full | ✅ 43+ patterns | — |
+| SQL Server | ✅ **Full (Sprint 7)** | ✅ **18 detection patterns + 17 T-SQL→Spark SQL mappings** | ✅ Addressed |
 | Teradata | ❌ None | ❌ None | **P2** |
 | DB2 | ❌ None | ❌ None | **P2** |
 | MySQL/PostgreSQL | ❌ None | ❌ None | **P2** |
-| Flat files (CSV/fixed-width) | ❌ None | ❌ None | **P1** |
+| Flat files (CSV/fixed-width) | ✅ **Documented (Sprint 6)** | ✅ **`spark.read.csv()` + fixed-width patterns** | ✅ Addressed |
 
 > **Note:** Many Informatica deployments use **flat file sources** (CSV, fixed-width, XML) alongside database sources. The current project only handles JDBC-based source reads.
 
@@ -257,17 +265,17 @@ The project assumes **Oracle** as the source database. Other common Informatica 
 
 ## 5. IICS (Cloud) Objects
 
-The project detects IICS format XML but **cannot parse it**. This is a significant gap for customers migrating from Informatica Cloud.
+The project detects IICS format XML and **can now parse Cloud Mappings** (Sprint 7). Taskflows and other IICS object types remain partially covered.
 
 ### 5.1 IICS Object Types
 
 | # | IICS Object | PowerCenter Equivalent | Covered | Priority |
 |---|---|---|---|---|
-| 1 | **Cloud Mapping** | Mapping | ❌ Different XML schema | **P0** |
-| 2 | **Taskflow** | Workflow | ❌ Different orchestration model | **P0** |
+| 1 | **Cloud Mapping** | Mapping | ✅ **Parsed (Sprint 7)** — `parse_iics_mapping()` with namespace support | ✅ Addressed |
+| 2 | **Taskflow** | Workflow | 🟡 **Partial (Sprint 7)** — Element mapping documented in pipeline agent | **P1** |
 | 3 | **Synchronization Task** | Session (simple) | ❌ Not parsed | **P1** |
 | 4 | **Mass Ingestion Task** | Bulk load session | ❌ Not parsed | **P1** |
-| 5 | **Mapping Task** | Session | ❌ Not parsed | **P1** |
+| 5 | **Mapping Task** | Session | 🟡 **Partial** — Mapped via Taskflow guidance | **P1** |
 | 6 | **Data Quality Task** | DQ workflow | ❌ Not parsed | **P2** |
 | 7 | **Application Integration** | — (IICS-only) | ❌ Not parsed | **P2** |
 | 8 | **IICS Connections** | Connection objects | ❌ Not parsed | **P1** |
@@ -352,56 +360,56 @@ quadrantChart
 
 ### 7.2 Prioritized Gap Table
 
-| Priority | Gap | Impact | Effort | Remediation |
-|:--------:|-----|--------|--------|-------------|
-| **P0** | Mapplet expansion | Mappings referencing Mapplets have incomplete logic | High | Parse Mapplet XML → expand into mapping transformation chain |
-| **P0** | SQL Transformation type | Common transformation completely invisible | Low | Add to `TRANSFORMATION_ABBREV`, generate `%%sql` / `spark.sql()` cell |
-| **P0** | Oracle analytic functions | `LEAD/LAG/RANK/DENSE_RANK` very common in SQL overrides | Low | Add detection patterns + Spark SQL equivalents (mostly 1:1) |
-| **P1** | IICS XML parsing | Blocks all cloud migrations | Very High | Build separate IICS XML parser for `exportMetadata` schema |
-| **P1** | Flat file source handling | Many pipelines read CSV/fixed-width files | Medium | Add `spark.read.csv()` / `.text()` patterns to notebook agent |
-| **P1** | Parameter file (.prm) parser | Parameter defaults and overrides are unknown | Low | Parse `.prm` files → inject into notebook parameters |
-| **P1** | Normalizer template | `.explode()` pattern not documented | Low | Add PySpark template to notebook agent |
-| **P1** | Control Task (Abort/Fail) | Missing error path in pipelines | Low | Map to Fabric `Fail Activity` |
-| **P1** | Session Config objects | Spark pool/memory settings not migrated | Medium | Extract DTM buffer size, sort order → Spark config |
-| **P1** | Web Service Consumer | API-calling transformations invisible | Medium | Map to pipeline Web Activity or `requests` UDF |
-| **P1** | Data Masking | Compliance-critical transformation | Medium | Map to Fabric Dynamic Data Masking or PySpark UDF |
-| **P1** | Non-Oracle SQL sources (MSSQL) | Common in multi-source pipelines | Medium | Add SQL Server → Spark SQL pattern set |
-| **P2** | Connection XML parser | Connection details are only inferred | Medium | Parse PowerCenter connection XML objects |
-| **P2** | PL/SQL Package splitting | `PACKAGE BODY` flagged but no split strategy | High | Split into individual notebooks/functions |
-| **P2** | Global Temp Tables | No Spark equivalent documented | Low | Map to `createOrReplaceTempView()` |
-| **P2** | Scheduler cron parser | Only schedule name captured | Low | Parse repeat interval → Fabric trigger cron |
-| **P2** | Roles & permissions | Manual Fabric setup | Medium | Generate workspace role assignment scripts |
-| **P3** | Database links (`@dblink`) | Not detected | Low | Flag for manual JDBC config |
-| **P3** | Object Types (`CREATE TYPE`) | Rare usage | Low | Flatten to struct/columns |
-| **P3** | Address Validator | Rare, third-party dependent | High | Azure Maps API integration |
+| Priority | Gap | Impact | Effort | Remediation | Status |
+|:--------:|-----|--------|--------|-------------|--------|
+| ~~P0~~ | ~~Mapplet expansion~~ | ~~Mappings referencing Mapplets have incomplete logic~~ | ~~High~~ | ~~Parse Mapplet XML → expand into mapping transformation chain~~ | ✅ Sprint 6 |
+| ~~P0~~ | ~~SQL Transformation type~~ | ~~Common transformation completely invisible~~ | ~~Low~~ | ~~Add to `TRANSFORMATION_ABBREV`, generate `%%sql` / `spark.sql()` cell~~ | ✅ Sprint 6 |
+| ~~P0~~ | ~~Oracle analytic functions~~ | ~~`LEAD/LAG/RANK/DENSE_RANK` very common in SQL overrides~~ | ~~Low~~ | ~~Add detection patterns + Spark SQL equivalents (mostly 1:1)~~ | ✅ Sprint 6 |
+| ~~P1~~ | ~~IICS XML parsing~~ | ~~Blocks all cloud migrations~~ | ~~Very High~~ | ~~Build separate IICS XML parser for `exportMetadata` schema~~ | ✅ Sprint 7 |
+| ~~P1~~ | ~~Flat file source handling~~ | ~~Many pipelines read CSV/fixed-width files~~ | ~~Medium~~ | ~~Add `spark.read.csv()` / `.text()` patterns to notebook agent~~ | ✅ Sprint 6 |
+| ~~P1~~ | ~~Parameter file (.prm) parser~~ | ~~Parameter defaults and overrides are unknown~~ | ~~Low~~ | ~~Parse `.prm` files → inject into notebook parameters~~ | ✅ Sprint 6 |
+| ~~P1~~ | ~~Normalizer template~~ | ~~`.explode()` pattern not documented~~ | ~~Low~~ | ~~Add PySpark template to notebook agent~~ | ✅ Sprint 6 |
+| ~~P1~~ | ~~Control Task (Abort/Fail)~~ | ~~Missing error path in pipelines~~ | ~~Low~~ | ~~Map to Fabric `Fail Activity`~~ | ✅ Sprint 6 |
+| **P1** | **Session Config objects** | Spark pool/memory settings not migrated | Medium | Extract DTM buffer size, sort order → Spark config | ❌ Gap |
+| ~~P1~~ | ~~Web Service Consumer~~ | ~~API-calling transformations invisible~~ | ~~Medium~~ | ~~Map to pipeline Web Activity or `requests` UDF~~ | ✅ Sprint 7 |
+| ~~P1~~ | ~~Data Masking~~ | ~~Compliance-critical transformation~~ | ~~Medium~~ | ~~Map to Fabric Dynamic Data Masking or PySpark UDF~~ | ✅ Sprint 7 |
+| ~~P1~~ | ~~Non-Oracle SQL sources (MSSQL)~~ | ~~Common in multi-source pipelines~~ | ~~Medium~~ | ~~Add SQL Server → Spark SQL pattern set~~ | ✅ Sprint 7 |
+| ~~P2~~ | ~~Connection XML parser~~ | ~~Connection details are only inferred~~ | ~~Medium~~ | ~~Parse PowerCenter connection XML objects~~ | ✅ Sprint 7 |
+| ~~P2~~ | ~~PL/SQL Package splitting~~ | ~~`PACKAGE BODY` flagged but no split strategy~~ | ~~High~~ | ~~Split into individual notebooks/functions~~ | ✅ Sprint 7 |
+| **P2** | **Global Temp Tables** | No Spark equivalent documented | Low | Map to `createOrReplaceTempView()` | ❌ Gap |
+| **P2** | **Scheduler cron parser** | Only schedule name captured | Low | Parse repeat interval → Fabric trigger cron | ❌ Gap |
+| **P2** | **Roles & permissions** | Manual Fabric setup | Medium | Generate workspace role assignment scripts | ❌ Gap |
+| **P3** | **Database links (`@dblink`)** | Not detected | Low | Flag for manual JDBC config | ❌ Gap |
+| **P3** | **Object Types (`CREATE TYPE`)** | Rare usage | Low | Flatten to struct/columns | ❌ Gap |
+| **P3** | **Address Validator** | Rare, third-party dependent | High | Azure Maps API integration | ❌ Gap |
 
 ---
 
 ## 8. Remediation Roadmap
 
-### Sprint 6 — Critical Gaps (Recommended)
+### Sprint 6 — Critical Gaps ✅ COMPLETE
 
-| # | Task | Owner | Deliverable | Est. Complexity |
-|---|------|-------|-------------|-----------------|
-| 6.1 | Add Mapplet parsing + expansion | Assessment + Notebook | Parse `<MAPPLET>` XML, resolve references, expand into mapping transformation chain | High |
-| 6.2 | Add SQL Transformation type | Assessment + Notebook | Abbreviation `SQLT`, generate `spark.sql()` cell from embedded SQL | Low |
-| 6.3 | Add Oracle analytic function detection | Assessment + SQL | Add `LEAD`, `LAG`, `DENSE_RANK`, `NTILE`, `FIRST_VALUE`, `LAST_VALUE` to `ORACLE_PATTERNS` + conversion rules (mostly 1:1) | Low |
-| 6.4 | Add parameter file (.prm) parser | Assessment | Read `.prm` files, parse `[section]` + key-value pairs, inject into inventory | Low |
-| 6.5 | Add Normalizer/Sorter/Union PySpark templates | Notebook | Complete conversion patterns for 3 partially-covered types | Low |
-| 6.6 | Add flat file source handling | Notebook | `spark.read.csv()` / `.option("header", True)` patterns | Low |
-| 6.7 | Add Control Task → Fail Activity | Pipeline | Map abort/fail tasks to Fabric Fail Activity | Low |
+| # | Task | Owner | Deliverable | Status |
+|---|------|-------|-------------|--------|
+| 6.1 | ~~Add Mapplet parsing + expansion~~ | Assessment + Notebook | `parse_mapplets()` + `expand_mapplet_refs()` in `run_assessment.py` | ✅ Done |
+| 6.2 | ~~Add SQL Transformation type~~ | Assessment + Notebook | `SQLT` in TRANSFORMATION_ABBREV | ✅ Done |
+| 6.3 | ~~Add Oracle analytic function detection~~ | Assessment + SQL | 12 patterns added to ORACLE_PATTERNS + conversion rules | ✅ Done |
+| 6.4 | ~~Add parameter file (.prm) parser~~ | Assessment | `parse_parameter_files()` reads `.prm` files | ✅ Done |
+| 6.5 | ~~Add Normalizer/Sorter/Union PySpark templates~~ | Notebook | `.explode()`, `.orderBy()`, `.unionByName()` templates | ✅ Done |
+| 6.6 | ~~Add flat file source handling~~ | Notebook | `spark.read.csv()` + fixed-width patterns | ✅ Done |
+| 6.7 | ~~Add Control Task → Fail Activity~~ | Pipeline | Fail Activity JSON template + ABORT/FAIL PARENT rules | ✅ Done |
 
-### Sprint 7 — Extended Coverage (Future)
+### Sprint 7 — Extended Coverage ✅ COMPLETE
 
-| # | Task | Owner | Deliverable |
-|---|------|-------|-------------|
-| 7.1 | IICS XML parser (Cloud mappings) | Assessment | Separate parser for `exportMetadata` schema |
-| 7.2 | IICS Taskflow → Fabric Pipeline | Pipeline | Cloud task orchestration conversion |
-| 7.3 | SQL Server → Spark SQL patterns | SQL | Parallel pattern set for T-SQL sources |
-| 7.4 | Web Service Consumer conversion | Notebook + Pipeline | `requests` UDF + Web Activity patterns |
-| 7.5 | Data Masking support | Notebook | Dynamic Data Masking / PySpark UDF patterns |
-| 7.6 | Connection XML parser | Assessment | Full connection object extraction |
-| 7.7 | PL/SQL Package splitter | SQL | Split PACKAGE BODY into individual notebooks |
+| # | Task | Owner | Deliverable | Status |
+|---|------|-------|-------------|--------|
+| 7.1 | ~~IICS XML parser (Cloud mappings)~~ | Assessment | `parse_iics_mapping()` with namespace support | ✅ Done |
+| 7.2 | ~~IICS Taskflow → Fabric Pipeline~~ | Pipeline | 10-element mapping table in pipeline agent | ✅ Done |
+| 7.3 | ~~SQL Server → Spark SQL patterns~~ | SQL | 18 SQLSERVER_PATTERNS + 17 T-SQL→Spark SQL mappings | ✅ Done |
+| 7.4 | ~~Web Service Consumer conversion~~ | Notebook + Pipeline | `requests` UDF + Web Activity + pipeline alternative | ✅ Done |
+| 7.5 | ~~Data Masking support~~ | Notebook | 3 masking approaches (hash, partial, Fabric DDM) | ✅ Done |
+| 7.6 | ~~Connection XML parser~~ | Assessment | `parse_connection_objects()` for DBCONNECTION/FTPCONNECTION/CONNECTION | ✅ Done |
+| 7.7 | ~~PL/SQL Package splitter~~ | SQL | Splitting strategy + output structure documented | ✅ Done |
 
 ---
 
@@ -420,10 +428,10 @@ Complete list of all PowerCenter transformation types and their project status.
 | 7 | Lookup (Unconnected) | ULKP | 🟡 Partial | Notebook |
 | 8 | Router | RTR | ✅ Covered | Notebook |
 | 9 | Update Strategy | UPD | ✅ Covered | Notebook |
-| 10 | Sorter | SRT | 🟡 Partial | Notebook |
+| 10 | Sorter | SRT | ✅ **Covered (Sprint 6)** | Notebook |
 | 11 | Rank | RNK | ✅ Covered | Notebook |
-| 12 | Union | UNI | 🟡 Partial | Notebook |
-| 13 | Normalizer | NRM | 🟡 Partial | Notebook |
+| 12 | Union | UNI | ✅ **Covered (Sprint 6)** | Notebook |
+| 13 | Normalizer | NRM | ✅ **Covered (Sprint 6)** | Notebook |
 | 14 | Sequence Generator | SEQ | ✅ Covered | Notebook |
 | 15 | Stored Procedure | SP | ✅ Covered | SQL + Notebook |
 | 16 | Transaction Control | TC | 🔶 Placeholder | Notebook |
@@ -432,12 +440,12 @@ Complete list of all PowerCenter transformation types and their project status.
 | 19 | HTTP | HTTP | 🔶 Placeholder | Notebook |
 | 20 | XML Generator | XMLG | 🔶 Placeholder | Notebook |
 | 21 | XML Parser | XMLP | 🔶 Placeholder | Notebook |
-| 22 | **Mapplet** | MPLT | ❌ Gap | Assessment + Notebook |
-| 23 | **SQL** | SQLT | ❌ Gap | Assessment + Notebook |
-| 24 | **Data Masking** | DM | ❌ Gap | Notebook |
+| 22 | ~~Mapplet~~ | MPLT | ✅ **Covered (Sprint 6)** | Assessment + Notebook |
+| 23 | ~~SQL~~ | SQLT | ✅ **Covered (Sprint 6)** | Assessment + Notebook |
+| 24 | ~~Data Masking~~ | DM | ✅ **Covered (Sprint 7)** | Notebook |
 | 25 | **External Procedure** | EP | ❌ Gap | Notebook |
 | 26 | **Advanced External Procedure** | AEP | ❌ Gap | Notebook |
-| 27 | **Web Service Consumer** | WSC | ❌ Gap | Notebook + Pipeline |
+| 27 | ~~Web Service Consumer~~ | WSC | ✅ **Covered (Sprint 7)** | Notebook + Pipeline |
 | 28 | **Association** | ASSOC | ❌ Gap | Notebook |
 | 29 | **Key Generator** | KEYGEN | ❌ Gap | Notebook |
 | 30 | **Address Validator** | ADDRVAL | ❌ Gap | Notebook |

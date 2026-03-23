@@ -1,9 +1,9 @@
 # Development Plan — Informatica to Fabric Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-4%2F5%20complete-27AE60?style=for-the-badge" alt="4/5 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-7%2F7%20complete-27AE60?style=for-the-badge" alt="7/7 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
-  <img src="https://img.shields.io/badge/status-sprint%205-0078D4?style=for-the-badge" alt="Sprint 5"/>
+  <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
 </p>
 
 > This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
@@ -18,6 +18,8 @@
 - [Sprint 3 — Pipeline & Orchestration](#sprint-3--pipeline--orchestration)
 - [Sprint 4 — Validation & Integration](#sprint-4--validation--integration)
 - [Sprint 5 — Polish, Hardening & Documentation](#sprint-5--polish-hardening--documentation)
+- [Sprint 6 — Critical Gap Remediation](#sprint-6--critical-gap-remediation)
+- [Sprint 7 — Extended Coverage](#sprint-7--extended-coverage)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -229,6 +231,51 @@ gantt
 - ✅ Agent files have consistent structure (Reference, Output, Rules, Roadmap)
 - ✅ README has generated output examples
 - ✅ Shared instructions updated with lessons learned
+
+---
+
+## Sprint 6 — Critical Gap Remediation ✅
+
+**Goal:** Address all P0 and critical P1 gaps identified in GAP_ANALYSIS.md — Mapplet expansion, SQL Transformation, Oracle analytics, parameter files, Normalizer/Sorter/Union templates, flat file sources, and Control Task.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 6.1 | Mapplet parsing + expansion | Assessment | `run_assessment.py` | ✅ `parse_mapplets()` extracts MAPPLET definitions; `expand_mapplet_refs()` resolves references and inlines inner transformations; `has_mapplet` flag set on mappings |
+| 6.2 | SQL Transformation type | Assessment | `run_assessment.py` | ✅ `SQLT` added to `TRANSFORMATION_ABBREV`; detected and abbreviated in inventory |
+| 6.3 | Oracle analytic function detection | Assessment + SQL | `run_assessment.py`, `sql-migration.agent.md` | ✅ 12 analytic patterns added (LEAD, LAG, DENSE_RANK, NTILE, FIRST_VALUE, LAST_VALUE, ROW_NUMBER, OVER, PARTITION BY, GLOBAL TEMPORARY TABLE, MATERIALIZED VIEW, DB_LINK); conversion rules in SQL agent (mostly 1:1) |
+| 6.4 | Parameter file (.prm) parser | Assessment | `run_assessment.py` | ✅ `parse_parameter_files()` reads .prm files with [section] key=value format; results in inventory.json |
+| 6.5 | Normalizer/Sorter/Union PySpark templates | Notebook | `notebook-migration.agent.md` | ✅ NRM→`.explode()`, SRT→`.orderBy()`, UNI→`.unionByName()` with full code examples |
+| 6.6 | Flat file source handling | Notebook | `notebook-migration.agent.md` | ✅ CSV (`spark.read.csv()`) and fixed-width (`spark.read.text()` + `.substr()`) patterns documented |
+| 6.7 | Control Task → Fail Activity | Pipeline | `pipeline-migration.agent.md` | ✅ Fail Activity JSON template with ABORT/FAIL PARENT rules documented |
+
+**Sprint 6 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ Mapplet parsing + expansion tested with 2-Mapplet test file (M_LOAD_EMPLOYEES.xml)
+- ✅ All 3 P0 gaps addressed (Mapplet, SQL Transformation, Oracle analytics)
+- ✅ 4 P1 gaps addressed (parameter files, Normalizer/Sorter/Union, flat files, Control Task)
+- ✅ Assessment runs clean with 6 mappings, 2 Mapplets, 3 SQL files, 1 param file, 4 connections
+
+---
+
+## Sprint 7 — Extended Coverage ✅
+
+**Goal:** Extend migration tooling to IICS cloud exports, SQL Server sources, Web Service Consumer, Data Masking, connection XML parsing, and PL/SQL package splitting.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 7.1 | IICS XML parser (Cloud mappings) | Assessment | `run_assessment.py` | ✅ `parse_iics_mapping()` handles `exportMetadata`/`dTemplate` schema with namespace support; `detect_xml_format()` auto-detects IICS vs PowerCenter |
+| 7.2 | IICS Taskflow → Fabric Pipeline | Pipeline | `pipeline-migration.agent.md` | ✅ 10 IICS element → Fabric activity mappings documented (Mapping Task, Command Task, Human Task, Notification Task, Subflow, Exclusive/Parallel Gateway, Timer Event) |
+| 7.3 | SQL Server → Spark SQL patterns | Assessment + SQL | `run_assessment.py`, `sql-migration.agent.md` | ✅ 18 SQLSERVER_PATTERNS in assessment; `detect_source_db_type()` scores Oracle vs MSSQL; 17 T-SQL→Spark SQL function mappings + construct mappings + date format codes in SQL agent |
+| 7.4 | Web Service Consumer conversion | Notebook | `notebook-migration.agent.md` | ✅ WSC placeholder type with PySpark UDF pattern (`requests` library) and pipeline Web Activity alternative documented |
+| 7.5 | Data Masking support | Notebook | `notebook-migration.agent.md` | ✅ DM placeholder type with 3 masking approaches: hash-based (`sha2`), partial masking, Fabric Dynamic Data Masking |
+| 7.6 | Connection XML parser | Assessment | `run_assessment.py` | ✅ `parse_connection_objects()` extracts DBCONNECTION, FTPCONNECTION, CONNECTION elements; deduped with inferred connections |
+| 7.7 | PL/SQL Package splitter | SQL | `sql-migration.agent.md` | ✅ Split strategy documented: parse→identify deps→map shared state→split into individual notebooks; output structure with README |
+
+**Sprint 7 Exit Criteria:** ✅ ALL MET (2026-03-23)
+- ✅ IICS parsing tested with namespace-aware XML (IICS_M_LOAD_CONTACTS.xml → 2 cloud mappings detected)
+- ✅ SQL Server detection tested (SP_REFRESH_DASHBOARD.sql → 17 T-SQL constructs, correctly classified as `sqlserver`)
+- ✅ Oracle analytics detection tested (SP_CALC_RANKINGS.sql → 17 Oracle constructs including LEAD/LAG/DENSE_RANK/NTILE/FIRST_VALUE/LAST_VALUE)
+- ✅ Connection XML parsing tested (2 connections extracted: ORACLE_HR DB + FTP_HR_FILES)
+- ✅ All agent docs updated with new conversion patterns and guidance
 
 ---
 
@@ -468,11 +515,13 @@ A task is **Done** when:
 
 ```mermaid
 pie title Sprint Effort Distribution
-    "Sprint 1 — Foundation" : 20
-    "Sprint 2 — SQL & Notebooks" : 30
-    "Sprint 3 — Pipelines" : 20
-    "Sprint 4 — Validation" : 20
+    "Sprint 1 — Foundation" : 15
+    "Sprint 2 — SQL & Notebooks" : 20
+    "Sprint 3 — Pipelines" : 15
+    "Sprint 4 — Validation" : 15
     "Sprint 5 — Hardening" : 10
+    "Sprint 6 — Gap Remediation" : 15
+    "Sprint 7 — Extended Coverage" : 10
 ```
 
 | Sprint | Primary Agents | Outputs | Status |
@@ -481,4 +530,6 @@ pie title Sprint Effort Distribution
 | **2** | SQL Migration, Notebook Migration | `SQL_*.sql`, `NB_*.py` | ✅ Complete |
 | **3** | Pipeline Migration, Orchestrator (delegation) | `PL_*.json`, `migration_summary.md` | ✅ Complete |
 | **4** | Validation, All (integration) | `VAL_*.py`, `test_matrix.md` | ✅ Complete |
-| **5** | All (hardening) | Edge case handling, docs, final QA | ⏳ Next |
+| **5** | All (hardening) | Edge case handling, docs, final QA | ✅ Complete |
+| **6** | Assessment, Notebook, Pipeline, SQL | Mapplet expansion, analytics, param files, templates | ✅ Complete |
+| **7** | Assessment, Notebook, Pipeline, SQL | IICS parser, SQL Server patterns, WSC/DM, PL/SQL split | ✅ Complete |
