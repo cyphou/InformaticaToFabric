@@ -9,7 +9,9 @@
 
 ## Overview
 
-This project uses a **6-agent specialization model** to automate and guide the migration from Informatica to Microsoft Fabric. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
+This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
+
+**Current state:** 21 sprints complete — 333 tests, 88% coverage, full PowerCenter + IICS support, CLI tool (`informatica-to-fabric`), session config mapping, schedule trigger conversion, and GTT/MV/DB link detection.
 
 ---
 
@@ -19,8 +21,8 @@ This project uses a **6-agent specialization model** to automate and guide the m
 flowchart TB
     USER["👤 User"] --> ORCH
     ORCH["🎯 migration-orchestrator\nCoordinator Agent"]
-    ORCH --> ASS["🔍 assessment\nDiscovery & Inventory"]
-    ORCH --> SQL["🗄️ sql-migration\nOracle → Spark SQL"]
+    ORCH --> ASS["🔍 assessment\nDiscovery & Inventory\n(PowerCenter + IICS)"]
+    ORCH --> SQL["🗄️ sql-migration\nOracle/SQL Server → Spark SQL"]
     ORCH --> NB["📓 notebook-migration\nMappings → PySpark"]
     ORCH --> PL["⚡ pipeline-migration\nWorkflows → Pipelines"]
     ORCH --> VAL["✅ validation\nTesting & QA"]
@@ -83,10 +85,10 @@ flowchart TB
 | Agent | Invoke With | Owns | Outputs |
 |-------|-------------|------|---------|
 | **🎯 @migration-orchestrator** | `@migration-orchestrator start migration` | Migration plan, wave scheduling, progress | `output/migration_summary.md` |
-| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing, inventory, complexity, DAG | `output/inventory/` |
+| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), inventory, complexity, DAG, session config, scheduler | `output/inventory/` |
 | **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook generation | `output/notebooks/NB_*.py` |
-| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow → Pipeline JSON generation | `output/pipelines/PL_*.json` |
-| **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle → Spark SQL / T-SQL conversion | `output/sql/SQL_*.sql` |
+| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Pipeline JSON (+ schedule triggers) | `output/pipelines/PL_*.json` |
+| **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle/SQL Server → Spark SQL / T-SQL (+ GTT, MV, DB link detection) | `output/sql/SQL_*.sql` |
 | **✅ @validation** | `@validation generate tests for Silver tables` | Test scripts, row counts, checksums, diffs | `output/validation/VAL_*.py` |
 
 ---
@@ -106,8 +108,8 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Parses Informatica XML exports, builds inventories, classifies complexity, maps dependencies |
-| **Inputs** | Informatica XML export files (workflows, mappings, sessions) |
+| **Role** | Parses Informatica XML exports (PowerCenter + IICS), builds inventories, classifies complexity, maps dependencies, extracts session configs and scheduler definitions |
+| **Inputs** | Informatica XML export files (workflows, mappings, sessions, IICS taskflows) |
 | **Outputs** | `inventory.json`, `complexity_report.md`, `dependency_dag.json` |
 | **File** | [.github/agents/assessment.agent.md](.github/agents/assessment.agent.md) |
 
@@ -124,7 +126,7 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Converts Informatica workflows into Fabric Data Pipeline JSON definitions |
+| **Role** | Converts Informatica workflows and IICS taskflows into Fabric Data Pipeline JSON definitions (including schedule triggers) |
 | **Inputs** | Workflow metadata from assessment, notebook references |
 | **Outputs** | Fabric Data Pipeline JSON definitions with dependency chains |
 | **File** | [.github/agents/pipeline-migration.agent.md](.github/agents/pipeline-migration.agent.md) |
@@ -133,8 +135,8 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Converts Oracle SQL (overrides, stored procs) to Fabric-compatible SQL (Spark SQL / T-SQL) |
-| **Inputs** | SQL overrides from mappings, stored procedure files |
+| **Role** | Converts Oracle/SQL Server SQL (overrides, stored procs) to Fabric-compatible SQL (Spark SQL / T-SQL), detects GTT, Materialized Views, and DB links |
+| **Inputs** | SQL overrides from mappings, stored procedure files, Oracle and SQL Server sources |
 | **Outputs** | Converted SQL files, Notebook `%%sql` cells |
 | **File** | [.github/agents/sql-migration.agent.md](.github/agents/sql-migration.agent.md) |
 
@@ -154,8 +156,8 @@ flowchart TB
 ```mermaid
 flowchart LR
     subgraph "📂 Input"
-        XML["Informatica\nXML Exports"]
-        SQL_IN["Oracle SQL\nStored Procs"]
+        XML["Informatica\nXML Exports\n(PowerCenter + IICS)"]
+        SQL_IN["Oracle/SQL Server\nStored Procs"]
     end
 
     subgraph "🔍 Phase 1 — Assessment"
@@ -163,7 +165,7 @@ flowchart LR
     end
 
     subgraph "⚙️ Phase 2 — Conversion"
-        SQL_MIG["sql-migration\nOracle → Spark SQL"]
+        SQL_MIG["sql-migration\nOracle/SQL Server → Spark SQL"]
         NB_MIG["notebook-migration\nMapping → PySpark"]
         PL_MIG["pipeline-migration\nWorkflow → JSON"]
     end
@@ -320,6 +322,10 @@ InformaticaToDBFabric/
 ├── .vscode/
 │   └── instructions/                    # 📘 Shared rules
 │       └── informatica-patterns.instructions.md
+├── docs/                                # 📖 User documentation
+│   ├── USER_GUIDE.md                    #   Usage guide & examples
+│   ├── TROUBLESHOOTING.md               #   Common issues & fixes
+│   └── ADR/                             #   Architecture Decision Records
 ├── input/                               # 📂 Informatica exports
 │   ├── workflows/                       #   Workflow XML
 │   ├── mappings/                        #   Mapping XML
@@ -335,9 +341,22 @@ InformaticaToDBFabric/
 │   ├── notebook_template.py
 │   ├── pipeline_template.json
 │   └── validation_template.py
+├── tests/                               # 🧪 333 tests, 88% coverage
+│   ├── test_migration.py                #   Core conversion tests
+│   ├── test_extended.py                 #   Extended transformation tests
+│   ├── test_coverage.py                 #   Coverage gap tests
+│   ├── test_e2e.py                      #   End-to-end integration tests
+│   ├── test_iics.py                     #   IICS-specific tests
+│   └── test_gaps.py                     #   Gap remediation tests
 ├── AGENTS.md                            # 🤖 This file
+├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
+├── DEVELOPMENT_PLAN.md                  # 📝 21-sprint development plan
+├── GAP_ANALYSIS.md                      # 📊 Gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Migration strategy
-└── README.md                            # 📖 Project overview
+├── README.md                            # 📖 Project overview
+├── pyproject.toml                       # 📦 Package config & CLI
+├── migration.yaml                       # ⚙️ Runtime configuration
+└── requirements.txt                     # 📦 Dependencies
 ```
 
 ---
@@ -348,6 +367,13 @@ InformaticaToDBFabric/
 
 ```
 @migration-orchestrator start migration
+```
+
+### CLI Usage
+
+```bash
+pip install -e .
+informatica-to-fabric run --config migration.yaml
 ```
 
 ### Individual Tasks

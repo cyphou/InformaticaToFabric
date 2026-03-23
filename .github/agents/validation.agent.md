@@ -194,5 +194,7 @@ df_diff = df_source.join(df_target, "id").filter(
 |--------|-------|------------------|
 | **4** | Core validation | All 5 levels (row count, key uniqueness, NULL checks, transformation verification, aggregate comparison), test matrix generation, known-difference handling |
 | **5** | Hardening | Tolerance thresholds, regression suite, detailed diff reports, floating-point comparison handling |
+| **17** | Coverage | Validation generator fully unit-tested (97% coverage) |
+| **18** | E2E tests | End-to-end validation phase integration testing |
 
-**Success Criteria:** Generate validation notebooks for every migrated table, test matrix covers all 5 levels, known differences documented and accepted, all validation notebooks re-runnable and idempotent.
+**Success Criteria:** Generate validation notebooks for every migrated table, test matrix covers all 5 levels, known differences documented and accepted, all validation notebooks re-runnable and idempotent. 97% code coverage on validation module.

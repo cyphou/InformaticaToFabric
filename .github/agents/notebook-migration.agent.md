@@ -306,5 +306,7 @@ def call_api(input_value):
 | **3** | Pipeline integration | Notebook exit values for pipeline decision gates, Rank/Normalizer/SP transforms |
 | **4** | Testing | Verify generated notebooks match golden outputs for all 3 test mappings |
 | **5** | Hardening | Custom/Java transformations (placeholder cells), multi-group routers, unsupported type handling |
+| **6** | Flat file + Mapplet | CSV/fixed-width source patterns, Mapplet expansion in notebooks |
+| **17** | Coverage | Notebook generator fully unit-tested (97% coverage), all 18+ transformation types covered |
 
-**Success Criteria:** Generate runnable PySpark notebooks for all 14 standard transformation types, match golden output for Simple/Medium/Complex test cases, all notebooks parameterizable and traceable to original mapping.
+**Success Criteria:** Generate runnable PySpark notebooks for all 18+ transformation types (including Data Masking, Web Service Consumer, SQL Transformation), match golden output for Simple/Medium/Complex test cases, notebooks parameterizable and traceable to original mapping. 97% code coverage.

@@ -162,6 +162,8 @@ df = df.withColumn("rank", row_number().over(window))
 ### XML Parsing Pitfalls
 - **SOURCE/TARGET at FOLDER level:** Some Informatica XML exports place `<SOURCE>` and `<TARGET>` elements as siblings of `<MAPPING>` at the `<FOLDER>` level, not nested inside `<MAPPING>`. Always search both locations.
 - **IICS vs PowerCenter format:** IICS (Cloud) exports use different root tags (`exportMetadata`, `dTemplate`). Detect format before parsing; PowerCenter uses `POWERMART`, `REPOSITORY`, `FOLDER`.
+- **IICS namespace clearing:** IICS XMLs may have `xmlns=""` on `weightedCSPackage` which clears the namespace for child elements. Use a `find_all()` helper that searches both namespaced and non-namespaced tags.
+- **IICS Taskflows:** Parse `<dTemplate objectType="com.infa.deployment.taskflow">` for orchestration. Mapping tasks, command tasks, notification tasks, exclusive gateways, and timer events map to workflow equivalents.
 - **Encoding issues:** Some exports include null bytes or invalid UTF-8. Use `errors="replace"` and strip `\x00`.
 
 ### Complexity Classification Insights
@@ -172,10 +174,19 @@ df = df.withColumn("rank", row_number().over(window))
 - **Oracle DATE includes time:** Oracle `DATE` type stores both date and time. Map to Spark `TIMESTAMP`, not `DATE`.
 - **DECODE nesting:** Deeply nested `DECODE()` calls should be converted to `CASE WHEN` chains, not nested ternaries.
 - **Post-session SQL:** `EXEC <stored_proc>` in post-session SQL needs special handling — it doesn't convert to a simple `%%sql` cell. Consider a separate notebook activity in the pipeline.
+- **Global Temporary Tables:** `CREATE GLOBAL TEMPORARY TABLE` → `CREATE OR REPLACE TEMP VIEW`. `ON COMMIT PRESERVE/DELETE ROWS` clauses are removed (Spark temp views are session-scoped).
+- **Materialized Views:** `CREATE MATERIALIZED VIEW` → Flag as TODO with Delta table + scheduled notebook refresh.
+- **Database Links:** `@dblink` references → Flag as TODO with `spark.read.jdbc()` pointing to remote database.
+
+### Session Config & Scheduling
+- **Session config properties** (DTM buffer size, Commit Interval, Lookup Cache Size, etc.) are extracted and mapped to Spark equivalents in the inventory.
+- **Scheduler conversion:** Informatica schedule names (DAILY, HOURLY, WEEKLY, MONTHLY) are converted to Fabric cron expressions and attached as `ScheduleTrigger` in pipeline JSON.
+- **Custom schedules** with time patterns (e.g., `SCHED_06AM`, `RUN_2PM`, `LOAD_0600`) are inferred where possible.
 
 ### Pipeline Generation
 - **Retry policies are required:** Every activity must have a `policy` block. Fabric defaults may not match Informatica behavior.
 - **Worklet nesting:** Limit to 2 levels of `ExecutePipeline` nesting for maintainability. Flatten deeper hierarchies.
+- **IICS Taskflows:** IICS uses exclusive gateways (→ IfCondition), parallel gateways (→ multiple dependsOn), and timer events (→ Wait Activity).
 
 ### Agent Collaboration
 - **Sub-agents cannot write to arbitrary paths:** Each agent should only write to its designated output folder. Cross-agent file access is read-only.

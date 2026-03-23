@@ -265,6 +265,17 @@ Some Oracle constructs cannot be automatically converted to Spark SQL. When enco
 | `AUTONOMOUS_TRANSACTION` | Independent transaction commit | Not supported — restructure logic |
 | `%TYPE` / `%ROWTYPE` | PL/SQL type references | Replace with explicit types |
 
+### Global Temporary Tables (GTT)
+`CREATE GLOBAL TEMPORARY TABLE` is automatically converted to `CREATE OR REPLACE TEMP VIEW`.
+- `ON COMMIT PRESERVE ROWS` → Spark temp views persist for the session (similar behavior)
+- `ON COMMIT DELETE ROWS` → Use `cache`/`unpersist` after use
+
+### Materialized Views
+`CREATE MATERIALIZED VIEW` is flagged as a TODO with guidance to use a Delta table with a scheduled notebook for refresh.
+
+### Database Links
+`@dblink` references are flagged as TODOs with guidance to replace with `spark.read.jdbc()` pointing to the remote database.
+
 ### Output Format for Non-Convertible SQL
 
 When SQL cannot be converted, output this block:
@@ -300,5 +311,7 @@ When SQL cannot be converted, output this block:
 | **3** | Pipeline support | Pre/post-session SQL conversion, SQL-based pipeline variables |
 | **4** | Validation support | SQL-based validation queries for aggregate checks |
 | **5** | Hardening | PL/SQL block conversion, cursor handling, dynamic SQL, CONNECT BY → recursive CTE |
+| **7** | SQL Server support | 18+ T-SQL→Spark patterns, CROSS/OUTER APPLY, temp tables |
+| **20** | Gap remediation | GTT→temp view, MV→TODO Delta, DB link→TODO JDBC conversion rules |
 
-**Success Criteria:** Convert 90%+ of Oracle SQL overrides automatically, MERGE INTO converts to Delta MERGE correctly, unconvertible SQL is clearly marked with `-- TODO:` comments.
+**Success Criteria:** Convert 90%+ of Oracle and SQL Server SQL overrides automatically, including GTT/MV/DB link handling. Unconvertible SQL is clearly marked with `-- TODO:` comments.

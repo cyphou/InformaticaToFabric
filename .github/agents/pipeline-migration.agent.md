@@ -88,6 +88,32 @@ IICS Taskflows use a different orchestration model than PowerCenter workflows. W
 3. IICS "data objects" → pipeline variables
 4. IICS "connections" → Fabric linked services or notebook connection params
 
+### Schedule Trigger Support
+
+When the workflow inventory includes `schedule_cron` data (from the assessment’s `parse_scheduler_cron`), the pipeline generator adds a `ScheduleTrigger` to the pipeline JSON:
+
+```json
+{
+  "trigger": {
+    "type": "ScheduleTrigger",
+    "description": "Daily at 2 AM UTC",
+    "typeProperties": {
+      "recurrence": {
+        "cron": "0 0 2 * * *",
+        "timeZone": "UTC"
+      }
+    }
+  }
+}
+```
+
+Schedule conversion mapping:
+- `DAILY` → `0 0 2 * * *`
+- `HOURLY` → `0 0 * * * *`
+- `WEEKLY` → `0 0 2 * * 1`
+- `MONTHLY` → `0 0 2 1 * *`
+- Custom time patterns are inferred from schedule names
+
 ### Link Conditions
 | Informatica Link | Fabric Dependency |
 |---|---|
@@ -334,8 +360,10 @@ Every activity in a generated pipeline MUST include a `policy` block with retry 
 | **3** | Core conversion | Session→Notebook, Decision→IfCondition, Email→WebActivity, schedules, sequential/parallel dependencies, pipeline parameters |
 | **4** | Integration testing | Verify generated pipelines match golden output, cross-agent handoff validation |
 | **5** | Hardening | Worklet nesting (Execute Pipeline), complex decision trees, event-based triggers |
+| **19** | IICS Taskflow support | IICS Taskflow→Pipeline conversion, gateway/timer/notification mapping |
+| **20** | Schedule triggers | ScheduleTrigger from `schedule_cron`, cron expression generation |
 
-**Success Criteria:** Generate valid Fabric Data Pipeline JSON for all workflow patterns (sequential, parallel, decision, error), match golden output for test workflow, all activity types correctly mapped.
+**Success Criteria:** Generate valid Fabric Data Pipeline JSON for all workflow patterns (PowerCenter + IICS), including schedule triggers, activity dependencies, and IICS gateway/timer handling.
 
 ## Important Rules
 - Preserve the exact dependency order from the original workflow

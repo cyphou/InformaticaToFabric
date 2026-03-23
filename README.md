@@ -124,13 +124,15 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 | Source Platform | Assessment | SQL Conversion | Status |
 |---|---|---|---|
 | **Informatica PowerCenter** 9.x/10.x | ✅ Full XML parsing | ✅ Oracle + SQL Server | Production-ready |
-| **Informatica IICS** (Cloud) | ✅ Cloud Mapping parsing | ✅ Namespace-aware | New in Sprint 7 |
-| **Oracle** SQL overrides & stored procs | ✅ 43+ patterns | ✅ Full conversion | Production-ready |
-| **SQL Server** SQL overrides & stored procs | ✅ 18 patterns | ✅ T-SQL → Spark SQL | New in Sprint 7 |
-| **Flat files** (CSV, fixed-width) | ✅ Documented | ✅ `spark.read.csv()` patterns | New in Sprint 6 |
-| **Mapplets** (reusable fragments) | ✅ Parsed + expanded | ✅ Auto-resolved | New in Sprint 6 |
-| **Parameter files** (.prm) | ✅ Parsed | ✅ Key-value extraction | New in Sprint 6 |
-| **Connection objects** (XML) | ✅ Parsed | ✅ DB/FTP/generic | New in Sprint 7 |
+| **Informatica IICS** (Cloud) | ✅ Taskflows + Mappings + Sync/MassIngestion | ✅ Namespace-aware | Production-ready (Sprint 19) |
+| **Oracle** SQL overrides & stored procs | ✅ 43+ patterns | ✅ Full conversion + GTT/MV/DB links | Production-ready |
+| **SQL Server** SQL overrides & stored procs | ✅ 18 patterns | ✅ T-SQL → Spark SQL | Production-ready |
+| **Flat files** (CSV, fixed-width) | ✅ Documented | ✅ `spark.read.csv()` patterns | Production-ready |
+| **Mapplets** (reusable fragments) | ✅ Parsed + expanded | ✅ Auto-resolved | Production-ready |
+| **Parameter files** (.prm) | ✅ Parsed | ✅ Key-value extraction | Production-ready |
+| **Connection objects** (XML + IICS) | ✅ Parsed | ✅ DB/FTP/generic/IICS | Production-ready |
+| **Session configs** | ✅ Extracted → Spark config | ✅ DTM/cache/commit mapping | New in Sprint 20 |
+| **Scheduler/Cron** | ✅ Schedule → cron expression | ✅ Pipeline triggers | New in Sprint 20 |
 
 ---
 
@@ -456,13 +458,22 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 Unit test suite (112 tests)
+├── tests/                               # 🧪 Unit test suite (333 tests, 88% coverage)
 │   ├── __init__.py
-│   ├── test_migration.py                # Sprint 9: Core migration tests (64)
-│   └── test_extended.py                 # Sprint 14: Assessment, deploy, dashboard tests (48)
+│   ├── test_migration.py                # Core migration tests
+│   ├── test_extended.py                 # Assessment, deploy, dashboard tests
+│   ├── test_coverage.py                 # Sprint 17: Deep coverage tests
+│   ├── test_e2e.py                      # Sprint 18: End-to-end integration tests
+│   ├── test_iics.py                     # Sprint 19: IICS format tests
+│   └── test_gaps.py                     # Sprint 20: Gap remediation tests
+├── docs/                                # 📝 Documentation
+│   ├── USER_GUIDE.md                    # Step-by-step user guide
+│   ├── TROUBLESHOOTING.md               # Common issues & solutions
+│   └── ADR/                             # Architecture Decision Records
+├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (16 sprints)
-├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis (82% coverage)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (21 sprints)
+├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
 ```
@@ -528,7 +539,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 112 tests
+# Run all 333 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -538,22 +549,16 @@ python -m pytest tests/test_migration.py::TestSQLConversion -v
 python -m pytest tests/ --cov=. --cov-report=term-missing
 ```
 
-| Test Class | Tests | Covers |
-|------------|-------|--------|
-| `TestSQLConversion` | 25 | Oracle + SQL Server function mappings, edge cases |
-| `TestNotebookGeneration` | 8 | PySpark notebook content, all 18+ transformation types |
-| `TestPipelineGeneration` | 9 | Pipeline JSON structure, activities, dependencies |
-| `TestValidationGeneration` | 8 | Target inference, validation notebook L1-L3 checks |
-| `TestOrchestrator` | 9 | CLI arg parsing, summary generation, phase config |
-| `TestSQLEndToEnd` | 1 | Full SQL migration integration test |
-| `TestAssessmentHelpers` | 11 | Complexity classification, abbreviation |
-| `TestDetectSourceDbType` | 4 | Oracle/SQL Server/ANSI SQL detection |
-| `TestXmlParsing` | 7 | PowerCenter/IICS format detection, XML parsing |
-| `TestParameterFiles` | 3 | .prm parameter file parsing |
-| `TestDeployment` | 5 | Dry-run deployment (notebooks/pipelines/SQL) |
-| `TestOrchestratorConfig` | 6 | Config loading, logging setup, main dry-run |
-| `TestCheckpointing` | 6 | Save/load/clear checkpoint, --resume/--reset |
-| `TestDashboard` | 7 | Status collection, HTML generation, file output |
+| Test File | Tests | Covers |
+|-----------|-------|--------|
+| `test_migration.py` | ~30 | Core unit tests: SQL conversion, notebook/pipeline/validation generation, orchestrator |
+| `test_extended.py` | ~50 | Assessment helpers, XML parsing, parameters, deployment, checkpointing, dashboard |
+| `test_coverage.py` | ~112 | Sprint 17: Deep coverage for HTML reports, assessment edge cases, connections, all modules |
+| `test_e2e.py` | 19 | Sprint 18: End-to-end integration (all 5 phases against real fixtures) |
+| `test_iics.py` | 23 | Sprint 19: IICS taskflow/sync/mass-ingestion/connection parsers |
+| `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
+
+**Overall:** 333 tests, 88% coverage (9s on Python 3.14)
 
 ### Configuration
 

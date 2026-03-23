@@ -130,6 +130,47 @@ IICS exports use a different XML schema than PowerCenter.
 - The `detect_xml_format()` function in `run_assessment.py` auto-detects IICS format
 - IICS mappings are included in the same `inventory.json` with `format: "iics"`
 
+### IICS Taskflow Structure
+IICS Taskflows are the orchestration equivalent of PowerCenter Workflows:
+
+- **Mapping Task** → Parsed as session (references an IICS mapping)
+- **Command Task** → Parsed as command task
+- **Notification Task** → Parsed as email task
+- **Exclusive Gateway** → Parsed as decision task
+- **Timer Event** → Parsed with has_timer flag
+- **Links** → Captured with from/to/condition for dependency DAG
+- **Parameters** → Extracted from in-out parameter definitions
+
+The parser also handles:
+- **IICS Sync Tasks** → Parsed as Simple-complexity mappings
+- **IICS Mass Ingestion Tasks** → Parsed as Simple-complexity mappings
+- **IICS Connection Objects** → Extracted with connector type, host, database
+
+### Session Config Extraction
+The assessment extracts session configuration properties and maps them to Spark equivalents:
+
+| Informatica Property | Spark Property | Notes |
+|---|---|---|
+| DTM buffer size | `spark.sql.shuffle.partitions` | Adjust based on data volume |
+| Commit Interval | `spark.databricks.delta.optimizeWrite.enabled` | Use Delta auto-optimize |
+| Sorter Cache Size | `spark.sql.execution.sortMergeJoinThreshold` | Sorter memory |
+| Lookup Cache Size | `spark.sql.autoBroadcastJoinThreshold` | Broadcast threshold |
+| Treat Source Rows As | `merge_strategy` | DD_INSERT/UPDATE/DELETE |
+
+### Scheduler Cron Conversion
+The assessment converts Informatica schedule names to Fabric cron expressions:
+- DAILY → `0 0 2 * * *` (Daily at 2 AM UTC)
+- HOURLY → `0 0 * * * *`
+- WEEKLY → `0 0 2 * * 1` (Monday 2 AM UTC)
+- MONTHLY → `0 0 2 1 * *` (1st of month 2 AM UTC)
+- Time patterns (e.g., `SCHED_06AM`, `RUN_2PM`) → Inferred cron
+
+### SQL File Advanced Detection
+When parsing SQL files, the assessment also detects:
+- **Global Temporary Tables** (`CREATE GLOBAL TEMPORARY TABLE`) → Suggests `createOrReplaceTempView()`
+- **Materialized Views** (`CREATE MATERIALIZED VIEW`) → Suggests Delta table + scheduled refresh
+- **Database Links** (`@dblink` syntax) → Suggests JDBC connection replacement
+
 ### Connection XML Structure
 Connection objects may be defined in XML alongside mappings and workflows.
 
@@ -230,5 +271,9 @@ Write all outputs to `output/inventory/`
 | **2** | Downstream support | SQL override extraction, parameter file parsing for notebook/SQL agents |
 | **4** | Integration testing | Verify inventory feeds all downstream agents correctly |
 | **5** | Hardening | Malformed XML handling, IICS format support, partial parse recovery |
+| **6** | Mapplet + Parameter | Mapplet expansion, parameter file parsing, flat file source detection |
+| **7** | Extended coverage | IICS mapping parser, SQL Server detection, connection object parsing |
+| **19** | IICS Full Support | IICS Taskflow/SyncTask/MassIngestion/Connection parsers, namespace handling |
+| **20** | Gap Remediation | Session config extraction, scheduler cron conversion, GTT/MV/DB link detection |
 
-**Success Criteria:** Parse any Informatica PowerCenter XML (v9.x/v10.x), classify 95%+ of mappings correctly, produce valid JSON inventory consumable by all downstream agents.
+**Success Criteria:** Parse any Informatica PowerCenter XML (v9.x/v10.x) and IICS Cloud exports, classify 95%+ of mappings correctly, produce valid JSON inventory with session configs, schedule cron, and advanced SQL construct detection.
