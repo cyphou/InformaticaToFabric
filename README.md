@@ -27,6 +27,7 @@
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-multi-agent-architecture">Agents</a> •
   <a href="#-transformation-mapping">Mappings</a> •
+  <a href="examples/">📂 Examples</a> •
   <a href="#-documentation">Docs</a>
 </p>
 
@@ -430,10 +431,12 @@ InformaticaToDBFabric/
 ├── .vscode/
 │   └── instructions/
 │       └── informatica-patterns.instructions.md  # 📘 Shared conversion rules
+├── examples/                            # 📂 Browsable before/after migration examples
+│   └── README.md                        #   10 walkthroughs with input→output links
 ├── input/                               # 📂 Informatica exports (your files go here)
-│   ├── workflows/                       #   Workflow XML exports
+│   ├── workflows/                       #   Workflow XML exports (PowerCenter + IICS)
 │   ├── mappings/                        #   Mapping XML exports + .prm param files
-│   ├── sessions/                        #   Session XML exports
+│   ├── sessions/                        #   Session config XML exports
 │   └── sql/                             #   Oracle/SQL Server/Teradata/DB2/MySQL/PostgreSQL SQL
 ├── output/                              # 📤 Generated Fabric artifacts
 │   ├── inventory/                       #   Assessment results (JSON/Markdown)
@@ -577,7 +580,26 @@ logging:
 
 ---
 
-## 📸 Generated Output Examples
+## � Examples
+
+> **[Browse all examples →](examples/)**
+
+The [`examples/`](examples/) directory contains a **complete walkthrough** of 10 before/after migration examples — from simple mappings to complex multi-source workflows — with links to the actual input and output files in the repo.
+
+| Example | Input (Informatica) | Output (Fabric) |
+|---------|---------------------|-----------------|
+| Simple Mapping | [`M_LOAD_CUSTOMERS.xml`](input/mappings/M_LOAD_CUSTOMERS.xml) | [`NB_M_LOAD_CUSTOMERS.py`](output/notebooks/NB_M_LOAD_CUSTOMERS.py) |
+| Complex Mapping (LKP+AGG) | [`M_LOAD_ORDERS.xml`](input/mappings/M_LOAD_ORDERS.xml) | [`NB_M_LOAD_ORDERS.py`](output/notebooks/NB_M_LOAD_ORDERS.py) |
+| Advanced (Mapplet+Router+Rank) | [`M_COMPLEX_MULTI_SOURCE.xml`](input/mappings/M_COMPLEX_MULTI_SOURCE.xml) | *(run tool)* |
+| Workflow → Pipeline | [`WF_DAILY_SALES_LOAD.xml`](input/workflows/WF_DAILY_SALES_LOAD.xml) | [`PL_WF_DAILY_SALES_LOAD.json`](output/pipelines/PL_WF_DAILY_SALES_LOAD.json) |
+| Oracle SQL → Spark SQL | [`SP_CALC_RANKINGS.sql`](input/sql/SP_CALC_RANKINGS.sql) | [`SQL_SP_CALC_RANKINGS.sql`](output/sql/SQL_SP_CALC_RANKINGS.sql) |
+| Validation Notebook | *(auto)* | [`VAL_DIM_CUSTOMER.py`](output/validation/VAL_DIM_CUSTOMER.py) |
+| IICS Taskflow | [`IICS_TF_DAILY_CONTACTS_ETL.xml`](input/workflows/IICS_TF_DAILY_CONTACTS_ETL.xml) | [`NB_m_load_contacts.py`](output/notebooks/NB_m_load_contacts.py) |
+| Multi-DB SQL | [Teradata](input/sql/SP_TERADATA_CUSTOMER_STATS.sql) / [DB2](input/sql/SP_DB2_INVENTORY_REFRESH.sql) / [MySQL](input/sql/SP_MYSQL_USER_ANALYTICS.sql) / [PostgreSQL](input/sql/SP_POSTGRESQL_REPORTING.sql) / [SQL Server](input/sql/SP_SQLSERVER_CUSTOMER_MERGE.sql) | *(run tool)* |
+
+---
+
+## �📸 Generated Output Examples
 
 Here are excerpts from actual generated artifacts to illustrate what the agents produce.
 
@@ -659,6 +681,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview (this file) |
+| [examples/](examples/) | **Browsable before/after migration examples** (10 walkthroughs) |
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Step-by-step user guide |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
