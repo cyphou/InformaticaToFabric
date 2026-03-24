@@ -7,18 +7,26 @@
 <h1 align="center">Informatica to Microsoft Fabric Migration</h1>
 
 <p align="center">
-  <strong>Migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric — Notebooks, Data Pipelines & SQL — powered by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric — PySpark Notebooks, Data Pipelines, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/agents-6-0078D4?style=flat-square" alt="Agents"/>
-  <img src="https://img.shields.io/badge/coverage-92%25-27AE60?style=flat-square" alt="92% coverage"/>
-  <img src="https://img.shields.io/badge/target-Microsoft%20Fabric-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric"/>
-  <img src="https://img.shields.io/badge/notebooks-PySpark-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
-  <img src="https://img.shields.io/badge/pipelines-Data%20Factory-0078D4?style=flat-square" alt="Pipelines"/>
-  <img src="https://img.shields.io/badge/SQL-Oracle%20%2B%20SQL%20Server%20%E2%86%92%20SparkSQL-blue?style=flat-square" alt="SQL"/>
-  <img src="https://img.shields.io/badge/IICS-supported-27AE60?style=flat-square" alt="IICS"/>
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/30%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="30 sprints complete"/>
+  <img src="https://img.shields.io/badge/588%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="588 tests"/>
+  <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
+  <img src="https://img.shields.io/badge/PySpark-notebooks-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
+  <img src="https://img.shields.io/badge/Delta%20Lake-schema%20gen-00ADD8?style=flat-square&logo=databricks&logoColor=white" alt="Delta Lake"/>
+  <img src="https://img.shields.io/badge/6%20databases-Oracle%20%C2%B7%20SQL%20Server%20%C2%B7%20Teradata%20%C2%B7%20DB2%20%C2%B7%20MySQL%20%C2%B7%20PostgreSQL-blue?style=flat-square&logo=amazondynamodb&logoColor=white" alt="6 databases"/>
+  <img src="https://img.shields.io/badge/IICS-full%20support-27AE60?style=flat-square&logo=icloud&logoColor=white" alt="IICS"/>
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/wave%20planner-topological%20sort-8E44AD?style=flat-square&logo=graphql&logoColor=white" alt="Wave Planner"/>
+  <img src="https://img.shields.io/badge/5--level%20validation-L1%E2%80%93L5-C0392B?style=flat-square&logo=testcafe&logoColor=white" alt="5-level validation"/>
+  <img src="https://img.shields.io/badge/audit%20log-JSON-F39C12?style=flat-square&logo=json&logoColor=white" alt="Audit log"/>
+  <img src="https://img.shields.io/badge/credential%20sanitization-secure-2ECC71?style=flat-square&logo=letsencrypt&logoColor=white" alt="Credential sanitization"/>
+  <img src="https://img.shields.io/badge/Medallion-Bronze%20%C2%B7%20Silver%20%C2%B7%20Gold-FFD700?style=flat-square&logo=stackblitz&logoColor=black" alt="Medallion architecture"/>
 </p>
 
 <p align="center">
@@ -167,9 +175,11 @@ flowchart LR
 
 **Phase 3 — Generate Pipelines:** Each workflow → Data Pipeline JSON with dependency chains
 
-**Phase 4 — Validate:** Automated row counts, checksums, and aggregate comparisons
+**Phase 4 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold lakehouses with workspace setup notebook
 
-**Phase 5 — Deploy:** Push artifacts to Microsoft Fabric workspace
+**Phase 5 — Validate:** 5-level validation — row counts, checksums, data quality rules, key sampling & aggregate comparison
+
+**Phase 6 — Deploy:** Push artifacts to Microsoft Fabric workspace
 
 ### 🏗️ Fabric Target Architecture
 
@@ -442,8 +452,9 @@ InformaticaToDBFabric/
 │   ├── inventory/                       #   Assessment results (JSON/Markdown)
 │   ├── notebooks/                       #   Generated Fabric Notebooks (.py)
 │   ├── pipelines/                       #   Generated Pipeline JSON
+│   ├── schema/                          #   Delta Lake DDL (Bronze/Silver/Gold) + setup notebook
 │   ├── sql/                             #   Converted SQL files
-│   └── validation/                      #   Validation scripts + test matrix
+│   └── validation/                      #   Validation scripts + test matrix + HTML report
 ├── templates/                           # 📋 Reusable templates
 │   ├── notebook_template.py             #   Base notebook structure
 │   ├── pipeline_template.json           #   Base pipeline JSON
@@ -452,8 +463,9 @@ InformaticaToDBFabric/
 ├── run_sql_migration.py                 # 🗄️ SQL conversion script (Phase 1)
 ├── run_notebook_migration.py            # 📓 Notebook generation script (Phase 2)
 ├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 3)
-├── run_validation.py                    # ✅ Validation generation script (Phase 4)
-├── run_migration.py                     # 🎯 End-to-end orchestrator (all phases)
+├── run_schema_generator.py               # 🏗️ Delta Lake DDL & setup notebook (Phase 4)
+├── run_validation.py                    # ✅ Validation generation script (Phase 5)
+├── run_migration.py                     # 🎯 End-to-end orchestrator (6 phases)
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
 ├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
@@ -461,21 +473,22 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 Unit test suite (443 tests, 92% coverage)
+├── tests/                               # 🧪 588 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
 │   ├── test_coverage.py                 # Sprint 17: Deep coverage tests
 │   ├── test_e2e.py                      # Sprint 18: End-to-end integration tests
 │   ├── test_iics.py                     # Sprint 19: IICS format tests
-│   └── test_gaps.py                     # Sprint 20: Gap remediation tests
+│   ├── test_gaps.py                     # Sprint 20: Gap remediation tests
+│   └── test_sprint26_30.py              # Sprint 26–30: Templates, schema, waves, validation, audit
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
 │   ├── TROUBLESHOOTING.md               # Common issues & solutions
 │   └── ADR/                             # Architecture Decision Records
 ├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (21 complete + 3 planned)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (30/30 complete)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -542,7 +555,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 443 tests
+# Run all 588 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -560,8 +573,9 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 | `test_e2e.py` | 19 | Sprint 18: End-to-end integration (all 5 phases against real fixtures) |
 | `test_iics.py` | 23 | Sprint 19: IICS taskflow/sync/mass-ingestion/connection parsers |
 | `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
+| `test_sprint26_30.py` | 110 | Sprint 26–30: Transformation templates, schema generation, wave planner, L4/L5 validation, audit log, credential sanitization |
 
-**Overall:** 443 tests, 92% coverage (7s on Python 3.14)
+**Overall:** 588 tests, 587 passing (1 pre-existing e2e), ~16s on Python 3.14
 
 ### Configuration
 
@@ -687,7 +701,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (21 complete, 3 planned) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (30/30 complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [docs/ADR/](docs/ADR/) | Architecture Decision Records |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
