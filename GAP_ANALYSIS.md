@@ -3,11 +3,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/objects_covered-92%25-27AE60?style=for-the-badge" alt="92% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_24_complete-27AE60?style=for-the-badge" alt="Sprint 24 complete"/>
+  <img src="https://img.shields.io/badge/status-sprint_25_complete-27AE60?style=for-the-badge" alt="Sprint 25 complete"/>
+  <img src="https://img.shields.io/badge/tests-478_(477_passing)-2980B9?style=for-the-badge" alt="478 tests"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-03-23 (Sprint 22–24 remediation applied)  
+**Last Updated:** 2026-03-24 (Sprint 25 — Lineage & Conversion Scoring)  
 **Scope:** Informatica PowerCenter 9.x/10.x + IICS → Microsoft Fabric  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
@@ -23,7 +24,9 @@
 - [5. IICS (Cloud) Objects](#5-iics-cloud-objects)
 - [6. Infrastructure & Configuration Objects](#6-infrastructure--configuration-objects)
 - [7. Gap Summary & Prioritization](#7-gap-summary--prioritization)
-- [8. Remediation Roadmap](#8-remediation-roadmap)
+- [8. Sprint 25 — Lineage & Conversion Scoring](#8-sprint-25--lineage--conversion-scoring)
+- [9. Remediation Roadmap](#9-remediation-roadmap)
+- [10. Remaining Gaps & Next Sprints](#10-remaining-gaps--next-sprints)
 
 ---
 
@@ -388,7 +391,74 @@ quadrantChart
 
 ---
 
-## 8. Remediation Roadmap
+## 8. Sprint 25 — Lineage & Conversion Scoring
+
+**Status:** ✅ COMPLETE (commit `81d30fc`)  
+**Tests:** 35 new tests in `test_sprint25.py` (478 total, 477 passing)
+
+Sprint 25 adds **migration intelligence** — every mapping now has quantified readiness metrics and traceable field-level lineage.
+
+### 8.1 New Capabilities
+
+| Capability | Function | Output |
+|------------|----------|--------|
+| **Field-level lineage** | `extract_field_lineage()` | Per-field source→transformation→target trace via BFS on CONNECTOR graph |
+| **Conversion score** | `calculate_conversion_score()` | 0-100 score per mapping (50% TX coverage, 30% SQL convertibility, 20% gap penalty) |
+| **Manual effort estimate** | `estimate_manual_effort()` | Hours per mapping (base by complexity + placeholder gaps + SQL complexity) |
+| **Mermaid lineage diagrams** | `generate_lineage_mermaid()` | `flowchart LR` for Complex/Custom mappings in complexity report |
+| **Lineage JSON output** | `write_lineage_json()` | `output/inventory/lineage.json` with per-mapping lineage + Mermaid |
+
+### 8.2 Scoring Model
+
+```
+Conversion Score = (TX_coverage × 0.5) + (SQL_convertibility × 0.3) + (gap_penalty × 0.2)
+```
+
+| Factor | Weight | Measure |
+|--------|:------:|--------|
+| TX coverage | 50% | % of transformations in `AUTO_CONVERTIBLE_TX` (SQ, EXP, FIL, AGG, JNR, LKP, RTR, UPD, RNK, SRT, UNI, NRM, SEQ, SP, SQLT, DM, WSC, MPLT) |
+| SQL convertibility | 30% | % of SQL overrides without unsupported patterns (CONNECT BY, PRAGMA, CURSOR, BULK COLLECT, FORALL, PACKAGE BODY, DBMS_*, UTL_*) |
+| Gap penalty | 20% | % of transformations NOT in `PLACEHOLDER_TX` (JTX, CT, HTTP, XMLG, XMLP, TC, ULKP) |
+
+### 8.3 Effort Estimation Model
+
+| Complexity | Base Hours | + Per Placeholder | + SQL Patterns |
+|------------|:----------:|:-----------------:|:--------------:|
+| Simple | 0.5h | +2h each | CONNECT BY/CURSOR: +3h, MERGE/DECODE: +0.5h |
+| Medium | 2h | +2h each | Same |
+| Complex | 4h | +2h each | Same |
+| Custom | 8h | +2h each | Same |
+
+### 8.4 Enriched Outputs
+
+Every mapping in `inventory.json` now includes:
+
+```json
+{
+  "name": "M_LOAD_CUSTOMERS",
+  "conversion_score": 95,
+  "manual_effort_hours": 0.5,
+  "lineage_summary": "12 field paths traced",
+  "field_lineage": [
+    {
+      "source_field": "CUST_ID",
+      "source_instance": "SQ_CUSTOMERS",
+      "target_field": "CUSTOMER_ID",
+      "target_instance": "TGT_DIM_CUSTOMER",
+      "transformations": [{"instance": "EXP_DERIVE", "type": "Expression"}]
+    }
+  ]
+}
+```
+
+The **complexity report** (`complexity_report.md`) now includes:
+- **Conversion Readiness** table with avg score and total effort
+- Score and Effort columns in the mapping details table
+- **Mermaid lineage diagrams** for Complex/Custom mappings
+
+---
+
+## 9. Remediation Roadmap
 
 ### Sprint 6 — Critical Gaps ✅ COMPLETE
 
@@ -431,6 +501,48 @@ quadrantChart
 | 20.1 | ~~Session config parser~~ | Assessment | DTM buffer, commit interval, cache sizes → Spark config | ✅ Done |
 | 20.2 | ~~Scheduler cron converter~~ | Assessment + Pipeline | DAILY/HOURLY/WEEKLY/MONTHLY → cron expression + ScheduleTrigger | ✅ Done |
 | 20.3 | ~~GTT / MV / DB Link detection~~ | Assessment + SQL | Detection functions with line tracking; GTT → temp view, MV → TODO, DB link → TODO JDBC | ✅ Done |
+
+---
+
+## 10. Remaining Gaps & Next Sprints
+
+### 10.1 Remaining Object Gaps (7)
+
+These items are **not covered** by the tooling:
+
+| # | Gap | Category | Priority | Planned Sprint |
+|---|-----|----------|:--------:|:--------------:|
+| 1 | External Procedure (EP) | Transformation | P2 | — |
+| 2 | Advanced External Procedure (AEP) | Transformation | P2 | — |
+| 3 | Association (ASSOC) | Transformation | P2 | — |
+| 4 | Key Generator (KEYGEN) | Transformation | P2 | — |
+| 5 | Address Validator (ADDRVAL) | Transformation | P3 | — |
+| 6 | Oracle Object Types (`CREATE TYPE`) | SQL | P3 | — |
+| 7 | Roles & Permissions | Infrastructure | P2 | — |
+
+### 10.2 Placeholder Transformations (6) → Sprint 26
+
+These are detected and classified but only generate TODO cells:
+
+| Transformation | Planned Template | Sprint |
+|---------------|-----------------|:------:|
+| Java (JTX) | PySpark UDF stub | 26 |
+| Custom (CT) | pandas UDF stub | 26 |
+| HTTP | `requests` UDF | 26 |
+| XML Generator (XMLG) | `to_xml()` template | 26 |
+| XML Parser (XMLP) | `spark.read.format("xml")` | 26 |
+| Transaction Control (TC) | Delta ACID pattern | 26 |
+| Unconnected Lookup (ULKP) | Broadcast join pattern | 26 |
+
+### 10.3 Sprint 26–30 Roadmap
+
+| Sprint | Focus | Key Deliverables |
+|:------:|-------|------------------|
+| **26** | Placeholder Templates | 7 placeholder TX → meaningful PySpark templates |
+| **27** | Schema & Lakehouse Setup | Delta DDL generation, type mapping for 6 DB dialects |
+| **28** | Wave Planner | Topological sort, parallel groups, critical path |
+| **29** | Validation Framework | Row counts, checksums, transformation verification |
+| **30** | Production Hardening | Audit log, dry-run mode, security review, 500+ tests |
 
 ---
 
@@ -478,6 +590,8 @@ Complete list of all PowerCenter transformation types and their project status.
 1. **Before migration:** Review this gap analysis against your Informatica inventory. If your mappings use gap items (Mapplets, SQL Transformations, etc.), plan manual effort accordingly.
 2. **During assessment:** Run `@assessment` and check the warnings for "Unknown transformation type" — these are gap items the parser doesn't recognize.
 3. **Estimating effort:** Use the Priority column to estimate the manual conversion effort for each gap item in your specific deployment.
+4. **After Sprint 25:** Use `conversion_score` (0-100) and `manual_effort_hours` in `inventory.json` for precise per-mapping effort estimates.
+5. **Lineage tracing:** Use `lineage.json` or the Mermaid diagrams in `complexity_report.md` to understand field-level data flow.
 4. **Contributing:** When you implement a gap fix (e.g., add Mapplet support), update this document's status accordingly.
 
 ---
