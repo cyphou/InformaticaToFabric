@@ -43,13 +43,14 @@ TX_TEMPLATES = {
     "DM": "data_masking",
     "WSC": "web_service",
     "MPLT": "mapplet",
-    # Placeholders
-    "JTX": "placeholder",
-    "CT": "placeholder",
-    "HTTP": "placeholder",
-    "XMLG": "placeholder",
-    "XMLP": "placeholder",
-    "TC": "placeholder",
+    # Sprint 26: Promoted from placeholder to template
+    "JTX": "java_transformation",
+    "CT": "custom_transformation",
+    "HTTP": "http_transformation",
+    "XMLG": "xml_generator",
+    "XMLP": "xml_parser",
+    "TC": "transaction_control",
+    "ULKP": "unconnected_lookup",
 }
 
 
@@ -289,12 +290,28 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
 
     elif tx_type == "WSC":
         lines.extend([
-            "# --- Web Service Consumer → TODO: Replace with pipeline Web Activity ---",
-            "# Option 1: Pipeline Web Activity (preferred for external API calls)",
-            "# Option 2: Python requests UDF (for inline processing)",
-            "# import requests",
-            "# response = requests.get('https://api.example.com/data')  # TODO: Configure",
-            f"df = {prev_df}",
+            "# --- Web Service Consumer → requests UDF ---",
+            "import requests",
+            "from pyspark.sql.functions import udf",
+            "from pyspark.sql.types import StringType",
+            "",
+            "# Define a UDF that calls an external web service",
+            "# TODO: Configure URL, headers, authentication, and retry logic",
+            "@udf(returnType=StringType())",
+            "def call_web_service(input_value):",
+            '    try:',
+            '        resp = requests.get(',
+            '            "https://api.example.com/data",  # TODO: Replace with actual URL',
+            '            params={"key": input_value},',
+            '            headers={"Content-Type": "application/json"},',
+            '            timeout=30',
+            '        )',
+            '        resp.raise_for_status()',
+            '        return resp.text',
+            '    except Exception as e:',
+            '        return None',
+            "",
+            f'df = {prev_df}.withColumn("ws_result", call_web_service(col("INPUT_COL")))  # TODO: Replace INPUT_COL',
         ])
 
     elif tx_type == "MPLT":
@@ -305,12 +322,175 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
             f"df = {prev_df}",
         ])
 
-    else:
-        # Placeholder for unknown/custom types
+    elif tx_type == "JTX":
         lines.extend([
-            f"# --- {tx_type} transformation (PLACEHOLDER) ---",
-            f"# TODO: Manual conversion required for {tx_type}",
-            "#   This transformation type requires manual review and PySpark implementation.",
+            "# --- Java Transformation → PySpark UDF ---",
+            "# The original Informatica Java transform embedded custom Java code.",
+            "# Rewrite the logic as a Python UDF below.",
+            "from pyspark.sql.functions import udf",
+            "from pyspark.sql.types import StringType  # TODO: Match actual return type",
+            "",
+            "@udf(returnType=StringType())",
+            "def java_transform_udf(input_col):",
+            '    \"\"\"Rewrite the Java transformation logic in Python.',
+            '    ',
+            '    Original Java class: TODO — paste class name from mapping XML.',
+            '    Input ports: TODO — list input port names.',
+            '    Output ports: TODO — list output port names.',
+            '    \"\"\"',
+            '    # TODO: Implement the Java logic in Python',
+            '    result = input_col  # Placeholder — replace with actual logic',
+            '    return result',
+            "",
+            f'df = {prev_df}.withColumn("JTX_OUTPUT", java_transform_udf(col("INPUT_COL")))  # TODO: Replace columns',
+        ])
+
+    elif tx_type == "CT":
+        lines.extend([
+            "# --- Custom Transformation → pandas UDF ---",
+            "# The original Informatica Custom transform used C/C++ code.",
+            "# Rewrite as a vectorized pandas UDF for performance.",
+            "import pandas as pd",
+            "from pyspark.sql.functions import pandas_udf",
+            "from pyspark.sql.types import StringType  # TODO: Match actual return type",
+            "",
+            "@pandas_udf(StringType())",
+            "def custom_transform_udf(series: pd.Series) -> pd.Series:",
+            '    \"\"\"Vectorized replacement for Custom transformation.',
+            '    ',
+            '    Original module: TODO — paste DLL/SO name from mapping XML.',
+            '    Input ports: TODO — list input port names.',
+            '    Output ports: TODO — list output port names.',
+            '    \"\"\"',
+            '    # TODO: Implement the C/C++ logic as vectorized pandas operations',
+            '    return series  # Placeholder — replace with actual logic',
+            "",
+            f'df = {prev_df}.withColumn("CT_OUTPUT", custom_transform_udf(col("INPUT_COL")))  # TODO: Replace columns',
+        ])
+
+    elif tx_type == "HTTP":
+        lines.extend([
+            "# --- HTTP Transformation → requests UDF with retry ---",
+            "import requests",
+            "from requests.adapters import HTTPAdapter",
+            "from urllib3.util.retry import Retry",
+            "from pyspark.sql.functions import udf",
+            "from pyspark.sql.types import StringType",
+            "",
+            "# Configure retry strategy",
+            "_session = requests.Session()",
+            "_retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])",
+            "_session.mount('https://', HTTPAdapter(max_retries=_retry))",
+            "_session.mount('http://', HTTPAdapter(max_retries=_retry))",
+            "",
+            "@udf(returnType=StringType())",
+            "def http_transform(input_value):",
+            '    \"\"\"Call external HTTP endpoint — replaces Informatica HTTP transformation.',
+            '    TODO: Configure URL, method (GET/POST), headers, and body template.',
+            '    \"\"\"',
+            '    try:',
+            '        resp = _session.get(',
+            '            "https://api.example.com/endpoint",  # TODO: Replace URL',
+            '            params={"input": input_value},',
+            '            timeout=30',
+            '        )',
+            '        resp.raise_for_status()',
+            '        return resp.text',
+            '    except Exception:',
+            '        return None',
+            "",
+            f'df = {prev_df}.withColumn("HTTP_RESULT", http_transform(col("URL_INPUT")))  # TODO: Replace columns',
+        ])
+
+    elif tx_type == "XMLG":
+        lines.extend([
+            "# --- XML Generator → PySpark XML construction ---",
+            "from pyspark.sql.functions import concat, format_string, col, lit",
+            "",
+            "# Build XML string from DataFrame columns",
+            "# TODO: Adjust tag names and columns to match original XML Generator ports",
+            f"df = {prev_df}.withColumn(",
+            '    "xml_output",',
+            '    concat(',
+            '        lit("<record>"),',
+            '        lit("<id>"), col("ID").cast("string"), lit("</id>"),  # TODO: Replace',
+            '        lit("<name>"), col("NAME").cast("string"), lit("</name>"),  # TODO: Replace',
+            '        lit("</record>")',
+            '    )',
+            ")",
+            "# For file output: df.select('xml_output').write.text('output_path')",
+        ])
+
+    elif tx_type == "XMLP":
+        lines.extend([
+            "# --- XML Parser → spark.read.format('xml') ---",
+            "# Option 1: Parse XML column from existing DataFrame",
+            "from pyspark.sql.functions import from_json, col",
+            "from pyspark.sql.types import StructType, StructField, StringType",
+            "",
+            "# TODO: Define the XML schema matching the original XML Parser ports",
+            "xml_schema = StructType([",
+            '    StructField("id", StringType(), True),',
+            '    StructField("name", StringType(), True),',
+            '    # TODO: Add fields matching the XML Parser output ports',
+            "])",
+            "",
+            "# Option 2: Read XML files directly (requires spark-xml package)",
+            "# df_xml = spark.read.format('com.databricks.spark.xml')",
+            "#     .option('rowTag', 'record')  # TODO: Replace with actual row tag",
+            "#     .schema(xml_schema)",
+            "#     .load('path/to/xml/files')",
+            "",
+            f"df = {prev_df}  # TODO: Replace with parsed XML DataFrame",
+        ])
+
+    elif tx_type == "TC":
+        lines.extend([
+            "# --- Transaction Control → Delta ACID pattern ---",
+            "# Informatica TC_COMMIT / TC_ROLLBACK → Delta Lake atomic writes",
+            "from delta.tables import DeltaTable",
+            "",
+            "# Delta Lake provides ACID guarantees on every write.",
+            "# Pattern: Write in a single atomic operation with error handling.",
+            "target_table = 'silver.target_table'  # TODO: Replace with actual table",
+            "",
+            "try:",
+            f"    {prev_df}.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(target_table)",
+            f'    print(f"Transaction committed: {{target_table}}")',
+            "except Exception as e:",
+            f'    print(f"Transaction failed — Delta automatically rolled back: {{e}}")',
+            "    raise",
+            "",
+            f"df = {prev_df}",
+        ])
+
+    elif tx_type == "ULKP":
+        lines.extend([
+            "# --- Unconnected Lookup → broadcast join + when/otherwise ---",
+            "# Informatica ULKP: called from expressions via :LKP.lookup_name(key)",
+            "# Pattern: Pre-load lookup table, broadcast join, then use when().",
+            "",
+            "# Load lookup table (broadcast for performance < 100MB)",
+            'df_ulkp = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table',
+            'ulkp_key = "LOOKUP_KEY"  # TODO: Replace with actual key column',
+            'ulkp_value = "LOOKUP_VALUE"  # TODO: Replace with actual return column',
+            'default_value = None  # TODO: Set default value on no-match',
+            "",
+            f"df = {prev_df}.join(",
+            "    broadcast(df_ulkp.select(col(ulkp_key), col(ulkp_value).alias('_ulkp_val'))),",
+            "    on=col('JOIN_KEY') == col(ulkp_key),  # TODO: Replace JOIN_KEY",
+            "    how='left'",
+            ")",
+            'df = df.withColumn("LOOKUP_RESULT", coalesce(col("_ulkp_val"), lit(default_value)))',
+            'df = df.drop("_ulkp_val", ulkp_key)',
+        ])
+
+    else:
+        # Truly unknown types
+        lines.extend([
+            f"# --- {tx_type} transformation (UNKNOWN) ---",
+            f"# This transformation type ({tx_type}) is not recognized.",
+            "# Manual conversion required.",
             f"df = {prev_df}",
         ])
 

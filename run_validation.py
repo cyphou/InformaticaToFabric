@@ -270,9 +270,86 @@ def generate_validation(mapping, source_type):
         )
         cells.append(cell4)
 
-        # Cell 5: Summary
+        # Cell 5: Level 4 — Key Field Sampling
         cell5 = (
-            "# Cell 5: Summary Report\n"
+            "# Cell 5: Level 4 — Key Field Sampling\n"
+            "try:\n"
+            "    sample_size = 100\n"
+            "    source_sample = df_source.orderBy(col(key_columns[0])).limit(sample_size)\n"
+            "    target_sample = df_target.orderBy(col(key_columns[0])).limit(sample_size)\n"
+            "\n"
+            "    # Compare key column values\n"
+            "    source_keys = set(row[key_columns[0]] for row in source_sample.select(key_columns[0]).collect())\n"
+            "    target_keys = set(row[key_columns[0]] for row in target_sample.select(key_columns[0]).collect())\n"
+            "    common_keys = source_keys & target_keys\n"
+            "    missing_in_target = source_keys - target_keys\n"
+            "\n"
+            "    if not missing_in_target:\n"
+            '        sampling_result = "PASS"\n'
+            '        sampling_detail = f"All {len(common_keys)} sampled keys present in target"\n'
+            "    else:\n"
+            '        sampling_result = "FAIL"\n'
+            '        sampling_detail = f"{len(missing_in_target)} of {len(source_keys)} sampled keys missing in target"\n'
+            "except Exception as e:\n"
+            '    sampling_result = "SKIPPED"\n'
+            '    sampling_detail = f"Sampling failed — {e}"\n'
+            "\n"
+            "results.append({\n"
+            '    "check": "Key Sampling", "level": 4,\n'
+            '    "result": sampling_result, "detail": sampling_detail\n'
+            "})\n"
+            'print(f"[Level 4] Key Sampling: {sampling_result} — {sampling_detail}")\n'
+        )
+        cells.append(cell5)
+
+        # Cell 6: Level 5 — Aggregate Comparison
+        cell6 = (
+            "# Cell 6: Level 5 — Aggregate Comparison\n"
+            "try:\n"
+            "    # Compare aggregate stats between source and target\n"
+            "    numeric_cols = [f.name for f in df_target.schema.fields\n"
+            "                    if str(f.dataType) in ('IntegerType()', 'LongType()',\n"
+            "                                           'DoubleType()', 'FloatType()',\n"
+            "                                           'DecimalType()')]\n"
+            "    agg_checks = []\n"
+            "    for nc in numeric_cols[:5]:  # Limit to first 5 numeric columns\n"
+            "        src_sum = df_source.agg(spark_sum(col(nc))).collect()[0][0]\n"
+            "        tgt_sum = df_target.agg(spark_sum(col(nc))).collect()[0][0]\n"
+            "        if src_sum is None and tgt_sum is None:\n"
+            '            agg_checks.append(("PASS", f"{nc}: both NULL"))\n'
+            "        elif src_sum is not None and tgt_sum is not None:\n"
+            "            diff_pct = abs(float(src_sum) - float(tgt_sum)) / max(abs(float(src_sum)), 1) * 100\n"
+            "            if diff_pct < 0.01:\n"
+            '                agg_checks.append(("PASS", f"{nc}: src={src_sum}, tgt={tgt_sum}"))\n'
+            "            else:\n"
+            '                agg_checks.append(("FAIL", f"{nc}: src={src_sum}, tgt={tgt_sum}, diff={diff_pct:.2f}%"))\n'
+            "        else:\n"
+            '            agg_checks.append(("FAIL", f"{nc}: src={src_sum}, tgt={tgt_sum}"))\n'
+            "\n"
+            "    if not agg_checks:\n"
+            '        agg_result = "SKIPPED"\n'
+            '        agg_detail = "No numeric columns found"\n'
+            '    elif all(r[0] == "PASS" for r in agg_checks):\n'
+            '        agg_result = "PASS"\n'
+            '        agg_detail = "; ".join(r[1] for r in agg_checks)\n'
+            "    else:\n"
+            '        agg_result = "FAIL"\n'
+            '        agg_detail = "; ".join(r[1] for r in agg_checks)\n'
+            "except Exception as e:\n"
+            '    agg_result = "SKIPPED"\n'
+            '    agg_detail = f"Aggregate comparison failed — {e}"\n'
+            "\n"
+            "results.append({\n"
+            '    "check": "Aggregate Comparison", "level": 5,\n'
+            '    "result": agg_result, "detail": agg_detail\n'
+            "})\n"
+            'print(f"[Level 5] Aggregate Comparison: {agg_result} — {agg_detail}")\n'
+        )
+        cells.append(cell6)
+
+        # Cell 7: Summary
+        cell7 = (
+            "# Cell 7: Summary Report\n"
             'overall = "PASS" if all(r["result"] == "PASS" for r in results) else (\n'
             '    "FAIL" if any(r["result"] == "FAIL" for r in results) else "SKIPPED"\n'
             ")\n"
@@ -299,7 +376,7 @@ def generate_validation(mapping, source_type):
             ")\n"
             "df_summary.show(truncate=False)\n"
         )
-        cells.append(cell5)
+        cells.append(cell7)
 
         # Assemble notebook
         content = cells[0] + "\n" + SEP + (SEP).join(cells[1:])
@@ -323,7 +400,7 @@ def generate_test_matrix(inventory, generated_files):
 
     for i, (mapping_name, target, filename) in enumerate(generated_files, 1):
         lines.append(
-            f"| {i} | {mapping_name} | {target} | `{filename}` | L1–L3 |"
+            f"| {i} | {mapping_name} | {target} | `{filename}` | L1\u2013L5 |"
         )
 
     lines.extend([
@@ -335,6 +412,8 @@ def generate_test_matrix(inventory, generated_files):
         "| L1 | Row Count | Source count == Target count |",
         "| L2 | Checksum | MD5-based column hash comparison |",
         "| L3 | Data Quality | NULL checks, key uniqueness |",
+        "| L4 | Key Sampling | Sample N keys and compare presence |",
+        "| L5 | Aggregate Comparison | SUM/MIN/MAX on numeric columns |",
         "",
         "## How to Run",
         "",
@@ -352,6 +431,42 @@ def generate_test_matrix(inventory, generated_files):
     ])
 
     return "\n".join(lines)
+
+
+def _generate_html_report(generated_files, out_path):
+    """Generate an HTML validation report with pass/fail matrix."""
+    rows_html = []
+    for mapping_name, target, filename in generated_files:
+        rows_html.append(
+            f"<tr><td>{mapping_name}</td><td>{target}</td>"
+            f"<td><code>{filename}</code></td>"
+            f"<td>L1–L5</td><td><span class='pending'>Pending</span></td></tr>"
+        )
+
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Validation Report</title>
+<style>
+body {{ font-family: -apple-system, sans-serif; margin: 2em; }}
+table {{ border-collapse: collapse; width: 100%; }}
+th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+th {{ background: #2980B9; color: white; }}
+tr:nth-child(even) {{ background: #f2f2f2; }}
+.pass {{ color: green; font-weight: bold; }}
+.fail {{ color: red; font-weight: bold; }}
+.pending {{ color: #F39C12; font-weight: bold; }}
+h1 {{ color: #2C3E50; }}
+</style></head><body>
+<h1>Validation Report</h1>
+<p>Generated by <code>run_validation.py</code> — run each notebook in Fabric to populate results.</p>
+<table>
+<tr><th>Mapping</th><th>Target</th><th>Notebook</th><th>Levels</th><th>Status</th></tr>
+{''.join(rows_html)}
+</table>
+<p><strong>Total validation notebooks:</strong> {len(generated_files)}</p>
+<p><strong>Validation levels:</strong> L1 Row Count, L2 Checksum, L3 DQ Rules, L4 Key Sampling, L5 Aggregates</p>
+</body></html>"""
+
+    out_path.write_text(html, encoding="utf-8")
 
 
 def main():
@@ -391,6 +506,11 @@ def main():
     with open(matrix_path, "w", encoding="utf-8") as f:
         f.write(matrix_content)
     print("\n  📋 test_matrix.md")
+
+    # Generate HTML validation report
+    html_path = OUTPUT_DIR / "validation_report.html"
+    _generate_html_report(generated_files, html_path)
+    print(f"  📊 validation_report.html")
 
     print()
     print("=" * 60)

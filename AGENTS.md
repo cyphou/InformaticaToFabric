@@ -11,7 +11,7 @@
 
 This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 24 sprints complete — 443 tests, 92% coverage, full PowerCenter + IICS support, CLI tool (`informatica-to-fabric`), session config mapping, schedule trigger conversion, GTT/MV/DB link detection, and multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL).
+**Current state:** 30 sprints complete — 588 tests, full PowerCenter + IICS support, CLI tool (`informatica-to-fabric`), session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, and audit logging.
 
 ---
 
@@ -341,7 +341,7 @@ InformaticaToDBFabric/
 │   ├── notebook_template.py
 │   ├── pipeline_template.json
 │   └── validation_template.py
-├── tests/                               # 🧪 443 tests, 92% coverage
+├── tests/                               # 🧪 588 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests

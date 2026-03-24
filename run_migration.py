@@ -26,6 +26,7 @@ import argparse
 import importlib
 import json
 import logging
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -38,8 +39,57 @@ PHASES = [
     {"id": 1, "name": "SQL Migration", "module": "run_sql_migration"},
     {"id": 2, "name": "Notebook Migration", "module": "run_notebook_migration"},
     {"id": 3, "name": "Pipeline Migration", "module": "run_pipeline_migration"},
-    {"id": 4, "name": "Validation", "module": "run_validation"},
+    {"id": 4, "name": "Schema Generation", "module": "run_schema_generator"},
+    {"id": 5, "name": "Validation", "module": "run_validation"},
 ]
+
+# Credential patterns to sanitize in audit logs
+_CREDENTIAL_PATTERNS = [
+    (re.compile(r'(password\s*[=:]\s*)\S+', re.IGNORECASE), r'\1***REDACTED***'),
+    (re.compile(r'(secret\s*[=:]\s*)\S+', re.IGNORECASE), r'\1***REDACTED***'),
+    (re.compile(r'(token\s*[=:]\s*)\S+', re.IGNORECASE), r'\1***REDACTED***'),
+    (re.compile(r'(jdbc:[^\s]+@)([^\s/]+)', re.IGNORECASE), r'\1***REDACTED***'),
+    (re.compile(r'(AccountKey\s*=\s*)\S+', re.IGNORECASE), r'\1***REDACTED***'),
+]
+
+
+def sanitize_output(text):
+    """Remove credentials and secrets from text using _CREDENTIAL_PATTERNS."""
+    result = str(text)
+    for pattern, replacement in _CREDENTIAL_PATTERNS:
+        result = pattern.sub(replacement, result)
+    return result
+
+
+def _write_audit_log(results, config):
+    """Write a structured JSON audit log to output/audit_log.json."""
+    audit = {
+        "migration_run": datetime.now(timezone.utc).isoformat(),
+        "config_file": config.get("_config_file", "migration.yaml"),
+        "phases": [],
+    }
+    for r in results:
+        entry = {
+            "phase_id": r["id"],
+            "phase_name": r["name"],
+            "status": r["status"],
+            "duration_seconds": round(r["duration"], 2) if r["duration"] else 0,
+            "error": sanitize_output(r["error"]) if r.get("error") else None,
+        }
+        audit["phases"].append(entry)
+    ok = sum(1 for r in results if r["status"] == "ok")
+    audit["summary"] = {
+        "total_phases": len(results),
+        "succeeded": ok,
+        "failed": sum(1 for r in results if r["status"] == "error"),
+        "skipped": sum(1 for r in results if r["status"] == "skipped"),
+        "total_duration_seconds": round(sum(r["duration"] for r in results if r["duration"]), 2),
+    }
+    audit_path = WORKSPACE / "output" / "audit_log.json"
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(audit_path, "w", encoding="utf-8") as f:
+        json.dump(audit, f, indent=2, ensure_ascii=False)
+    return audit_path
 
 
 def _parse_args():
@@ -204,7 +254,9 @@ def generate_summary(results):
         "| `output/sql/` | Converted SQL files (Oracle/SQL Server → Spark SQL) |",
         "| `output/notebooks/` | PySpark notebooks (one per mapping) |",
         "| `output/pipelines/` | Fabric Pipeline JSON (one per workflow) |",
+        "| `output/schema/` | Delta Lake DDL + workspace setup notebook |",
         "| `output/validation/` | Validation notebooks + test matrix |",
+        "| `output/audit_log.json` | Structured audit log (JSON) |",
         "",
         "## Next Steps",
         "",
@@ -334,7 +386,9 @@ def main():
             print("     Continuing to next phase...")
         print()
 
-    # Generate summary
+    # Generate audit log and summary
+    audit_path = _write_audit_log(results, config)
+    log.info(f"Audit log written to {audit_path}")
     summary_path = generate_summary(results)
 
     ok_count = sum(1 for r in results if r["status"] == "ok")

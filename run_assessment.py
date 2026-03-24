@@ -1184,6 +1184,216 @@ def write_dependency_dag(dag):
 
 
 # =====================================================================
+# Sprint 28: Migration Wave Planner
+# =====================================================================
+
+def _build_mapping_dependency_graph(all_mappings, all_workflows):
+    """Build a dependency graph between mappings based on workflow ordering.
+
+    Returns: dict mapping_name -> set of mapping_names it depends on.
+    """
+    deps = {m["name"]: set() for m in all_mappings}
+
+    for wf in all_workflows:
+        stm = wf.get("session_to_mapping", {})
+        edges = wf.get("links", [])
+
+        # Build session ordering from workflow edges
+        for edge in edges:
+            from_session = edge.get("from", "")
+            to_session = edge.get("to", "")
+            from_mapping = stm.get(from_session, "")
+            to_mapping = stm.get(to_session, "")
+            if from_mapping and to_mapping and from_mapping != to_mapping:
+                deps.setdefault(to_mapping, set()).add(from_mapping)
+
+        # Also infer dependencies from shared tables (source of one is target of another)
+    target_to_mapping = {}
+    for m in all_mappings:
+        for tgt in m.get("targets", []):
+            target_to_mapping[tgt.lower()] = m["name"]
+
+    for m in all_mappings:
+        for src in m.get("sources", []):
+            producer = target_to_mapping.get(src.lower(), "")
+            if producer and producer != m["name"]:
+                deps.setdefault(m["name"], set()).add(producer)
+
+    return deps
+
+
+def topological_sort_waves(deps):
+    """Topological sort into waves of parallelizable mappings.
+
+    Returns list of waves: [[mapping_name, ...], ...]
+    Each wave contains mappings with no unresolved dependencies.
+    """
+    remaining = {k: set(v) for k, v in deps.items()}
+    waves = []
+    completed = set()
+
+    while remaining:
+        # Find all mappings with no pending dependencies
+        ready = [m for m, d in remaining.items() if not (d - completed)]
+        if not ready:
+            # Cycle detected — break by picking the mapping with fewest deps
+            ready = [min(remaining, key=lambda m: len(remaining[m] - completed))]
+
+        waves.append(sorted(ready))
+        completed.update(ready)
+        for m in ready:
+            remaining.pop(m, None)
+
+    return waves
+
+
+def find_critical_path(deps, effort_map):
+    """Find the critical path (longest chain by estimated effort).
+
+    Returns: (path_list, total_effort)
+    """
+    # Build adjacency list (who depends on me → successors)
+    successors = {}
+    for m, dep_set in deps.items():
+        for d in dep_set:
+            successors.setdefault(d, set()).add(m)
+        successors.setdefault(m, set())
+
+    # Dynamic programming: longest path from each node
+    memo = {}
+
+    def longest_from(node, visited):
+        if node in memo:
+            return memo[node]
+        if node in visited:
+            return ([node], effort_map.get(node, 1))
+        visited_copy = visited | {node}
+        best_path = [node]
+        best_effort = effort_map.get(node, 1)
+        for succ in successors.get(node, []):
+            sub_path, sub_effort = longest_from(succ, visited_copy)
+            total = effort_map.get(node, 1) + sub_effort
+            if total > best_effort:
+                best_effort = total
+                best_path = [node] + sub_path
+        memo[node] = (best_path, best_effort)
+        return memo[node]
+
+    # Find start nodes (no dependencies)
+    start_nodes = [m for m, d in deps.items() if not d]
+    if not start_nodes:
+        start_nodes = list(deps.keys())[:1]
+
+    best_overall_path = []
+    best_overall_effort = 0
+    for start in start_nodes:
+        path, effort = longest_from(start, set())
+        if effort > best_overall_effort:
+            best_overall_effort = effort
+            best_overall_path = path
+
+    return best_overall_path, round(best_overall_effort, 1)
+
+
+def generate_wave_plan(all_mappings, all_workflows):
+    """Generate a full migration wave plan.
+
+    Returns dict with waves, critical_path, stats.
+    """
+    deps = _build_mapping_dependency_graph(all_mappings, all_workflows)
+    waves = topological_sort_waves(deps)
+
+    effort_map = {m["name"]: m.get("manual_effort_hours", 1) for m in all_mappings}
+    mapping_info = {m["name"]: m for m in all_mappings}
+
+    wave_plan = []
+    for i, wave_mappings in enumerate(waves, 1):
+        wave = {
+            "wave_number": i,
+            "mappings": wave_mappings,
+            "parallel_count": len(wave_mappings),
+            "dependencies": [],
+            "estimated_effort_hours": round(
+                sum(effort_map.get(m, 1) for m in wave_mappings), 1
+            ),
+            "complexity_breakdown": {},
+        }
+        for m_name in wave_mappings:
+            m_deps = deps.get(m_name, set())
+            if m_deps:
+                wave["dependencies"].append({
+                    "mapping": m_name,
+                    "depends_on": sorted(m_deps),
+                })
+            complexity = mapping_info.get(m_name, {}).get("complexity", "Unknown")
+            wave["complexity_breakdown"][complexity] = wave["complexity_breakdown"].get(complexity, 0) + 1
+
+        wave_plan.append(wave)
+
+    critical_path, critical_effort = find_critical_path(deps, effort_map)
+
+    return {
+        "total_waves": len(wave_plan),
+        "total_mappings": sum(len(w["mappings"]) for w in wave_plan),
+        "total_effort_hours": round(sum(w["estimated_effort_hours"] for w in wave_plan), 1),
+        "critical_path": critical_path,
+        "critical_path_effort_hours": critical_effort,
+        "waves": wave_plan,
+    }
+
+
+def write_wave_plan(wave_data):
+    """Write wave_plan.json and wave_plan.md."""
+    # JSON
+    json_path = OUTPUT_DIR / "wave_plan.json"
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(wave_data, f, indent=2, ensure_ascii=False)
+    print(f"  Written: {json_path}")
+
+    # Markdown
+    lines = [
+        "# Migration Wave Plan",
+        "",
+        f"**Total Waves:** {wave_data['total_waves']}",
+        f"**Total Mappings:** {wave_data['total_mappings']}",
+        f"**Total Effort:** {wave_data['total_effort_hours']} hours",
+        f"**Critical Path:** {' → '.join(wave_data['critical_path'])} ({wave_data['critical_path_effort_hours']}h)",
+        "",
+        "---",
+        "",
+    ]
+
+    for wave in wave_data["waves"]:
+        lines.append(f"## Wave {wave['wave_number']} ({wave['parallel_count']} mappings, {wave['estimated_effort_hours']}h)")
+        lines.append("")
+        lines.append("| Mapping | Dependencies |")
+        lines.append("|---------|-------------|")
+        dep_map = {d["mapping"]: d["depends_on"] for d in wave["dependencies"]}
+        for m in wave["mappings"]:
+            deps_str = ", ".join(dep_map.get(m, [])) or "—"
+            lines.append(f"| {m} | {deps_str} |")
+        lines.append("")
+
+    # Mermaid Gantt
+    lines.extend(["---", "", "## Wave Timeline", "", "```mermaid", "gantt"])
+    lines.append("    title Migration Waves")
+    lines.append("    dateFormat X")
+    lines.append("    axisFormat Wave %s")
+    offset = 0
+    for wave in wave_data["waves"]:
+        lines.append(f"    section Wave {wave['wave_number']}")
+        for m in wave["mappings"]:
+            lines.append(f"    {m} : {offset}, {offset + 1}")
+        offset += 1
+    lines.extend(["```", ""])
+
+    md_path = OUTPUT_DIR / "wave_plan.md"
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print(f"  Written: {md_path}")
+
+
+# =====================================================================
 # Sprint 6: Mapplet expansion
 # =====================================================================
 
@@ -2311,6 +2521,11 @@ def main():
     write_complexity_report(inventory)
     dag = build_dependency_dag(all_workflows)
     write_dependency_dag(dag)
+
+    # Sprint 28: Wave planner
+    wave_data = generate_wave_plan(all_mappings, all_workflows)
+    write_wave_plan(wave_data)
+
     print()
 
     # 8. Summary
@@ -2349,6 +2564,13 @@ def main():
     print(f"    Est. manual effort:   {total_effort} hours")
     print(f"    Field lineage paths:  {total_lineage}")
 
+    # Sprint 28: Wave plan stats
+    print()
+    print("  Migration waves:")
+    print(f"    Total waves:          {wave_data['total_waves']}")
+    print(f"    Critical path length: {len(wave_data['critical_path'])} mappings")
+    print(f"    Critical path effort: {wave_data['critical_path_effort_hours']}h")
+
     # 9. Warnings and issues
     print()
     print("[9/10] Final report...")
@@ -2378,6 +2600,8 @@ def main():
     print("    - complexity_report.md")
     print("    - dependency_dag.json")
     print("    - lineage.json")
+    print("    - wave_plan.json")
+    print("    - wave_plan.md")
     if issues:
         print("    - parse_issues.json")
 

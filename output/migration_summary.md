@@ -1,6 +1,6 @@
 # Migration Summary
 
-**Generated:** 2026-03-24 07:57 UTC
+**Generated:** 2026-03-24 09:20 UTC
 
 ## Phase Results
 
@@ -10,9 +10,10 @@
 | 1 | SQL Migration | ❌ None | — |
 | 2 | Notebook Migration | ❌ None | — |
 | 3 | Pipeline Migration | ❌ None | — |
-| 4 | Validation | ❌ None | — |
+| 4 | Schema Generation | ❌ None | — |
+| 5 | Validation | ❌ None | — |
 
-**Phases completed:** 0/5
+**Phases completed:** 0/6
 **Total duration:** 0.0s
 
 ## Output Directories
@@ -23,7 +24,9 @@
 | `output/sql/` | Converted SQL files (Oracle/SQL Server → Spark SQL) |
 | `output/notebooks/` | PySpark notebooks (one per mapping) |
 | `output/pipelines/` | Fabric Pipeline JSON (one per workflow) |
+| `output/schema/` | Delta Lake DDL + workspace setup notebook |
 | `output/validation/` | Validation notebooks + test matrix |
+| `output/audit_log.json` | Structured audit log (JSON) |
 
 ## Next Steps
 
