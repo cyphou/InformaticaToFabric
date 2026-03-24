@@ -412,6 +412,9 @@ def parse_mapping_xml(filepath):
         # Complexity Classification
         complexity = classify_complexity(transformations, sql_overrides, sources, targets, has_stored_proc, lookup_conditions)
 
+        # Sprint 25: Field-level lineage
+        field_lineage = extract_field_lineage(mapping_el)
+
         mapping_info = {
             "name": m_name,
             "sources": sources,
@@ -426,7 +429,13 @@ def parse_mapping_xml(filepath):
             "parameters": parameters,
             "target_load_order": target_load_order,
             "connector_count": len(connectors),
+            "field_lineage": field_lineage,
         }
+
+        # Sprint 25: Conversion score & effort estimate (needs mapping_info to exist)
+        mapping_info["conversion_score"] = calculate_conversion_score(mapping_info)
+        mapping_info["manual_effort_hours"] = estimate_manual_effort(mapping_info)
+        mapping_info["lineage_summary"] = f"{len(field_lineage)} field paths traced"
 
         mappings.append(mapping_info)
       except Exception as e:
@@ -444,6 +453,237 @@ def parse_mapping_xml(filepath):
         warnings.append(f"WARNING: No <MAPPING> elements found in {filepath.name}")
 
     return mappings
+
+
+# =====================================================================
+# Sprint 25: Lineage & Conversion Scoring
+# =====================================================================
+
+# Transformations with fully-automated PySpark conversion rules
+AUTO_CONVERTIBLE_TX = {
+    "SQ", "EXP", "FIL", "AGG", "JNR", "LKP", "RTR", "UPD",
+    "RNK", "SRT", "UNI", "NRM", "SEQ", "SP", "SQLT", "DM",
+    "WSC", "MPLT",
+}
+# Placeholder-only (no real conversion logic yet)
+PLACEHOLDER_TX = {"JTX", "CT", "HTTP", "XMLG", "XMLP", "TC", "ULKP"}
+
+
+def extract_field_lineage(mapping_el):
+    """Extract field-level lineage from CONNECTOR elements.
+
+    Returns a list of lineage entries:
+      [{"source_field": ..., "source_instance": ..., "target_field": ...,
+        "target_instance": ..., "transformations": [...]}]
+    """
+    # Build connector graph: (from_instance, from_field) -> [(to_instance, to_field)]
+    graph = {}
+    # Also track all outgoing edges per instance (for field-name changes)
+    instance_outgoing = {}  # instance -> [(to_instance, to_field)]
+    for conn in mapping_el.iter("CONNECTOR"):
+        src = (conn.get("FROMINSTANCE", ""), conn.get("FROMFIELD", ""))
+        dst = (conn.get("TOINSTANCE", ""), conn.get("TOFIELD", ""))
+        from_type = conn.get("FROMINSTANCETYPE", "")
+        to_type = conn.get("TOINSTANCETYPE", "")
+        graph.setdefault(src, []).append((dst, from_type, to_type))
+        instance_outgoing.setdefault(src[0], []).append(dst)
+
+    # Build instance type map from CONNECTOR metadata
+    instance_type = {}
+    for conn in mapping_el.iter("CONNECTOR"):
+        fi = conn.get("FROMINSTANCE", "")
+        ft = conn.get("FROMINSTANCETYPE", "")
+        ti = conn.get("TOINSTANCE", "")
+        tt = conn.get("TOINSTANCETYPE", "")
+        if fi and ft:
+            instance_type[fi] = ft
+        if ti and tt:
+            instance_type[ti] = tt
+
+    # Identify source (SQ) instances and target instances
+    sq_instances = {name for name, typ in instance_type.items()
+                    if typ == "Source Qualifier"}
+    tgt_instances = {name for name, typ in instance_type.items()
+                     if typ == "Target Definition"}
+
+    lineage = []
+
+    # Trace every field from source qualifier nodes through the graph to targets
+    for (inst, field), destinations in graph.items():
+        if inst not in sq_instances:
+            continue
+        # BFS from this source field to find all target field arrivals
+        queue = [(inst, field, [inst])]
+        visited = set()
+        while queue:
+            cur_inst, cur_field, path = queue.pop(0)
+            key = (cur_inst, cur_field)
+            if key in visited:
+                continue
+            visited.add(key)
+
+            if cur_inst in tgt_instances:
+                # Build transformation list (instances between source and target)
+                transformations = []
+                for p in path[1:]:  # skip source
+                    if p not in tgt_instances and p in instance_type:
+                        transformations.append({
+                            "instance": p,
+                            "type": instance_type.get(p, "Unknown"),
+                        })
+                lineage.append({
+                    "source_field": field,
+                    "source_instance": inst,
+                    "target_field": cur_field,
+                    "target_instance": cur_inst,
+                    "transformations": transformations,
+                })
+                continue
+
+            # Follow graph edges from current position (exact field match)
+            for (next_inst, next_field), _ft, _tt in graph.get(key, []):
+                queue.append((next_inst, next_field, path + [next_inst]))
+
+            # Also follow all outgoing edges from this instance (field-name changes)
+            # This handles transformations that rename fields (e.g., ID_IN -> ID_OUT)
+            if cur_inst not in sq_instances and cur_inst not in tgt_instances:
+                for (next_inst, next_field) in instance_outgoing.get(cur_inst, []):
+                    if (cur_inst, next_field) not in visited:
+                        queue.append((next_inst, next_field, path + [next_inst]))
+
+    return lineage
+
+
+def calculate_conversion_score(mapping):
+    """Calculate a conversion quality score (0-100) for a mapping.
+
+    Scoring factors:
+    - % of transformations with auto-conversion rules (50% weight)
+    - % of SQL overrides that are auto-convertible (30% weight)
+    - Absence of placeholder/gap indicators (20% weight)
+    """
+    tx_list = mapping.get("transformations", [])
+    sql_overrides = mapping.get("sql_overrides", [])
+
+    # Factor 1: Transformation coverage (50%)
+    if tx_list:
+        auto_count = sum(1 for t in tx_list if t in AUTO_CONVERTIBLE_TX)
+        tx_score = (auto_count / len(tx_list)) * 100
+    else:
+        tx_score = 100  # No transformations = nothing to convert
+
+    # Factor 2: SQL override convertibility (30%)
+    if sql_overrides:
+        convertible = 0
+        for ovr in sql_overrides:
+            val = ovr.get("value", "")
+            # Check if the SQL uses only known auto-convertible patterns
+            has_unsupported = bool(re.search(
+                r'\bCONNECT\s+BY\b|\bPRAGMA\b|\bCURSOR\b|\bBULK\s+COLLECT\b|'
+                r'\bFORALL\b|\bPACKAGE\s+BODY\b|\bDBMS_\w+|\bUTL_\w+',
+                val, re.IGNORECASE
+            ))
+            if not has_unsupported:
+                convertible += 1
+        sql_score = (convertible / len(sql_overrides)) * 100
+    else:
+        sql_score = 100  # No SQL overrides = no conversion needed
+
+    # Factor 3: Placeholder gap penalty (20%)
+    placeholder_count = sum(1 for t in tx_list if t in PLACEHOLDER_TX)
+    if tx_list:
+        gap_score = ((len(tx_list) - placeholder_count) / len(tx_list)) * 100
+    else:
+        gap_score = 100
+
+    score = round(tx_score * 0.5 + sql_score * 0.3 + gap_score * 0.2)
+    return min(100, max(0, score))
+
+
+def estimate_manual_effort(mapping):
+    """Estimate manual effort in hours based on complexity and gaps."""
+    complexity = mapping.get("complexity", "Simple")
+    tx_list = mapping.get("transformations", [])
+    sql_overrides = mapping.get("sql_overrides", [])
+
+    base_hours = {"Simple": 0.5, "Medium": 2, "Complex": 4, "Custom": 8}
+    hours = base_hours.get(complexity, 2)
+
+    # Add per-placeholder gap
+    placeholder_count = sum(1 for t in tx_list if t in PLACEHOLDER_TX)
+    hours += placeholder_count * 2
+
+    # Add for complex SQL overrides
+    for ovr in sql_overrides:
+        val = ovr.get("value", "")
+        if re.search(r'\bCONNECT\s+BY\b|\bPACKAGE\s+BODY\b|\bCURSOR\b', val, re.IGNORECASE):
+            hours += 3
+        elif re.search(r'\bMERGE\b|\bDECODE\b', val, re.IGNORECASE):
+            hours += 0.5
+
+    return round(hours, 1)
+
+
+def generate_lineage_mermaid(mapping_name, lineage_entries):
+    """Generate a Mermaid flowchart for a mapping's field-level lineage."""
+    if not lineage_entries:
+        return ""
+
+    # Collect unique instances in order and their types
+    instance_order = []
+    instance_types = {}
+    seen = set()
+    for entry in lineage_entries:
+        src = entry["source_instance"]
+        tgt = entry["target_instance"]
+        if src not in seen:
+            instance_order.append(src)
+            seen.add(src)
+            instance_types[src] = "Source Qualifier"
+        for tx in entry.get("transformations", []):
+            inst = tx["instance"]
+            if inst not in seen:
+                instance_order.append(inst)
+                seen.add(inst)
+                instance_types[inst] = tx.get("type", "Unknown")
+        if tgt not in seen:
+            instance_order.append(tgt)
+            seen.add(tgt)
+            instance_types[tgt] = "Target"
+
+    # Build unique edges
+    edges = set()
+    for entry in lineage_entries:
+        chain = [entry["source_instance"]]
+        for tx in entry.get("transformations", []):
+            chain.append(tx["instance"])
+        chain.append(entry["target_instance"])
+        for i in range(len(chain) - 1):
+            edges.add((chain[i], chain[i + 1]))
+
+    # Sanitize node IDs for Mermaid (replace spaces/special chars)
+    def node_id(name):
+        return re.sub(r'[^A-Za-z0-9_]', '_', name)
+
+    lines = [f"```mermaid", f"flowchart LR"]
+    # Node definitions with labels
+    for inst in instance_order:
+        nid = node_id(inst)
+        typ = instance_types.get(inst, "")
+        if "Source" in typ:
+            lines.append(f'    {nid}["{inst}<br/>📥 {typ}"]')
+        elif "Target" in typ:
+            lines.append(f'    {nid}["{inst}<br/>📤 Target"]')
+        else:
+            short = TRANSFORMATION_ABBREV.get(typ, typ)
+            lines.append(f'    {nid}["{inst}<br/>⚙️ {short}"]')
+
+    # Edges
+    for src, dst in sorted(edges):
+        lines.append(f"    {node_id(src)} --> {node_id(dst)}")
+
+    lines.append("```")
+    return "\n".join(lines)
 
 
 def classify_complexity(transformations, sql_overrides, sources, targets, has_stored_proc, lookup_conditions):
@@ -697,6 +937,10 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
             "lookup_conditions": m["lookup_conditions"],
             "parameters": m["parameters"],
             "target_load_order": m["target_load_order"],
+            "conversion_score": m.get("conversion_score", 0),
+            "manual_effort_hours": m.get("manual_effort_hours", 0),
+            "lineage_summary": m.get("lineage_summary", ""),
+            "field_lineage": m.get("field_lineage", []),
         })
 
     workflows_out = []
@@ -736,6 +980,15 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
                 "Complex": sum(1 for m in mappings_out if m["complexity"] == "Complex"),
                 "Custom": sum(1 for m in mappings_out if m["complexity"] == "Custom"),
             },
+            "avg_conversion_score": round(
+                sum(m.get("conversion_score", 0) for m in mappings_out) / max(len(mappings_out), 1), 1
+            ),
+            "total_manual_effort_hours": round(
+                sum(m.get("manual_effort_hours", 0) for m in mappings_out), 1
+            ),
+            "total_field_lineage_paths": sum(
+                len(m.get("field_lineage", [])) for m in mappings_out
+            ),
         },
     }
 
@@ -744,6 +997,29 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
         json.dump(inventory, f, indent=2, ensure_ascii=False)
     print(f"  Written: {out_path}")
     return inventory
+
+
+def write_lineage_json(all_mappings):
+    """Write lineage.json with per-mapping field-level lineage and Mermaid diagrams."""
+    lineage_data = []
+    for m in all_mappings:
+        entry = {
+            "mapping": m["name"],
+            "complexity": m.get("complexity", "Unknown"),
+            "conversion_score": m.get("conversion_score", 0),
+            "manual_effort_hours": m.get("manual_effort_hours", 0),
+            "field_lineage": m.get("field_lineage", []),
+            "mermaid_diagram": generate_lineage_mermaid(
+                m["name"], m.get("field_lineage", [])
+            ),
+        }
+        lineage_data.append(entry)
+
+    out_path = OUTPUT_DIR / "lineage.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(lineage_data, f, indent=2, ensure_ascii=False)
+    print(f"  Written: {out_path}")
+    return lineage_data
 
 
 def write_complexity_report(inventory):
@@ -793,16 +1069,28 @@ def write_complexity_report(inventory):
         "",
         "---",
         "",
+        "## Conversion Readiness",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| Average Conversion Score | {summary.get('avg_conversion_score', 0)}/100 |",
+        f"| Total Manual Effort (est.) | {summary.get('total_manual_effort_hours', 0)} hours |",
+        f"| Total Field Lineage Paths | {summary.get('total_field_lineage_paths', 0)} |",
+        "",
+        "---",
+        "",
         "## Mapping Details",
         "",
-        "| Mapping | Complexity | Sources | Targets | Transformations | SQL Override | Stored Proc |",
-        "|---------|------------|---------|---------|-----------------|-------------|-------------|",
+        "| Mapping | Complexity | Score | Effort (h) | Sources | Targets | Transformations | SQL Override | Stored Proc |",
+        "|---------|------------|-------|------------|---------|---------|-----------------|-------------|-------------|",
     ]
 
     for m in inventory["mappings"]:
         tx = " -> ".join(m["transformations"])
+        score = m.get("conversion_score", 0)
+        effort = m.get("manual_effort_hours", 0)
         lines.append(
-            f"| {m['name']} | **{m['complexity']}** | {', '.join(m['sources'])} | {', '.join(m['targets'])} | {tx} | {'Yes' if m['has_sql_override'] else 'No'} | {'Yes' if m['has_stored_proc'] else 'No'} |"
+            f"| {m['name']} | **{m['complexity']}** | {score}/100 | {effort} | {', '.join(m['sources'])} | {', '.join(m['targets'])} | {tx} | {'Yes' if m['has_sql_override'] else 'No'} | {'Yes' if m['has_stored_proc'] else 'No'} |"
         )
 
     lines += ["", "---", "", "## SQL Overrides Found", ""]
@@ -822,6 +1110,20 @@ def write_complexity_report(inventory):
     if not any_overrides:
         lines.append("_No SQL overrides detected in mapping XML._")
         lines.append("")
+
+    # Field Lineage Diagrams (Complex/Custom mappings)
+    complex_mappings = [m for m in inventory["mappings"]
+                        if m.get("complexity") in ("Complex", "Custom")
+                        and m.get("field_lineage")]
+    if complex_mappings:
+        lines += ["", "---", "", "## Field Lineage Diagrams (Complex/Custom)", ""]
+        for m in complex_mappings:
+            mermaid = generate_lineage_mermaid(m["name"], m["field_lineage"])
+            if mermaid:
+                lines.append(f"### {m['name']} (Score: {m.get('conversion_score', 0)}/100)")
+                lines.append("")
+                lines.append(mermaid)
+                lines.append("")
 
     # SQL Files
     if inventory["sql_files"]:
@@ -1993,6 +2295,7 @@ def main():
     # 7. Write outputs
     print("[7/10] Writing output files...")
     inventory = write_inventory_json(all_mappings, all_workflows, connections, sql_files)
+    lineage_data = write_lineage_json(all_mappings)
     # Add param_files and mapplets to inventory
     inventory["parameter_files"] = param_files
     inventory["mapplets"] = {name: [t["abbrev"] for t in txs] for name, txs in all_mapplets.items()}
@@ -2036,6 +2339,16 @@ def main():
     if total_mssql:
         print(f"  SQL Server constructs in SQL files: {total_mssql}")
 
+    # Sprint 25: Lineage & conversion scoring stats
+    avg_score = inventory["summary"].get("avg_conversion_score", 0)
+    total_effort = inventory["summary"].get("total_manual_effort_hours", 0)
+    total_lineage = inventory["summary"].get("total_field_lineage_paths", 0)
+    print()
+    print("  Conversion readiness:")
+    print(f"    Avg conversion score: {avg_score}/100")
+    print(f"    Est. manual effort:   {total_effort} hours")
+    print(f"    Field lineage paths:  {total_lineage}")
+
     # 9. Warnings and issues
     print()
     print("[9/10] Final report...")
@@ -2064,6 +2377,7 @@ def main():
     print("    - inventory.json")
     print("    - complexity_report.md")
     print("    - dependency_dag.json")
+    print("    - lineage.json")
     if issues:
         print("    - parse_issues.json")
 
