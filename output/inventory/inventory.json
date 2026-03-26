@@ -8204,7 +8204,9 @@
     "total_field_lineage_paths": 380,
     "total_parameter_files": 1,
     "total_mapplets": 3,
-    "total_session_configs": 10
+    "total_session_configs": 10,
+    "total_pii_findings": 35,
+    "total_dq_rules": 5
   },
   "parameter_files": [
     {
@@ -8325,6 +8327,245 @@
       "infa_value": "default_session_config",
       "spark_property": "spark.conf.set()",
       "note": "Resolve config object 'default_session_config'"
+    }
+  ],
+  "pii_findings": [
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FIRST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "LAST_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "FULL_NAME",
+      "pii_category": "NAME",
+      "sensitivity": "Internal"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "field": "EMAIL",
+      "pii_category": "EMAIL",
+      "sensitivity": "Confidential"
+    }
+  ],
+  "dq_rules": [
+    {
+      "mapping": "m_load_contacts",
+      "type": "filter",
+      "description": "FIL transformation in m_load_contacts"
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "type": "filter",
+      "description": "FIL transformation in M_LOAD_CUSTOMERS"
+    },
+    {
+      "mapping": "M_LOAD_EMPLOYEES",
+      "type": "filter",
+      "description": "FIL transformation in M_LOAD_EMPLOYEES"
+    },
+    {
+      "mapping": "DQ_VALIDATE_EMAILS",
+      "type": "data_quality",
+      "description": "DQ transformation in DQ_VALIDATE_EMAILS"
+    },
+    {
+      "mapping": "DQ_STANDARDIZE_ADDRESSES",
+      "type": "data_quality",
+      "description": "DQ transformation in DQ_STANDARDIZE_ADDRESSES"
     }
   ]
 }

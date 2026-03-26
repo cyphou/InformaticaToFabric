@@ -2,7 +2,7 @@
 -- Converted from: C:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric\input\sql\SP_CALC_RANKINGS.sql
 -- DB Type: ORACLE
 -- Conversion: Oracle → Spark SQL
--- Date: 2026-03-24
+-- Date: 2026-03-26
 -- Agent: sql-migration (automated)
 -- ============================================================================
 -- Review all TODO comments before deploying to Fabric.
@@ -91,10 +91,9 @@ BEGIN
     -- TODO: print('Rankings calculated at ' || TO_CHAR(current_timestamp() in PySpark notebook, 'yyyy-MM-dd HH:mm:ss'));
 
     COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
+except Exception as e:  # PL/SQL EXCEPTION WHEN OTHERS
         ROLLBACK;
         -- TODO: print('Error: ' || SQLERRM) in PySpark notebook;
-        RAISE;
+        raise  # Re-raise current exception
 END SP_CALC_RANKINGS;
 /

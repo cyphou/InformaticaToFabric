@@ -1,6 +1,6 @@
 # Test Matrix — Informatica to Fabric Validation
 
-Generated: 2026-03-24 13:54 UTC
+Generated: 2026-03-26 17:36 UTC
 
 ## Validation Notebooks
 
@@ -31,7 +31,7 @@ Generated: 2026-03-24 13:54 UTC
 
 ## How to Run
 
-1. Upload validation notebooks to a Fabric workspace
+1. Upload validation notebooks to your Fabric workspace or Databricks workspace
 2. Configure source JDBC connection strings in Cell 1
 3. Run all cells — review OVERALL RESULT in final cell
 4. Address any FAIL results before sign-off

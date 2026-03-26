@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_LAKEHOUSE_BRONZE
 # Source: S3_LANDING → Target: silver.lakehouse_bronze

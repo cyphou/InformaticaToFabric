@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_FACT_ORDERS
 # Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: silver.fact_orders

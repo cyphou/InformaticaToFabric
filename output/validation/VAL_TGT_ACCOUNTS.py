@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_ACCOUNTS
 # Source: src_accounts → Target: silver.tgt_accounts

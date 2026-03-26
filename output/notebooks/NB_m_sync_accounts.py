@@ -2,7 +2,6 @@
 
 # METADATA_START
 # {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
-# METADATA_END
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_sync_accounts
@@ -11,7 +10,7 @@
 # Sources: src_accounts
 # Targets: tgt_accounts
 # Flow: EXP
-# Generated: 2026-03-24
+# Generated: 2026-03-26
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,

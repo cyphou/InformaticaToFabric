@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_LAKEHOUSE_SILVER
 # Source: Oracle_CRM → Target: silver.lakehouse_silver

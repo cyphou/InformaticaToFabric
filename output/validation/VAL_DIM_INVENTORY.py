@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_DIM_INVENTORY
 # Source: Oracle.SALES.STG_INVENTORY → Target: silver.dim_inventory

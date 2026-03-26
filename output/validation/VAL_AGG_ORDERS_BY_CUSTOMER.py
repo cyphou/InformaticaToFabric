@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_AGG_ORDERS_BY_CUSTOMER
 # Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: gold.agg_orders_by_customer

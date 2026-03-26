@@ -1,5 +1,5 @@
 -- Unity Catalog Permissions for catalog: main
--- Generated: 2026-03-26 17:28:15 UTC
+-- Generated: 2026-03-26 17:37:02 UTC
 
 -- Catalog-level grants
 GRANT USE CATALOG ON CATALOG main TO `data-engineers`;

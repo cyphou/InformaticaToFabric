@@ -2,7 +2,7 @@
 -- Converted from: C:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric\input\sql\SP_MYSQL_USER_ANALYTICS.sql
 -- DB Type: MYSQL
 -- Conversion: MySQL → Spark SQL
--- Date: 2026-03-24
+-- Date: 2026-03-26
 -- Agent: sql-migration (automated)
 -- ============================================================================
 -- Review all TODO comments before deploying to Fabric.

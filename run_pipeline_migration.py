@@ -383,7 +383,10 @@ def main():
             json.dump(pipeline, f, indent=2, ensure_ascii=False)
         generated += 1
 
-        act_count = len(pipeline["properties"]["activities"])
+        if target == "databricks":
+            act_count = len(pipeline.get("tasks", []))
+        else:
+            act_count = len(pipeline["properties"]["activities"])
         print(f"  ✅ PL_{wf['name']}.json ({act_count} activities)")
 
     print()

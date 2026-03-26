@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_LH_CONTACTS
 # Source: src_sf_contacts → Target: silver.tgt_lh_contacts

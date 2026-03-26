@@ -2,7 +2,7 @@
 -- Converted from: C:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric\input\sql\SP_UPDATE_ORDER_STATS.sql
 -- DB Type: ORACLE
 -- Conversion: Oracle → Spark SQL
--- Date: 2026-03-24
+-- Date: 2026-03-26
 -- Agent: sql-migration (automated)
 -- ============================================================================
 -- Review all TODO comments before deploying to Fabric.
@@ -73,8 +73,7 @@ BEGIN
 
     -- TODO: print('Order stats updated: ' || v_row_count || ' rows, Revenue: ' || TO_CHAR(v_total_rev, 'FM$999,999,999.00') in PySpark notebook);
 
-EXCEPTION
-    WHEN OTHERS THEN
+except Exception as e:  # PL/SQL EXCEPTION WHEN OTHERS
         ROLLBACK;
         INSERT INTO SALES.ETL_LOG (
             PROCEDURE_NAME, EXECUTION_DATE, ROWS_AFFECTED, DAILY_REVENUE, STATUS, ERROR_MESSAGE
@@ -82,6 +81,6 @@ EXCEPTION
             'SP_UPDATE_ORDER_STATS', current_timestamp(), 0, 0, 'FAILED', SUBSTRING(SQLERRM, 1, 500)
         );
         COMMIT;
-        RAISE;
+        raise  # Re-raise current exception
 END SP_UPDATE_ORDER_STATS;
 /

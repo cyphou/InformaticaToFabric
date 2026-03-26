@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_DIM_CUSTOMER
 # Source: Oracle.SALES.CUSTOMERS → Target: silver.dim_customer

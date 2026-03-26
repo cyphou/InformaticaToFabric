@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_FACT_TXN_TAGS
 # Source: Oracle.FINANCE.TRANSACTIONS, Oracle.FINANCE.ACCOUNTS → Target: silver.fact_txn_tags

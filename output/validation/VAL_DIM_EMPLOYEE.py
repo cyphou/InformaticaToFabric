@@ -1,4 +1,4 @@
-# Databricks notebook source / Fabric Notebook
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_DIM_EMPLOYEE
 # Source: Oracle.HR.EMPLOYEES → Target: silver.dim_employee
