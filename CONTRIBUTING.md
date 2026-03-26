@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 747 tests, 98% coverage. Dual-target support: Microsoft Fabric + Azure Databricks.
+**Current status:** 780 tests, 98% coverage. Dual-target support: Microsoft Fabric + Azure Databricks.
 
 ## Test Files
 
@@ -75,7 +75,7 @@ Configuration is in `pyproject.toml`.
 ├── generate_html_reports.py   # HTML report generation
 ├── dashboard.py               # Interactive dashboard
 ├── deploy_to_fabric.py        # Fabric deployment
-├── tests/                     # 747 tests (11 test files)
+├── tests/                     # 780 tests (11 test files)
 ├── input/                     # Informatica XML exports
 ├── output/                    # Generated artifacts
 ├── templates/                 # Notebook/pipeline templates (Fabric + Databricks)

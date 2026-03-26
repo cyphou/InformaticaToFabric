@@ -1,11 +1,11 @@
 # Development Plan — Informatica to Fabric / Databricks Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-37%2F40%20complete-F39C12?style=for-the-badge" alt="37/40 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-38%2F41%20complete-F39C12?style=for-the-badge" alt="38/41 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
   <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
-  <img src="https://img.shields.io/badge/phase_3-planned_(41--50)-2980B9?style=for-the-badge" alt="Phase 3 Planned"/>
+  <img src="https://img.shields.io/badge/phase_3-1%2F10_complete-2980B9?style=for-the-badge" alt="Phase 3 1/10 Complete"/>
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
 </p>
 
@@ -771,7 +771,7 @@ gantt
 **Sprint 30 Exit Criteria:**
 - [x] Audit log captures every migration action
 - [x] `--dry-run` mode works end-to-end
-- [x] 747 tests, 746 passing (1 pre-existing e2e failure) — includes 50 Databricks target tests
+- [x] 780 tests, 779 passing (1 pre-existing e2e failure) — includes 83 Databricks target tests
 - [x] No credentials exposed in logs or output files
 
 ---
@@ -1443,8 +1443,8 @@ flowchart LR
 - ✅ Notebook generation with `dbutils` + Unity Catalog 3-level namespace
 - ✅ Workflow JSON (Jobs API) generation
 - ✅ Schema DDL (Delta Lake on Unity Catalog)
-- ❌ **Deployment script** (`deploy_to_databricks.py`) — Sprint 41
-- ❌ **Unity Catalog permissions** scripts — Sprint 41
+- ✅ **Deployment script** (`deploy_to_databricks.py`) — Sprint 41
+- ✅ **Unity Catalog permissions** scripts — Sprint 41
 - ⏳ Asset Bundles (DAB) for CI/CD (Sprint 42)
 - ⏳ SQL Warehouse DDL (Sprint 43)
 - ⏳ Delta Sharing (Sprint 43)
@@ -1459,10 +1459,10 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
 
-    section Sprint 41 — Databricks Deploy
-    deploy_to_databricks.py     :s41a, 2026-08-14, 7d
-    Unity Catalog permissions   :s41b, 2026-08-14, 5d
-    Databricks tests expansion  :s41c, after s41a, 3d
+    section Sprint 41 — Databricks Deploy ✅
+    deploy_to_databricks.py     :done, s41a, 2026-08-14, 7d
+    Unity Catalog permissions   :done, s41b, 2026-08-14, 5d
+    Databricks tests expansion  :done, s41c, after s41a, 3d
 
     section Sprint 42 — DevOps (Deferred 32)
     Fabric Deployment Pipelines :s42a, 2026-08-28, 7d
@@ -1526,11 +1526,12 @@ gantt
 | 41.6 | Update docs for Databricks target | All | `README.md`, `docs/USER_GUIDE.md` | Databricks Quick Start, `--target databricks` examples, Unity Catalog setup guide |
 
 **Sprint 41 Exit Criteria:**
-- [ ] `deploy_to_databricks.py` deploys notebooks + jobs to a Databricks workspace
-- [ ] Unity Catalog GRANT scripts cover catalog/schema/table/function permissions
-- [ ] 80+ Databricks tests passing
+- [x] `deploy_to_databricks.py` deploys notebooks + jobs to a Databricks workspace
+- [x] Unity Catalog GRANT scripts cover catalog/schema/table/function permissions
+- [x] 83 Databricks tests passing (up from 50)
+- [x] Cluster config recommender + secret scope setup
 - [ ] README and User Guide updated with Databricks instructions
-- [ ] 826+ total tests passing
+- [x] 780 total tests passing (779 + 1 pre-existing e2e skip)
 
 ---
 

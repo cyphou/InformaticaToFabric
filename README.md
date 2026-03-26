@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/40%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="40 sprints complete"/>
-  <img src="https://img.shields.io/badge/747%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="747 tests"/>
+  <img src="https://img.shields.io/badge/780%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="780 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
   <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks"/>
   <img src="https://img.shields.io/badge/PySpark-notebooks-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
@@ -152,7 +152,7 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 | Target Platform | Notebooks | Pipelines | Schema DDL | Secrets | Deploy |
 |---|---|---|---|---|---|
 | **Microsoft Fabric** | `notebookutils` / 2-level namespace | Fabric Data Pipeline JSON | Delta Lake on Lakehouse | `notebookutils.credentials.getSecret()` | `deploy_to_fabric.py` |
-| **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `dbutils.secrets.get()` | Coming (Sprint 41) |
+| **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `dbutils.secrets.get()` | `deploy_to_databricks.py` |
 
 ---
 
@@ -478,6 +478,7 @@ InformaticaToDBFabric/
 ├── run_validation.py                    # ✅ Validation generation script (Phase 5)
 ├── run_migration.py                     # 🎯 End-to-end orchestrator (6 phases)
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
+├── deploy_to_databricks.py              # 🚀 Databricks REST API deployment script
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
 ├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
 ├── migration.yaml                       # ⚙️ Configuration template (workspace, sources, logging)
@@ -563,10 +564,41 @@ Alternative deployment methods:
 - **Fabric Git Integration** — connect your repo to a Fabric workspace
 - **Manual Upload** — import notebooks and pipelines through the Fabric portal
 
+### Databricks Deployment
+
+Deploy generated artifacts to an Azure Databricks workspace:
+
+```bash
+# Dry-run: list what would be deployed
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --dry-run
+
+# Deploy only notebooks
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --token dapi... --only notebooks
+
+# Deploy everything (notebooks + workflows + SQL scripts)
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --token dapi...
+
+# Generate Unity Catalog permission scripts
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --generate-permissions
+
+# Get cluster configuration recommendation
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --recommend-cluster
+
+# Set up Databricks secret scope from migration.yaml
+python deploy_to_databricks.py --workspace-url https://adb-xxx.azuredatabricks.net --token dapi... --setup-secrets
+```
+
+Authentication uses a Databricks personal access token (PAT) via `--token` or `DATABRICKS_TOKEN` env var. The script handles rate limiting (429 retries) and produces a `databricks_deployment_log.json` audit trail.
+
+Alternative deployment methods:
+- **Databricks CLI** — `databricks workspace import` for notebooks
+- **Databricks Repos** — link a Git repo with the generated artifacts
+- **Jobs API** — create jobs from workflow JSON via REST API
+
 ### Testing
 
 ```bash
-# Run all 697 tests
+# Run all 780 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -585,8 +617,9 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 | `test_iics.py` | 23 | Sprint 19: IICS taskflow/sync/mass-ingestion/connection parsers |
 | `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
 | `test_sprint26_30.py` | 110 | Sprint 26–30: Transformation templates, schema generation, wave planner, L4/L5 validation, audit log, credential sanitization |
+| `test_databricks_target.py` | 83 | Sprint 40–41: Databricks notebooks, workflows, schema DDL, deployment, UC permissions, cluster config |
 
-**Overall:** 697 tests, 696 passing (1 pre-existing e2e), ~30s on Python 3.14
+**Overall:** 780 tests, 779 passing (1 pre-existing e2e), ~32s on Python 3.14
 
 ### Configuration
 

@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/objects_covered-98%25-27AE60?style=for-the-badge" alt="98% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-6-F39C12?style=for-the-badge" alt="6 gaps remaining"/>
   <img src="https://img.shields.io/badge/status-sprint_40_complete-27AE60?style=for-the-badge" alt="Sprint 40 complete"/>
-  <img src="https://img.shields.io/badge/tests-747_(746_passing)-2980B9?style=for-the-badge" alt="747 tests"/>
+  <img src="https://img.shields.io/badge/tests-780_(779_passing)-2980B9?style=for-the-badge" alt="780 tests"/>
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
 </p>
 

@@ -12,7 +12,7 @@
 
 This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 40 sprints complete (Phase 1 + Phase 2) — 747 tests, dual-target support (Microsoft Fabric + Azure Databricks), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
+**Current state:** 41 sprints complete (Phase 1 + Phase 2 + Sprint 41) — 780 tests, dual-target support (Microsoft Fabric + Azure Databricks), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog permissions generator, cluster config recommender, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
 
 ---
 
@@ -344,7 +344,7 @@ InformaticaToDBFabric/
 │   ├── pipeline_template.json           #   Fabric pipeline template
 │   ├── pipeline_template_databricks.json #  Databricks workflow template
 │   └── validation_template.py
-├── tests/                               # 🧪 747 tests
+├── tests/                               # 🧪 780 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests

@@ -1,0 +1,25 @@
+{
+  "profile": "medium",
+  "total_mappings": 11,
+  "complexity_breakdown": {
+    "Medium": 1,
+    "Simple": 4,
+    "Complex": 6
+  },
+  "recommendation": {
+    "driver_node_type": "Standard_DS4_v2",
+    "worker_node_type": "Standard_DS4_v2",
+    "autoscale": {
+      "min_workers": 2,
+      "max_workers": 8
+    },
+    "enable_photon": true,
+    "spark_version": "14.3.x-photon-scala2.12",
+    "runtime_engine": "PHOTON"
+  },
+  "rationale": {
+    "profile": "medium profile selected for 11 mappings with 6 complex/custom",
+    "photon": "Photon enabled — aggregations/joins detected",
+    "autoscale": "2-8 workers for ETL-heavy workload"
+  }
+}

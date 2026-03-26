@@ -518,3 +518,286 @@ class TestPipelineDispatch:
         with mock.patch.dict(os.environ, {}, clear=True):
             os.environ.pop("INFORMATICA_MIGRATION_TARGET", None)
             assert _get_target() == "fabric"
+
+
+# ═══════════════════════════════════════════════
+#  11. Databricks Deployment Script
+# ═══════════════════════════════════════════════
+
+class TestDeployToDatabricks:
+    """Test deploy_to_databricks.py functions."""
+
+    def test_module_imports(self):
+        import deploy_to_databricks
+        assert hasattr(deploy_to_databricks, "deploy_notebooks")
+        assert hasattr(deploy_to_databricks, "deploy_workflows")
+        assert hasattr(deploy_to_databricks, "deploy_sql_scripts")
+        assert hasattr(deploy_to_databricks, "setup_secret_scope")
+        assert hasattr(deploy_to_databricks, "generate_uc_permissions")
+        assert hasattr(deploy_to_databricks, "recommend_cluster_config")
+
+    def test_headers(self):
+        from deploy_to_databricks import _headers
+        h = _headers("dapi_test_token_123")
+        assert h["Authorization"] == "Bearer dapi_test_token_123"
+        assert h["Content-Type"] == "application/json"
+
+    def test_deploy_notebooks_dry_run(self):
+        from deploy_to_databricks import deploy_notebooks
+        results = deploy_notebooks("https://adb-test.azuredatabricks.net", "fake-token",
+                                   notebook_path="/Shared/test", dry_run=True)
+        assert len(results) > 0
+        for r in results:
+            assert r["status"] == "dry-run"
+            assert r["type"] == "Notebook"
+            assert "/Shared/test/" in r["path"]
+
+    def test_deploy_workflows_dry_run(self):
+        from deploy_to_databricks import deploy_workflows
+        results = deploy_workflows("https://adb-test.azuredatabricks.net", "fake-token", dry_run=True)
+        assert len(results) > 0
+        for r in results:
+            assert r["status"] == "dry-run"
+            assert r["type"] == "Job"
+
+    def test_deploy_sql_scripts_dry_run(self):
+        from deploy_to_databricks import deploy_sql_scripts
+        results = deploy_sql_scripts("https://adb-test.azuredatabricks.net", "fake-token",
+                                     notebook_path="/Shared/test/sql", dry_run=True)
+        assert len(results) > 0
+        for r in results:
+            assert r["status"] == "dry-run"
+            assert r["type"] == "SQL Notebook"
+
+    def test_deploy_notebooks_count_matches_files(self):
+        from deploy_to_databricks import deploy_notebooks, OUTPUT_DIR
+        nb_files = list((OUTPUT_DIR / "notebooks").glob("NB_*.py"))
+        results = deploy_notebooks("https://adb-test.azuredatabricks.net", "t", dry_run=True)
+        assert len(results) == len(nb_files)
+
+    def test_deploy_workflows_count_matches_files(self):
+        from deploy_to_databricks import deploy_workflows, OUTPUT_DIR
+        pl_files = list((OUTPUT_DIR / "pipelines").glob("PL_*.json"))
+        results = deploy_workflows("https://adb-test.azuredatabricks.net", "t", dry_run=True)
+        assert len(results) == len(pl_files)
+
+    def test_deploy_sql_scripts_count_matches_files(self):
+        from deploy_to_databricks import deploy_sql_scripts, OUTPUT_DIR
+        sql_files = list((OUTPUT_DIR / "sql").glob("SQL_*.sql"))
+        results = deploy_sql_scripts("https://adb-test.azuredatabricks.net", "t", dry_run=True)
+        assert len(results) == len(sql_files)
+
+    def test_setup_secret_scope_dry_run(self):
+        from deploy_to_databricks import setup_secret_scope
+        results = setup_secret_scope("https://adb-test.azuredatabricks.net", "fake-token",
+                                     "test-scope", {"key1": "val1", "key2": "val2"}, dry_run=True)
+        assert len(results) == 1
+        assert results[0]["status"] == "dry-run"
+        assert results[0]["count"] == 2
+
+    def test_setup_secret_scope_empty_secrets(self):
+        from deploy_to_databricks import setup_secret_scope
+        results = setup_secret_scope("https://adb-test.azuredatabricks.net", "t",
+                                     "empty-scope", {}, dry_run=True)
+        assert results[0]["count"] == 0
+
+    def test_notebook_path_default(self):
+        from deploy_to_databricks import deploy_notebooks
+        results = deploy_notebooks("https://adb-test.azuredatabricks.net", "t", dry_run=True)
+        for r in results:
+            assert r["path"].startswith("/Shared/migration/")
+
+    def test_notebook_path_custom(self):
+        from deploy_to_databricks import deploy_notebooks
+        results = deploy_notebooks("https://adb-test.azuredatabricks.net", "t",
+                                   notebook_path="/Users/me/project", dry_run=True)
+        for r in results:
+            assert r["path"].startswith("/Users/me/project/")
+
+
+# ═══════════════════════════════════════════════
+#  12. Unity Catalog Permissions
+# ═══════════════════════════════════════════════
+
+class TestUCPermissions:
+    """Test Unity Catalog GRANT statement generation."""
+
+    def test_generate_uc_permissions_basic(self):
+        from deploy_to_databricks import generate_uc_permissions, OUTPUT_DIR
+        sql = generate_uc_permissions(catalog="test_catalog")
+        assert "test_catalog" in sql
+        assert "GRANT USE CATALOG" in sql
+        assert "GRANT USE SCHEMA" in sql
+        assert "GRANT SELECT" in sql
+        assert "GRANT MODIFY" in sql
+
+    def test_generate_uc_permissions_file_written(self):
+        from deploy_to_databricks import generate_uc_permissions, OUTPUT_DIR
+        generate_uc_permissions(catalog="main")
+        out_path = OUTPUT_DIR / "scripts" / "uc_permissions.sql"
+        assert out_path.exists()
+        content = out_path.read_text(encoding="utf-8")
+        assert "GRANT" in content
+
+    def test_generate_uc_permissions_schemas(self):
+        from deploy_to_databricks import generate_uc_permissions
+        sql = generate_uc_permissions(catalog="analytics")
+        # Should have silver and/or gold schemas
+        assert "silver" in sql or "gold" in sql
+
+    def test_generate_uc_permissions_data_engineers(self):
+        from deploy_to_databricks import generate_uc_permissions
+        sql = generate_uc_permissions(catalog="main")
+        assert "data-engineers" in sql
+
+    def test_generate_uc_permissions_data_analysts(self):
+        from deploy_to_databricks import generate_uc_permissions
+        sql = generate_uc_permissions(catalog="main")
+        assert "data-analysts" in sql
+
+    def test_generate_uc_permissions_function_grants(self):
+        from deploy_to_databricks import generate_uc_permissions
+        sql = generate_uc_permissions(catalog="main")
+        assert "EXECUTE ON ALL FUNCTIONS" in sql
+
+    def test_generate_uc_permissions_missing_inventory(self):
+        from deploy_to_databricks import generate_uc_permissions
+        fake_path = Path("/nonexistent/inventory.json")
+        sql = generate_uc_permissions(inventory_path=fake_path)
+        assert sql == ""
+
+
+# ═══════════════════════════════════════════════
+#  13. Cluster Configuration Recommender
+# ═══════════════════════════════════════════════
+
+class TestClusterConfigRecommender:
+    """Test cluster config recommendation based on inventory."""
+
+    def test_recommend_cluster_basic(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        assert "profile" in config
+        assert "recommendation" in config
+        assert "rationale" in config
+
+    def test_recommend_cluster_has_node_types(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        rec = config["recommendation"]
+        assert "driver_node_type" in rec
+        assert "worker_node_type" in rec
+        assert "autoscale" in rec
+        assert "min_workers" in rec["autoscale"]
+        assert "max_workers" in rec["autoscale"]
+
+    def test_recommend_cluster_has_photon(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        rec = config["recommendation"]
+        assert "enable_photon" in rec
+        assert isinstance(rec["enable_photon"], bool)
+
+    def test_recommend_cluster_has_spark_version(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        rec = config["recommendation"]
+        assert "spark_version" in rec
+        assert "14.3" in rec["spark_version"]
+
+    def test_recommend_cluster_file_written(self):
+        from deploy_to_databricks import recommend_cluster_config, OUTPUT_DIR
+        recommend_cluster_config()
+        out_path = OUTPUT_DIR / "inventory" / "cluster_config.json"
+        assert out_path.exists()
+        data = json.loads(out_path.read_text(encoding="utf-8"))
+        assert data["profile"] in ("small", "medium", "large")
+
+    def test_recommend_cluster_complexity_breakdown(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        assert "complexity_breakdown" in config
+        assert "total_mappings" in config
+
+    def test_recommend_cluster_missing_inventory(self):
+        from deploy_to_databricks import recommend_cluster_config
+        fake_path = Path("/nonexistent/inventory.json")
+        config = recommend_cluster_config(inventory_path=fake_path)
+        assert "error" in config
+
+    def test_recommend_cluster_rationale(self):
+        from deploy_to_databricks import recommend_cluster_config
+        config = recommend_cluster_config()
+        rationale = config["rationale"]
+        assert "profile" in rationale
+        assert "photon" in rationale
+        assert "autoscale" in rationale
+
+
+# ═══════════════════════════════════════════════
+#  14. Databricks Notebook Content Deep Checks
+# ═══════════════════════════════════════════════
+
+class TestDatabricksNotebookContent:
+    """Deep content validation of generated Databricks notebooks."""
+
+    def test_audit_cell_databricks(self):
+        from run_notebook_migration import _audit_cell
+        with mock.patch.dict(os.environ, {"INFORMATICA_MIGRATION_TARGET": "databricks"}):
+            cell = _audit_cell(_make_mapping("M_TEST"), 5)
+            assert "Cell 5" in cell or "M_TEST" in cell
+
+    def test_full_notebook_databricks_no_notebookutils(self):
+        from run_notebook_migration import generate_notebook
+        mapping = _make_mapping("M_DB_TEST")
+        with mock.patch.dict(os.environ, {"INFORMATICA_MIGRATION_TARGET": "databricks", "INFORMATICA_DATABRICKS_CATALOG": "main"}):
+            cells = generate_notebook(mapping)
+            full = "\n".join(cells)
+            assert "notebookutils" not in full
+
+    def test_full_notebook_fabric_no_dbutils(self):
+        from run_notebook_migration import generate_notebook
+        mapping = _make_mapping("M_FB_TEST")
+        with mock.patch.dict(os.environ, {"INFORMATICA_MIGRATION_TARGET": "fabric"}):
+            cells = generate_notebook(mapping)
+            full = "\n".join(cells)
+            assert "dbutils.widgets" not in full
+            assert "dbutils.secrets" not in full
+
+
+# ═══════════════════════════════════════════════
+#  15. Databricks Workflow Edge Cases
+# ═══════════════════════════════════════════════
+
+class TestDatabricksWorkflowEdgeCases:
+    """Additional edge case tests for Databricks workflow generation."""
+
+    def test_single_session_workflow(self):
+        from run_pipeline_migration import generate_databricks_workflow
+        wf = {
+            "name": "WF_SINGLE",
+            "sessions": ["S_ONLY"],
+            "session_to_mapping": {"S_ONLY": "M_ONLY"},
+            "dependencies": {"S_ONLY": ["Start"]},
+            "schedule": "",
+            "schedule_cron": {},
+        }
+        mappings = {"M_ONLY": _make_mapping("M_ONLY")}
+        job = generate_databricks_workflow(wf, mappings)
+        assert len(job["tasks"]) == 1
+        assert "schedule" not in job
+
+    def test_workflow_name_prefix(self):
+        from run_pipeline_migration import generate_databricks_workflow
+        wf = _make_workflow("WF_NIGHTLY_BATCH")
+        mappings = {"M_LOAD_A": _make_mapping("M_LOAD_A"), "M_LOAD_B": _make_mapping("M_LOAD_B")}
+        job = generate_databricks_workflow(wf, mappings)
+        assert job["name"].startswith("PL_")
+
+    def test_workflow_task_keys_unique(self):
+        from run_pipeline_migration import generate_databricks_workflow
+        wf = _make_workflow()
+        mappings = {"M_LOAD_A": _make_mapping("M_LOAD_A"), "M_LOAD_B": _make_mapping("M_LOAD_B")}
+        job = generate_databricks_workflow(wf, mappings)
+        keys = [t["task_key"] for t in job["tasks"]]
+        assert len(keys) == len(set(keys))
