@@ -1,17 +1,18 @@
-# Multi-Agent Architecture — Informatica to Fabric Migration
+# Multi-Agent Architecture — Informatica to Fabric / Databricks Migration
 
 <p align="center">
   <img src="https://img.shields.io/badge/agents-6-0078D4?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/Informatica-FF4500?style=for-the-badge&logo=informatica&logoColor=white" alt="Informatica"/>
   <img src="https://img.shields.io/badge/%E2%86%92-gray?style=for-the-badge" alt="arrow"/>
   <img src="https://img.shields.io/badge/Microsoft%20Fabric-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Fabric"/>
+  <img src="https://img.shields.io/badge/Azure%20Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white" alt="Databricks"/>
 </p>
 
 ## Overview
 
-This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
+This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 30 sprints complete — 588 tests, full PowerCenter + IICS support, CLI tool (`informatica-to-fabric`), session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, and audit logging.
+**Current state:** 40 sprints complete (Phase 1 + Phase 2) — 747 tests, dual-target support (Microsoft Fabric + Azure Databricks), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
 
 ---
 
@@ -86,8 +87,8 @@ flowchart TB
 |-------|-------------|------|---------|
 | **🎯 @migration-orchestrator** | `@migration-orchestrator start migration` | Migration plan, wave scheduling, progress | `output/migration_summary.md` |
 | **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), inventory, complexity, DAG, session config, scheduler | `output/inventory/` |
-| **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook generation | `output/notebooks/NB_*.py` |
-| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Pipeline JSON (+ schedule triggers) | `output/pipelines/PL_*.json` |
+| **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook generation (Fabric `notebookutils` or Databricks `dbutils`) | `output/notebooks/NB_*.py` |
+| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Fabric Pipeline JSON or Databricks Workflow JSON | `output/pipelines/PL_*.json` |
 | **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle/SQL Server → Spark SQL / T-SQL (+ GTT, MV, DB link detection) | `output/sql/SQL_*.sql` |
 | **✅ @validation** | `@validation generate tests for Silver tables` | Test scripts, row counts, checksums, diffs | `output/validation/VAL_*.py` |
 
@@ -117,7 +118,7 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Converts Informatica mappings into Fabric Notebooks (PySpark) |
+| **Role** | Converts Informatica mappings into Fabric Notebooks or Databricks Notebooks (PySpark) — target-aware via `--target` flag |
 | **Inputs** | Mapping metadata from assessment, transformation rules, converted SQL |
 | **Outputs** | Fabric Notebook `.py` files with PySpark transformation logic |
 | **File** | [.github/agents/notebook-migration.agent.md](.github/agents/notebook-migration.agent.md) |
@@ -126,7 +127,7 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Converts Informatica workflows and IICS taskflows into Fabric Data Pipeline JSON definitions (including schedule triggers) |
+| **Role** | Converts Informatica workflows and IICS taskflows into Fabric Data Pipeline JSON or Databricks Workflow (Jobs API) JSON definitions (including schedule triggers) |
 | **Inputs** | Workflow metadata from assessment, notebook references |
 | **Outputs** | Fabric Data Pipeline JSON definitions with dependency chains |
 | **File** | [.github/agents/pipeline-migration.agent.md](.github/agents/pipeline-migration.agent.md) |
@@ -338,19 +339,25 @@ InformaticaToDBFabric/
 │   ├── sql/                             #   🗄️ Converted SQL
 │   └── validation/                      #   ✅ Test scripts
 ├── templates/                           # 📋 Reusable templates
-│   ├── notebook_template.py
-│   ├── pipeline_template.json
+│   ├── notebook_template.py             #   Fabric notebook template
+│   ├── notebook_template_databricks.py  #   Databricks notebook template
+│   ├── pipeline_template.json           #   Fabric pipeline template
+│   ├── pipeline_template_databricks.json #  Databricks workflow template
 │   └── validation_template.py
-├── tests/                               # 🧪 588 tests
+├── tests/                               # 🧪 747 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests
 │   ├── test_e2e.py                      #   End-to-end integration tests
 │   ├── test_iics.py                     #   IICS-specific tests
-│   └── test_gaps.py                     #   Gap remediation tests
+│   ├── test_gaps.py                     #   Gap remediation tests
+│   ├── test_sprint25.py                 #   Lineage & scoring tests
+│   ├── test_sprint26_30.py              #   Templates, schema, waves, validation, production
+│   ├── test_sprint31_40.py              #   Phase 2 tests (object gaps, PL/SQL, multi-tenant, DQ)
+│   └── test_databricks_target.py        #   Azure Databricks target tests
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
-├── DEVELOPMENT_PLAN.md                  # 📝 21-sprint dev plan + 3 planned
+├── DEVELOPMENT_PLAN.md                  # 📝 50-sprint dev plan (Phase 1-3)
 ├── GAP_ANALYSIS.md                      # 📊 Gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Migration strategy
 ├── README.md                            # 📖 Project overview
@@ -390,6 +397,13 @@ informatica-to-fabric run --config migration.yaml
 
 1. **Review outputs** in the `output/` folder
 2. **Deploy** using Fabric Git integration, manual upload, or Fabric REST API
+
+### Deploy to Azure Databricks
+
+1. **Review outputs** in the `output/` folder
+2. **Import notebooks** via Databricks CLI: `databricks workspace import`
+3. **Create jobs** from workflow JSON via Databricks Jobs API
+4. **Or** use Databricks Repos to link a Git repo with the generated artifacts
 
 ---
 

@@ -105,6 +105,9 @@ ORACLE_PATTERNS = {
     "GLOBAL TEMPORARY TABLE": r"\bGLOBAL\s+TEMPORARY\s+TABLE\b",
     "MATERIALIZED VIEW": r"\bMATERIALIZED\s+VIEW\b",
     "DB_LINK": r"@\w+",
+    # Sprint 31: Oracle Object Types
+    "CREATE TYPE": r"\bCREATE\s+(?:OR\s+REPLACE\s+)?TYPE\b",
+    "OBJECT TYPE": r"\bAS\s+OBJECT\b",
 }
 
 # SQL Server-specific patterns (Sprint 7.3)
@@ -189,6 +192,88 @@ POSTGRESQL_PATTERNS = {
     "GENERATE_SERIES": r"\bGENERATE_SERIES\s*\(",
     "PG_CATALOG": r"\bPG_CATALOG\b",
 }
+
+# Sprint 39: PII detection patterns (column/field name heuristics)
+PII_COLUMN_PATTERNS = {
+    "SSN": r"(?i)\b(ssn|social_security|soc_sec)\b",
+    "EMAIL": r"(?i)\b(email|e_mail|email_addr)\b",
+    "PHONE": r"(?i)\b(phone|mobile|cell|fax|tel)\b",
+    "ADDRESS": r"(?i)\b(address|addr|street|city|zip|postal)\b",
+    "NAME": r"(?i)\b(first_name|last_name|full_name|fname|lname|surname)\b",
+    "DOB": r"(?i)\b(dob|date_of_birth|birth_date|birthdate)\b",
+    "CREDIT_CARD": r"(?i)\b(credit_card|card_num|cc_num|card_number)\b",
+    "PASSPORT": r"(?i)\b(passport|passport_no|passport_num)\b",
+    "IP_ADDRESS": r"(?i)\b(ip_addr|ip_address|client_ip|source_ip)\b",
+    "NATIONAL_ID": r"(?i)\b(national_id|id_number|citizen_id|tax_id|tin)\b",
+}
+
+# Sprint 39: Sensitivity classification levels
+SENSITIVITY_LEVELS = {
+    "SSN": "Highly Confidential",
+    "CREDIT_CARD": "Highly Confidential",
+    "PASSPORT": "Highly Confidential",
+    "NATIONAL_ID": "Highly Confidential",
+    "DOB": "Confidential",
+    "EMAIL": "Confidential",
+    "PHONE": "Confidential",
+    "NAME": "Internal",
+    "ADDRESS": "Internal",
+    "IP_ADDRESS": "Internal",
+}
+
+
+def detect_pii_columns(mappings):
+    """Scan mapping field names for PII patterns. Returns list of PII findings."""
+    pii_findings = []
+    compiled = {cat: re.compile(pat) for cat, pat in PII_COLUMN_PATTERNS.items()}
+    for m in mappings:
+        # Check sources, targets, and field-level lineage
+        all_fields = []
+        all_fields.extend(m.get("sources", []))
+        all_fields.extend(m.get("targets", []))
+        for lineage in m.get("field_lineage", []):
+            all_fields.append(lineage.get("source_field", ""))
+            all_fields.append(lineage.get("target_field", ""))
+
+        for field in all_fields:
+            for category, pattern in compiled.items():
+                if pattern.search(field):
+                    pii_findings.append({
+                        "mapping": m["name"],
+                        "field": field,
+                        "pii_category": category,
+                        "sensitivity": SENSITIVITY_LEVELS.get(category, "Internal"),
+                    })
+    return pii_findings
+
+
+def extract_dq_rules(mappings):
+    """Extract data quality rules from filter, expression, and DQ transformations."""
+    dq_rules = []
+    for m in mappings:
+        for tx in m.get("transformations", []):
+            if tx in ("FIL", "DQ"):
+                dq_rules.append({
+                    "mapping": m["name"],
+                    "type": "filter" if tx == "FIL" else "data_quality",
+                    "description": f"{tx} transformation in {m['name']}",
+                })
+        # Check for NOT NULL / CHECK constraints in SQL overrides
+        for ovr in m.get("sql_overrides", []):
+            sql = ovr.get("value", "")
+            if re.search(r"\bIS\s+NOT\s+NULL\b", sql, re.IGNORECASE):
+                dq_rules.append({
+                    "mapping": m["name"],
+                    "type": "not_null_check",
+                    "description": f"NOT NULL constraint in SQL override",
+                })
+            if re.search(r"\bCHECK\s*\(", sql, re.IGNORECASE):
+                dq_rules.append({
+                    "mapping": m["name"],
+                    "type": "check_constraint",
+                    "description": f"CHECK constraint in SQL override",
+                })
+    return dq_rules
 
 # Warnings and issues collectors
 warnings = []
@@ -2525,6 +2610,26 @@ def main():
     # Sprint 28: Wave planner
     wave_data = generate_wave_plan(all_mappings, all_workflows)
     write_wave_plan(wave_data)
+
+    # Sprint 39: PII detection & DQ rule extraction
+    pii_findings = detect_pii_columns(all_mappings)
+    dq_rules = extract_dq_rules(all_mappings)
+    inventory["pii_findings"] = pii_findings
+    inventory["dq_rules"] = dq_rules
+    inventory["summary"]["total_pii_findings"] = len(pii_findings)
+    inventory["summary"]["total_dq_rules"] = len(dq_rules)
+    # Re-write inventory with PII/DQ data
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(inventory, f, indent=2, ensure_ascii=False)
+    if pii_findings:
+        print(f"  PII columns detected: {len(pii_findings)}")
+        categories = {}
+        for p in pii_findings:
+            categories[p["pii_category"]] = categories.get(p["pii_category"], 0) + 1
+        for cat, cnt in sorted(categories.items()):
+            print(f"    {cat}: {cnt}")
+    if dq_rules:
+        print(f"  DQ rules extracted: {len(dq_rules)}")
 
     print()
 

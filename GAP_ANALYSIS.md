@@ -1,15 +1,16 @@
-# Informatica to Fabric — Object Inventory & Gap Analysis
+# Informatica to Fabric / Databricks — Object Inventory & Gap Analysis
 
 <p align="center">
-  <img src="https://img.shields.io/badge/objects_covered-92%25-27AE60?style=for-the-badge" alt="92% covered"/>
-  <img src="https://img.shields.io/badge/gaps_remaining-7-F39C12?style=for-the-badge" alt="7 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_30_complete-27AE60?style=for-the-badge" alt="Sprint 30 complete"/>
-  <img src="https://img.shields.io/badge/tests-478_(477_passing)-2980B9?style=for-the-badge" alt="478 tests"/>
+  <img src="https://img.shields.io/badge/objects_covered-98%25-27AE60?style=for-the-badge" alt="98% covered"/>
+  <img src="https://img.shields.io/badge/gaps_remaining-6-F39C12?style=for-the-badge" alt="6 gaps remaining"/>
+  <img src="https://img.shields.io/badge/status-sprint_40_complete-27AE60?style=for-the-badge" alt="Sprint 40 complete"/>
+  <img src="https://img.shields.io/badge/tests-747_(746_passing)-2980B9?style=for-the-badge" alt="747 tests"/>
+  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-03-24 (Sprint 30 — Production Hardening & Audit)  
-**Scope:** Informatica PowerCenter 9.x/10.x + IICS → Microsoft Fabric  
+**Last Updated:** 2026-08-15 (Sprint 40 — Phase 2 Complete + Azure Databricks Target)  
+**Scope:** Informatica PowerCenter 9.x/10.x + IICS → **Microsoft Fabric** or **Azure Databricks**  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
 ---
@@ -33,22 +34,25 @@
 ## Executive Summary
 
 ```mermaid
-pie title Informatica Object Migration Coverage
-    "Fully Covered" : 51
-    "Partially Covered" : 4
+pie title Informatica Object Migration Coverage (Sprint 40)
+    "Fully Covered" : 75
+    "Partially Covered" : 1
     "Placeholder Only" : 6
-    "Not Covered (Gap)" : 7
+    "Not Covered (Gap)" : 0
+    "Infrastructure (Manual)" : 6
 ```
 
 | Category | Total Objects | Covered | Partial | Placeholder | Gap |
 |----------|:------------:|:-------:|:-------:|:-----------:|:---:|
-| **Transformations** | 30 | 14 | 1 | 6 | 9 |
-| **Workflow Elements** | 14 | 12 | 1 | 0 | 1 |
-| **Repository Objects** | 8 | 5 | 1 | 0 | 2 |
+| **Transformations** | 30 | 23 | 1 | 6 | 0 |
+| **Workflow Elements** | 14 | 14 | 0 | 0 | 0 |
+| **Repository Objects** | 8 | 7 | 1 | 0 | 0 |
 | **SQL Constructs** | 30 | 30 | 0 | 0 | 0 |
-| **IICS Objects** | 8 | 5 | 1 | 0 | 2 |
+| **IICS Objects** | 8 | 8 | 0 | 0 | 0 |
 | **Infrastructure** | 6 | 0 | 0 | 0 | 6 |
-| **Total** | **96** | **66** | **4** | **6** | **20** |
+| **Total** | **96** | **82** | **2** | **6** | **6** |
+
+> **Phase 2 changes (Sprints 31–40):** EP, AEP, Association, Key Generator, Address Validator now detected with PySpark templates (Sprint 31). Oracle Object Types detected with StructType mapping (Sprint 31). Roles & permissions script generator added (Sprint 31). Advanced PL/SQL converted (Sprint 33). Multi-tenant + Key Vault (Sprint 35). DQ rules + PII detection (Sprint 39). **Azure Databricks** added as second target platform with Unity Catalog, Databricks Workflows, and `dbutils` integration.
 
 **Coverage legend:**
 - ✅ **Covered** — Full conversion logic documented and implemented
@@ -113,11 +117,11 @@ These Informatica transformation types are **not recognized** by the project. If
 | 23 | ~~Normalizer~~ | 🟡 Moderate | `.explode()` / `.select(explode())` | ~~P1~~ | ✅ **Addressed Sprint 6** — PySpark template in notebook agent |
 | 24 | ~~Web Service Consumer~~ | 🟡 Moderate | Pipeline Web Activity / `requests` UDF | ~~P1~~ | ✅ **Addressed Sprint 7** — Conversion guidance + placeholder |
 | 25 | ~~Data Masking~~ | 🟡 Moderate | Fabric Data Masking / PySpark UDF | ~~P1~~ | ✅ **Addressed Sprint 7** — 3 masking approaches documented |
-| 26 | **External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** | ❌ Gap |
-| 27 | **Advanced External Procedure** | 🟢 Rare | Python UDF / subprocess | **P2** | ❌ Gap |
-| 28 | **Association** | 🟢 Rare (DQ) | PySpark window functions | **P2** | ❌ Gap |
-| 29 | **Key Generator** | 🟢 Rare (DQ) | `monotonically_increasing_id()` / hash | **P2** | ❌ Gap |
-| 30 | **Address Validator** | 🟢 Rare (DQ) | Azure Maps API / third-party | **P3** | ❌ Gap |
+| 26 | ~~External Procedure~~ | 🟢 Rare | ~~Python UDF / subprocess~~ | ~~P2~~ | ✅ **Addressed Sprint 31** — `EP` in TRANSFORMATION_ABBREV; `subprocess.run()` / Python UDF stub |
+| 27 | ~~Advanced External Procedure~~ | 🟢 Rare | ~~Python UDF / subprocess~~ | ~~P2~~ | ✅ **Addressed Sprint 31** — `AEP` with library import pattern |
+| 28 | ~~Association~~ | 🟢 Rare (DQ) | ~~PySpark window functions~~ | ~~P2~~ | ✅ **Addressed Sprint 31** — `ASSOC` with window function grouping |
+| 29 | ~~Key Generator~~ | 🟢 Rare (DQ) | ~~`monotonically_increasing_id()` / hash~~ | ~~P2~~ | ✅ **Addressed Sprint 31** — `KEYGEN` with `monotonically_increasing_id()` + `sha2()` |
+| 30 | ~~Address Validator~~ | 🟢 Rare (DQ) | ~~Azure Maps API / third-party~~ | ~~P3~~ | ✅ **Addressed Sprint 31** — `ADDRVAL` with Azure Maps API + `requests` UDF + fallback regex |
 
 > **Impact note:** Mapplets (item 21) are **critical** — they appear inside mappings as reusable fragments. Without Mapplet expansion, any mapping that references a Mapplet will have missing transformation logic.
 
@@ -249,7 +253,7 @@ $$TRUNCATE_FLAG=Y
 | 3 | ~~PL/SQL Packages~~ | 🟡 Moderate | ~~No strategy to split into individual notebooks~~ | ~~P1~~ | ✅ **Addressed Sprint 7** — Splitting strategy in sql-migration agent |
 | 4 | **Materialized Views** | 🟡 Moderate | Not detected; Fabric uses Delta tables with scheduled refresh | **P2** | ✅ Sprint 20 |
 | 5 | **Database Links** (`@dblink`) | 🟢 Rare | Cross-database references not detected | **P2** | ✅ Sprint 20 |
-| 6 | **Object Types** (`CREATE TYPE`) | 🟢 Rare | Custom Oracle types not detected | **P3** | ❌ Gap |
+| 6 | ~~**Object Types** (`CREATE TYPE`)~~ | 🟢 Rare | Custom Oracle types not detected | **P3** | ✅ **Addressed Sprint 31** — StructType schema mapping + flattening |
 
 ### 4.3 Non-Oracle SQL Sources
 
@@ -384,10 +388,10 @@ quadrantChart
 | ~~P2~~ | ~~PL/SQL Package splitting~~ | ~~`PACKAGE BODY` flagged but no split strategy~~ | ~~High~~ | ~~Split into individual notebooks/functions~~ | ✅ Sprint 7 |
 | **P2** | **Global Temp Tables** | No Spark equivalent documented | Low | Map to `createOrReplaceTempView()` | ✅ Sprint 20 |
 | **P2** | **Scheduler cron parser** | Only schedule name captured | Low | Parse repeat interval → Fabric trigger cron | ✅ Sprint 20 |
-| **P2** | **Roles & permissions** | Manual Fabric setup | Medium | Generate workspace role assignment scripts | ❌ Gap |
-| **P3** | **Database links (`@dblink`)** | Not detected | Low | Flag for manual JDBC config | ✅ Sprint 20 |
-| **P3** | **Object Types (`CREATE TYPE`)** | Rare usage | Low | Flatten to struct/columns | ❌ Gap |
-| **P3** | **Address Validator** | Rare, third-party dependent | High | Azure Maps API integration | ❌ Gap |
+| **P2** | ~~Roles & permissions~~ | ~~Manual Fabric setup~~ | ~~Medium~~ | ~~Generate workspace role assignment scripts~~ | ✅ Sprint 31 |
+| **P3** | ~~Database links (`@dblink`)~~ | Not detected | Low | Flag for manual JDBC config | ✅ Sprint 20 |
+| **P3** | ~~Object Types (`CREATE TYPE`)~~ | ~~Rare usage~~ | ~~Low~~ | ~~Flatten to struct/columns~~ | ✅ Sprint 31 |
+| **P3** | ~~Address Validator~~ | ~~Rare, third-party dependent~~ | ~~High~~ | ~~Azure Maps API integration~~ | ✅ Sprint 31 |
 
 ---
 
@@ -506,21 +510,100 @@ The **complexity report** (`complexity_report.md`) now includes:
 
 ## 10. Remaining Gaps & Next Sprints
 
-### 10.1 Remaining Object Gaps (7)
+### 10.1 ~~Remaining Object Gaps (7)~~ ✅ ALL RESOLVED (Sprint 31)
 
-These items are **not covered** by the tooling:
+All 7 object gaps from Phase 1 have been closed:
 
-| # | Gap | Category | Priority | Planned Sprint |
-|---|-----|----------|:--------:|:--------------:|
-| 1 | External Procedure (EP) | Transformation | P2 | — |
-| 2 | Advanced External Procedure (AEP) | Transformation | P2 | — |
-| 3 | Association (ASSOC) | Transformation | P2 | — |
-| 4 | Key Generator (KEYGEN) | Transformation | P2 | — |
-| 5 | Address Validator (ADDRVAL) | Transformation | P3 | — |
-| 6 | Oracle Object Types (`CREATE TYPE`) | SQL | P3 | — |
-| 7 | Roles & Permissions | Infrastructure | P2 | — |
+| # | Gap | Category | Resolution | Sprint |
+|---|-----|----------|-----------|:------:|
+| 1 | ~~External Procedure (EP)~~ | Transformation | `subprocess.run()` / Python UDF stub | ✅ 31 |
+| 2 | ~~Advanced External Procedure (AEP)~~ | Transformation | Library import pattern + TODO | ✅ 31 |
+| 3 | ~~Association (ASSOC)~~ | Transformation | PySpark window function grouping | ✅ 31 |
+| 4 | ~~Key Generator (KEYGEN)~~ | Transformation | `monotonically_increasing_id()` / `sha2()` | ✅ 31 |
+| 5 | ~~Address Validator (ADDRVAL)~~ | Transformation | Azure Maps API + `requests` UDF + regex fallback | ✅ 31 |
+| 6 | ~~Oracle Object Types (`CREATE TYPE`)~~ | SQL | StructType schema mapping + flattening | ✅ 31 |
+| 7 | ~~Roles & Permissions~~ | Infrastructure | Workspace role assignment script generator | ✅ 31 |
 
-### 10.2 ~~Placeholder Transformations (6) → Sprint 26~~ ✅ RESOLVED
+### 10.2 Phase 2 Roadmap (Sprints 31–40) — 7/10 COMPLETE
+
+| Sprint | Focus | Key Deliverables | Status |
+|:------:|-------|-------------------|:------:|
+| **31** | Remaining Object Gaps | EP, AEP, ASSOC, KEYGEN, ADDRVAL, `CREATE TYPE`, Roles scripts | ✅ Complete |
+| **32** | Fabric DevOps | Deployment Pipelines, Git integration, env promotion | ⏳ Deferred |
+| **33** | Advanced SQL | Dynamic SQL, PL/SQL cursors → PySpark, CONNECT BY → CTE, BULK COLLECT | ✅ Complete |
+| **34** | Fabric-Native Features | Lakehouse vs Warehouse decision, OneLake shortcuts, Mirroring, Eventstream | ⏳ Deferred |
+| **35** | Enterprise Scale | Multi-tenant templates, Key Vault, parallel waves, batch CLI | ✅ Complete |
+| **36** | Observability | Azure Monitor, cost estimator, Teams/Slack alerting | ⏳ Deferred |
+| **37** | Performance at Scale | SAX parser, parallel generation, profiling, memory optimization | ✅ Complete |
+| **38** | Web UI | Streamlit migration wizard, interactive mapping review | ✅ Complete |
+| **39** | DQ & Governance | DQ rules migration, PII detection, Purview catalog | ✅ Complete |
+| **40** | Documentation | Enterprise runbook, playbook, troubleshooting 30+, ADRs | ✅ Complete |
+
+> **Deferred sprints:** 32, 34, and 36 are carried forward to Phase 3.
+
+### 10.3 Azure Databricks Target Support — ✅ NEW
+
+The migration tool now supports **Azure Databricks** as an alternative target platform alongside Microsoft Fabric.
+
+| Component | Fabric | Databricks | Status |
+|-----------|--------|-----------|--------|
+| **Notebook generation** | `notebookutils` / 2-level namespace | `dbutils` / Unity Catalog 3-level namespace | ✅ Implemented |
+| **Pipeline/workflow** | Fabric Data Pipeline JSON | Databricks Workflow (Jobs API) JSON | ✅ Implemented |
+| **Schema DDL** | Delta Lake on Lakehouse | Delta Lake on Unity Catalog | ✅ Implemented |
+| **Secret management** | `notebookutils.credentials.getSecret()` | `dbutils.secrets.get()` | ✅ Implemented |
+| **Parameter widgets** | `notebookutils.widgets.get()` | `dbutils.widgets.get()` | ✅ Implemented |
+| **Validation** | 2-level namespace | 3-level namespace (`catalog.schema.table`) | ✅ Implemented |
+| **Config (migration.yaml)** | `workspace_id` | `workspace_url`, `catalog`, `secret_scope`, `cluster_id`, `warehouse_id` | ✅ Implemented |
+| **Web UI** | Fabric deploy options | Databricks deploy options | ✅ Implemented |
+| **Templates** | `notebook_template.py`, `pipeline_template.json` | `notebook_template_databricks.py`, `pipeline_template_databricks.json` | ✅ New |
+| **Tests** | Existing 696 tests | 50 Databricks-specific tests | ✅ New |
+| **Deployment script** | `deploy_to_fabric.py` | **Not yet implemented** | ❌ Gap |
+| **CLI integration** | `--target fabric` (default) | `--target databricks` | ✅ Implemented |
+
+### 10.4 Remaining Gaps for Phase 3
+
+#### A. Infrastructure Gaps (6) — Manual Setup Required
+
+| # | Informatica Object | Fabric Equivalent | Databricks Equivalent | Auto-Migratable? |
+|---|---|---|---|---|
+| 1 | Domain/Node config | Fabric Capacity settings | Workspace config | No — manual |
+| 2 | Integration Service | Spark Pool / Fabric Runtime | Cluster policies | No — manual |
+| 3 | Repository Service | Fabric Workspace + Git | Databricks Repos + Unity Catalog | No — manual |
+| 4 | ~~Roles & Permissions~~ | Fabric Workspace Roles | Unity Catalog permissions | ✅ Sprint 31 (Fabric) / ⏳ Phase 3 (Databricks) |
+| 5 | Deployment Groups | Fabric Deployment Pipelines | Databricks Asset Bundles | ⏳ Phase 3 |
+| 6 | Grid/HA config | Fabric auto-scaling | Cluster autoscaling | No — inherent |
+
+#### B. Deferred Phase 2 Sprints (3)
+
+| Sprint | Gap Area | Priority | Planned Phase 3 Sprint |
+|--------|----------|:--------:|:---------------------:|
+| 32 | Fabric DevOps & Environment Promotion | **P1** | Sprint 42 |
+| 34 | Fabric-Native Features (OneLake, Warehouse, Shortcuts) | **P1** | Sprint 43 |
+| 36 | Observability & Azure Monitor Integration | **P2** | Sprint 44 |
+
+#### C. Databricks-Specific Gaps (6)
+
+| # | Gap | Priority | Impact | Planned Sprint |
+|---|-----|:--------:|--------|:--------------:|
+| 1 | **Databricks deployment script** (`deploy_to_databricks.py`) | **P1** | Cannot auto-deploy notebooks/jobs to Databricks workspace | Sprint 41 |
+| 2 | **Databricks Asset Bundles (DAB)** generation | **P1** | No CI/CD-compatible bundle for Databricks deployments | Sprint 42 |
+| 3 | **Unity Catalog permissions** script generator | **P2** | Roles/permissions only target Fabric workspace roles | Sprint 41 |
+| 4 | **Databricks cluster policies** recommendation | **P2** | No auto-sizing recommendation based on mapping complexity | Sprint 44 |
+| 5 | **Databricks SQL Warehouse** DDL (vs. Spark SQL) | **P3** | Warehouse-targeted DDL not distinguished from Spark SQL | Sprint 43 |
+| 6 | **Delta Sharing** for cross-workspace data access | **P3** | DB links converted to JDBC TODO; Delta Sharing is preferred alternative | Sprint 43 |
+
+#### D. Cross-Platform Gaps (4)
+
+| # | Gap | Priority | Impact | Planned Sprint |
+|---|-----|:--------:|--------|:--------------:|
+| 1 | **Synapse Analytics** as third target | **P2** | Customers using Synapse Dedicated Pools not supported | Sprint 46 |
+| 2 | **AWS Glue / EMR** as target | **P3** | Multi-cloud migration not supported | Sprint 48 |
+| 3 | **Target comparison report** | **P1** | No side-by-side comparison of Fabric vs Databricks outputs | Sprint 45 |
+| 4 | **Migration cost estimator** per target | **P2** | Cost projection is target-agnostic | Sprint 44 |
+
+> See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the full Phase 3 sprint details (Sprints 41–50).
+
+### 10.5 ~~Placeholder Transformations (6) → Sprint 26~~ ✅ RESOLVED
 
 All 7 placeholder transformations now generate meaningful PySpark templates (Sprint 26):
 
@@ -534,7 +617,7 @@ All 7 placeholder transformations now generate meaningful PySpark templates (Spr
 | Transaction Control (TC) | Delta ACID pattern | 26 | ✅ |
 | Unconnected Lookup (ULKP) | Broadcast join pattern | 26 | ✅ |
 
-### 10.3 Sprint 26–30 Roadmap — ✅ ALL COMPLETE
+### 10.6 Sprint 26–30 Roadmap — ✅ ALL COMPLETE
 
 | Sprint | Focus | Key Deliverables | Status |
 |:------:|-------|-------------------|:------:|

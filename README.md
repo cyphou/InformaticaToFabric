@@ -4,16 +4,17 @@
   <img src="https://img.shields.io/badge/Microsoft%20Fabric-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Microsoft Fabric"/>
 </p>
 
-<h1 align="center">Informatica to Microsoft Fabric Migration</h1>
+<h1 align="center">Informatica to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric — PySpark Notebooks, Data Pipelines, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, Data Pipelines / Databricks Workflows, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/30%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="30 sprints complete"/>
-  <img src="https://img.shields.io/badge/588%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="588 tests"/>
+  <img src="https://img.shields.io/badge/40%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="40 sprints complete"/>
+  <img src="https://img.shields.io/badge/747%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="747 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
+  <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks"/>
   <img src="https://img.shields.io/badge/PySpark-notebooks-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/Delta%20Lake-schema%20gen-00ADD8?style=flat-square&logo=databricks&logoColor=white" alt="Delta Lake"/>
   <img src="https://img.shields.io/badge/6%20databases-Oracle%20%C2%B7%20SQL%20Server%20%C2%B7%20Teradata%20%C2%B7%20DB2%20%C2%B7%20MySQL%20%C2%B7%20PostgreSQL-blue?style=flat-square&logo=amazondynamodb&logoColor=white" alt="6 databases"/>
@@ -60,6 +61,9 @@ pip install -e ".[dev]"
 informatica-to-fabric
 # or: python run_migration.py
 
+# Target Azure Databricks instead of Fabric
+informatica-to-fabric --target databricks
+
 # Skip assessment if already done
 informatica-to-fabric --skip 0
 
@@ -101,8 +105,8 @@ Source Qualifier, Expression, Filter, Aggregator, Joiner, Lookup, Router, Update
 </td>
 <td width="50%">
 
-### ⚡ Workflows → Data Pipelines
-Every Informatica workflow becomes a **Fabric Data Pipeline** (JSON):
+### ⚡ Workflows → Data Pipelines / Databricks Workflows
+Every Informatica workflow becomes a **Fabric Data Pipeline** (JSON) or **Databricks Workflow** (Jobs API JSON):
 Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email Tasks, Worklets, Link Conditions, **Control Tasks** (Abort/Fail → Fail Activity), **IICS Taskflows**
 
 </td>
@@ -143,6 +147,13 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 | **Session configs** | ✅ Extracted → Spark config | ✅ DTM/cache/commit mapping | New in Sprint 20 |
 | **Scheduler/Cron** | ✅ Schedule → cron expression | ✅ Pipeline triggers | New in Sprint 20 |
 
+### 🎯 Target Platforms
+
+| Target Platform | Notebooks | Pipelines | Schema DDL | Secrets | Deploy |
+|---|---|---|---|---|---|
+| **Microsoft Fabric** | `notebookutils` / 2-level namespace | Fabric Data Pipeline JSON | Delta Lake on Lakehouse | `notebookutils.credentials.getSecret()` | `deploy_to_fabric.py` |
+| **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `dbutils.secrets.get()` | Coming (Sprint 41) |
+
 ---
 
 ## 🔧 How It Works
@@ -156,7 +167,7 @@ flowchart LR
     C --> D
     D --> F["✅ VALIDATE\nSource vs Target"]
     E --> F
-    F --> G["🚀 DEPLOY\nMicrosoft Fabric"]
+    F --> G["🚀 DEPLOY\nFabric or Databricks"]
 
     style A fill:#FF4500,color:#fff,stroke:#FF4500
     style B fill:#4B8BBE,color:#fff,stroke:#4B8BBE
@@ -171,15 +182,15 @@ flowchart LR
 
 **Phase 1 — Convert SQL:** Oracle-specific SQL → Spark SQL / T-SQL equivalents
 
-**Phase 2 — Generate Notebooks:** Each mapping → PySpark notebook with transformation logic
+**Phase 2 — Generate Notebooks:** Each mapping → PySpark notebook (Fabric or Databricks target)
 
-**Phase 3 — Generate Pipelines:** Each workflow → Data Pipeline JSON with dependency chains
+**Phase 3 — Generate Pipelines:** Each workflow → Data Pipeline JSON or Databricks Workflow JSON
 
-**Phase 4 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold lakehouses with workspace setup notebook
+**Phase 4 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold (Lakehouse or Unity Catalog)
 
 **Phase 5 — Validate:** 5-level validation — row counts, checksums, data quality rules, key sampling & aggregate comparison
 
-**Phase 6 — Deploy:** Push artifacts to Microsoft Fabric workspace
+**Phase 6 — Deploy:** Push artifacts to Microsoft Fabric workspace or Azure Databricks workspace
 
 ### 🏗️ Fabric Target Architecture
 
@@ -473,7 +484,7 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 588 tests
+├── tests/                               # 🧪 697 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -555,7 +566,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 588 tests
+# Run all 697 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -575,7 +586,7 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 | `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
 | `test_sprint26_30.py` | 110 | Sprint 26–30: Transformation templates, schema generation, wave planner, L4/L5 validation, audit log, credential sanitization |
 
-**Overall:** 588 tests, 587 passing (1 pre-existing e2e), ~16s on Python 3.14
+**Overall:** 697 tests, 696 passing (1 pre-existing e2e), ~30s on Python 3.14
 
 ### Configuration
 

@@ -1,4 +1,4 @@
-# User Guide — Informatica to Microsoft Fabric Migration
+# User Guide — Informatica to Microsoft Fabric / Azure Databricks Migration
 
 ## Table of Contents
 
@@ -9,7 +9,8 @@
 5. [Understanding the Output](#5-understanding-the-output)
 6. [Using AI Agents](#6-using-ai-agents)
 7. [Deploying to Fabric](#7-deploying-to-fabric)
-8. [Configuration Options](#8-configuration-options)
+8. [Deploying to Azure Databricks](#8-deploying-to-azure-databricks)
+9. [Configuration Options](#9-configuration-options)
 
 ---
 
@@ -18,7 +19,7 @@
 - **Python 3.10+** (tested with 3.14)
 - **VS Code** with GitHub Copilot (for agent-driven workflow)
 - **Informatica XML exports** — workflow, mapping, and session XML files
-- **Microsoft Fabric workspace** (for deployment)
+- **Microsoft Fabric workspace** (for Fabric target) **or Azure Databricks workspace** (for Databricks target)
 
 ## 2. Installation
 
@@ -69,8 +70,11 @@ input/
 ### Full Pipeline (Recommended)
 
 ```bash
-# Run all 5 phases
+# Run all 5 phases (default target: Fabric)
 informatica-to-fabric
+
+# Target Azure Databricks instead
+informatica-to-fabric --target databricks
 
 # Or equivalently
 python run_migration.py
@@ -195,7 +199,33 @@ python deploy_to_fabric.py --workspace-id <GUID>
 2. Push the `output/` contents to the repo
 3. Fabric will auto-sync notebooks and pipelines
 
-## 8. Configuration Options
+## 8. Deploying to Azure Databricks
+
+### Import Notebooks
+
+```bash
+# Import notebooks via Databricks CLI
+databricks workspace import_dir output/notebooks/ /Shared/migration --overwrite
+```
+
+### Create Workflow Jobs
+
+```bash
+# Create jobs from generated workflow JSON
+for f in output/pipelines/PL_*.json; do
+    databricks jobs create --json-file "$f"
+done
+```
+
+### Using Databricks Repos
+
+1. Link your Git repository to Databricks Repos
+2. Push the `output/` contents to the repo
+3. Reference notebooks from workflow job definitions
+
+> **Note:** Databricks notebooks use `dbutils.widgets.get()` for parameters and Unity Catalog 3-level namespace (`catalog.schema.table`).
+
+## 9. Configuration Options
 
 ### CLI Arguments
 
@@ -207,6 +237,7 @@ python deploy_to_fabric.py --workspace-id <GUID>
 | `--verbose` | Enable detailed logging |
 | `--resume` | Resume from last checkpoint |
 | `--config FILE` | Load configuration from YAML file |
+| `--target TARGET` | Target platform: `fabric` (default) or `databricks` |
 | `--log-format json` | Use JSON-formatted logging |
 
 ### Interactive Dashboard

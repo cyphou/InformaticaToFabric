@@ -39,15 +39,15 @@
 <body>
 <div class="header">
   <h1>Informatica → Fabric Migration</h1>
-  <p>Dashboard generated 2026-03-24T09:20:27</p>
+  <p>Dashboard generated 2026-03-26T17:12:57</p>
 </div>
 
 <div class="grid">
-  <div class="kpi"><div class="number">20</div><div class="label">Total Artifacts</div></div>
-  <div class="kpi"><div class="number">6</div><div class="label">Notebooks</div></div>
-  <div class="kpi"><div class="number">1</div><div class="label">Pipelines</div></div>
-  <div class="kpi"><div class="number">5</div><div class="label">SQL Files</div></div>
-  <div class="kpi"><div class="number">8</div><div class="label">Validation</div></div>
+  <div class="kpi"><div class="number">44</div><div class="label">Total Artifacts</div></div>
+  <div class="kpi"><div class="number">11</div><div class="label">Notebooks</div></div>
+  <div class="kpi"><div class="number">9</div><div class="label">Pipelines</div></div>
+  <div class="kpi"><div class="number">11</div><div class="label">SQL Files</div></div>
+  <div class="kpi"><div class="number">13</div><div class="label">Validation</div></div>
 </div>
 
 <div class="content">
@@ -55,9 +55,9 @@
   <div class="card">
     <h3>📊 Complexity Distribution</h3>
     <div class="bar">
-      <div class="bar-seg" style="flex:2;background:#27AE60">Simple (2)</div><div class="bar-seg" style="flex:1;background:#F39C12">Medium (1)</div><div class="bar-seg" style="flex:3;background:#E74C3C">Complex (3)</div>
+      <div class="bar-seg" style="flex:4;background:#27AE60">Simple (4)</div><div class="bar-seg" style="flex:1;background:#F39C12">Medium (1)</div><div class="bar-seg" style="flex:6;background:#E74C3C">Complex (6)</div>
     </div>
-    <p class="hint">6 mappings, 1 workflows, 4 connections</p>
+    <p class="hint">11 mappings, 9 workflows, 10 connections</p>
   </div>
 
   <div class="card">
@@ -73,29 +73,29 @@
 
   <div class="card">
     <h3>📓 Notebooks</h3>
-    <span class="artifact nb">NB_m_load_contacts.py</span><span class="artifact nb">NB_M_LOAD_CUSTOMERS.py</span><span class="artifact nb">NB_M_LOAD_EMPLOYEES.py</span><span class="artifact nb">NB_M_LOAD_ORDERS.py</span><span class="artifact nb">NB_m_sync_accounts.py</span><span class="artifact nb">NB_M_UPSERT_INVENTORY.py</span>
+    <span class="artifact nb">NB_DQ_STANDARDIZE_ADDRESSES.py</span><span class="artifact nb">NB_DQ_VALIDATE_EMAILS.py</span><span class="artifact nb">NB_M_COMPLEX_MULTI_SOURCE.py</span><span class="artifact nb">NB_m_load_contacts.py</span><span class="artifact nb">NB_M_LOAD_CUSTOMERS.py</span><span class="artifact nb">NB_M_LOAD_EMPLOYEES.py</span><span class="artifact nb">NB_M_LOAD_ORDERS.py</span><span class="artifact nb">NB_m_sync_accounts.py</span><span class="artifact nb">NB_M_UPSERT_INVENTORY.py</span><span class="artifact nb">NB_MI_BULK_LOAD_PRODUCTS.py</span><span class="artifact nb">NB_SYNC_CUSTOMER_DATA.py</span>
   </div>
 
   <div class="card">
     <h3>⚡ Pipelines</h3>
-    <span class="artifact pl">PL_WF_DAILY_SALES_LOAD.json</span>
+    <span class="artifact pl">PL_AI_PROCESS_ORDER_EVENTS.json</span><span class="artifact pl">PL_AI_WATCH_ORDER_FILES.json</span><span class="artifact pl">PL_svc_create_case.json</span><span class="artifact pl">PL_svc_lookup_customer.json</span><span class="artifact pl">PL_svc_publish_event.json</span><span class="artifact pl">PL_TF_DAILY_CONTACTS_ETL.json</span><span class="artifact pl">PL_TF_DATA_QUALITY_PIPELINE.json</span><span class="artifact pl">PL_WF_COMPLEX_FINANCE_ETL.json</span><span class="artifact pl">PL_WF_DAILY_SALES_LOAD.json</span>
   </div>
 
   <div class="card">
     <h3>🗄️ SQL Files</h3>
-    <span class="artifact sql">SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql</span><span class="artifact sql">SQL_OVERRIDES_M_LOAD_ORDERS.sql</span><span class="artifact sql">SQL_SP_CALC_RANKINGS.sql</span><span class="artifact sql">SQL_SP_REFRESH_DASHBOARD.sql</span><span class="artifact sql">SQL_SP_UPDATE_ORDER_STATS.sql</span>
+    <span class="artifact sql">SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql</span><span class="artifact sql">SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql</span><span class="artifact sql">SQL_OVERRIDES_M_LOAD_ORDERS.sql</span><span class="artifact sql">SQL_SP_CALC_RANKINGS.sql</span><span class="artifact sql">SQL_SP_DB2_INVENTORY_REFRESH.sql</span><span class="artifact sql">SQL_SP_MYSQL_USER_ANALYTICS.sql</span><span class="artifact sql">SQL_SP_POSTGRESQL_REPORTING.sql</span><span class="artifact sql">SQL_SP_REFRESH_DASHBOARD.sql</span><span class="artifact sql">SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql</span><span class="artifact sql">SQL_SP_TERADATA_CUSTOMER_STATS.sql</span><span class="artifact sql">SQL_SP_UPDATE_ORDER_STATS.sql</span>
   </div>
 
   <div class="card">
     <h3>✅ Validation</h3>
-    <span class="artifact val">VAL_AGG_ORDERS_BY_CUSTOMER.py</span><span class="artifact val">VAL_DIM_CUSTOMER.py</span><span class="artifact val">VAL_DIM_EMPLOYEE.py</span><span class="artifact val">VAL_DIM_INVENTORY.py</span><span class="artifact val">VAL_FACT_ORDERS.py</span><span class="artifact val">VAL_PIPELINE_EXECUTION.py</span><span class="artifact val">VAL_TGT_ACCOUNTS.py</span><span class="artifact val">VAL_TGT_LH_CONTACTS.py</span>
+    <span class="artifact val">VAL_AGG_ORDERS_BY_CUSTOMER.py</span><span class="artifact val">VAL_DIM_CUSTOMER.py</span><span class="artifact val">VAL_DIM_EMPLOYEE.py</span><span class="artifact val">VAL_DIM_INVENTORY.py</span><span class="artifact val">VAL_FACT_ORDERS.py</span><span class="artifact val">VAL_FACT_TXN_HIGH.py</span><span class="artifact val">VAL_FACT_TXN_LOW.py</span><span class="artifact val">VAL_FACT_TXN_TAGS.py</span><span class="artifact val">VAL_LAKEHOUSE_BRONZE.py</span><span class="artifact val">VAL_LAKEHOUSE_SILVER.py</span><span class="artifact val">VAL_PIPELINE_EXECUTION.py</span><span class="artifact val">VAL_TGT_ACCOUNTS.py</span><span class="artifact val">VAL_TGT_LH_CONTACTS.py</span>
   </div>
 
   
         <div class="card">
             <h3>🔄 Checkpoint</h3>
-            <p>Completed phases: <strong>[1]</strong></p>
-            <p>Last updated: <code>2026-03-23T19:03:56.258120+00:00</code></p>
+            <p>Completed phases: <strong>[0, 1, 2, 3, 4, 5]</strong></p>
+            <p>Last updated: <code>2026-03-24T13:54:05.714141+00:00</code></p>
             <p class="hint">Use <code>--resume</code> to continue from here</p>
         </div>
   

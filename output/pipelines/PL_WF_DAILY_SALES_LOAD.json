@@ -194,6 +194,16 @@
       "MigratedFromInformatica",
       "OriginalWorkflow:WF_DAILY_SALES_LOAD",
       "OriginalSchedule:SCHED_DAILY_0200"
-    ]
+    ],
+    "trigger": {
+      "type": "ScheduleTrigger",
+      "description": "Daily at 2 AM UTC",
+      "typeProperties": {
+        "recurrence": {
+          "cron": "0 0 2 * * *",
+          "timeZone": "UTC"
+        }
+      }
+    }
   }
 }

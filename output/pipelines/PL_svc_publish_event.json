@@ -1,0 +1,23 @@
+{
+  "name": "PL_svc_publish_event",
+  "properties": {
+    "description": "Migrated from Informatica workflow svc_publish_event. ",
+    "activities": [],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
+    },
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:svc_publish_event"
+    ]
+  }
+}

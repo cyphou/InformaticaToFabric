@@ -1,6 +1,296 @@
 {
   "workflows": [
     {
+      "workflow": "AI_PROCESS_ORDER_EVENTS",
+      "nodes": [
+        "Start",
+        "gw_event_router",
+        "mt_persist_event",
+        "svc_create_case",
+        "svc_lookup_customer",
+        "svc_publish_event"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "svc_lookup_customer",
+          "condition": ""
+        },
+        {
+          "from": "svc_lookup_customer",
+          "to": "gw_event_router",
+          "condition": ""
+        },
+        {
+          "from": "gw_event_router",
+          "to": "svc_create_case",
+          "condition": ""
+        },
+        {
+          "from": "gw_event_router",
+          "to": "svc_publish_event",
+          "condition": ""
+        },
+        {
+          "from": "svc_create_case",
+          "to": "mt_persist_event",
+          "condition": ""
+        },
+        {
+          "from": "svc_publish_event",
+          "to": "mt_persist_event",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "svc_lookup_customer",
+      "nodes": [
+        "Start"
+      ],
+      "edges": []
+    },
+    {
+      "workflow": "svc_create_case",
+      "nodes": [
+        "Start"
+      ],
+      "edges": []
+    },
+    {
+      "workflow": "svc_publish_event",
+      "nodes": [
+        "Start"
+      ],
+      "edges": []
+    },
+    {
+      "workflow": "AI_WATCH_ORDER_FILES",
+      "nodes": [
+        "Start",
+        "mt_process_batch",
+        "notify_batch_complete"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_process_batch",
+          "condition": ""
+        },
+        {
+          "from": "mt_process_batch",
+          "to": "notify_batch_complete",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "TF_DATA_QUALITY_PIPELINE",
+      "nodes": [
+        "Start",
+        "gw_dq_threshold",
+        "mt_address_standard",
+        "mt_email_validation",
+        "notify_dq_issues"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_email_validation",
+          "condition": ""
+        },
+        {
+          "from": "mt_email_validation",
+          "to": "gw_dq_threshold",
+          "condition": "$mt_email_validation.status = SUCCEEDED"
+        },
+        {
+          "from": "gw_dq_threshold",
+          "to": "mt_address_standard",
+          "condition": "dq_score >= 0.7"
+        },
+        {
+          "from": "gw_dq_threshold",
+          "to": "notify_dq_issues",
+          "condition": "dq_score < 0.7"
+        },
+        {
+          "from": "mt_address_standard",
+          "to": "notify_dq_issues",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "TF_DAILY_CONTACTS_ETL",
+      "nodes": [
+        "Start",
+        "cmd_update_stats",
+        "gw_check_quality",
+        "mt_load_contacts",
+        "mt_sync_accounts",
+        "notify_complete"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_load_contacts",
+          "condition": ""
+        },
+        {
+          "from": "Start",
+          "to": "mt_sync_accounts",
+          "condition": ""
+        },
+        {
+          "from": "mt_load_contacts",
+          "to": "gw_check_quality",
+          "condition": "$mt_load_contacts.status = SUCCEEDED"
+        },
+        {
+          "from": "mt_sync_accounts",
+          "to": "cmd_update_stats",
+          "condition": ""
+        },
+        {
+          "from": "gw_check_quality",
+          "to": "timer_wait",
+          "condition": "row_count > 0"
+        },
+        {
+          "from": "gw_check_quality",
+          "to": "notify_complete",
+          "condition": "row_count = 0"
+        },
+        {
+          "from": "timer_wait",
+          "to": "cmd_update_stats",
+          "condition": ""
+        },
+        {
+          "from": "cmd_update_stats",
+          "to": "notify_complete",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "WF_COMPLEX_FINANCE_ETL",
+      "nodes": [
+        "ASG_INIT_VARS",
+        "DEC_VALIDATE_LOADS",
+        "EMAIL_FAILURE",
+        "EMAIL_SUCCESS",
+        "EVT_RAISE_COMPLETE",
+        "EVT_WAIT_UPSTREAM",
+        "S_LOAD_BALANCES",
+        "S_LOAD_FX_RATES",
+        "S_LOAD_TRANSACTIONS",
+        "S_RECONCILE_TOTALS",
+        "S_VARIANCE_REPORT",
+        "Start",
+        "TMR_WAIT_MARKET_CLOSE",
+        "WKL_RECONCILIATION"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "S_RECONCILE_TOTALS",
+          "condition": ""
+        },
+        {
+          "from": "S_RECONCILE_TOTALS",
+          "to": "S_VARIANCE_REPORT",
+          "condition": "$S_RECONCILE_TOTALS.Status = SUCCEEDED"
+        },
+        {
+          "from": "Start",
+          "to": "TMR_WAIT_MARKET_CLOSE",
+          "condition": ""
+        },
+        {
+          "from": "TMR_WAIT_MARKET_CLOSE",
+          "to": "ASG_INIT_VARS",
+          "condition": ""
+        },
+        {
+          "from": "ASG_INIT_VARS",
+          "to": "EVT_WAIT_UPSTREAM",
+          "condition": ""
+        },
+        {
+          "from": "EVT_WAIT_UPSTREAM",
+          "to": "S_LOAD_TRANSACTIONS",
+          "condition": ""
+        },
+        {
+          "from": "EVT_WAIT_UPSTREAM",
+          "to": "S_LOAD_BALANCES",
+          "condition": ""
+        },
+        {
+          "from": "EVT_WAIT_UPSTREAM",
+          "to": "S_LOAD_FX_RATES",
+          "condition": ""
+        },
+        {
+          "from": "S_LOAD_TRANSACTIONS",
+          "to": "DEC_VALIDATE_LOADS",
+          "condition": "$S_LOAD_TRANSACTIONS.Status = SUCCEEDED"
+        },
+        {
+          "from": "S_LOAD_BALANCES",
+          "to": "DEC_VALIDATE_LOADS",
+          "condition": "$S_LOAD_BALANCES.Status = SUCCEEDED"
+        },
+        {
+          "from": "S_LOAD_FX_RATES",
+          "to": "DEC_VALIDATE_LOADS",
+          "condition": "$S_LOAD_FX_RATES.Status = SUCCEEDED"
+        },
+        {
+          "from": "S_LOAD_TRANSACTIONS",
+          "to": "EMAIL_FAILURE",
+          "condition": "$S_LOAD_TRANSACTIONS.Status = FAILED"
+        },
+        {
+          "from": "S_LOAD_BALANCES",
+          "to": "EMAIL_FAILURE",
+          "condition": "$S_LOAD_BALANCES.Status = FAILED"
+        },
+        {
+          "from": "S_LOAD_FX_RATES",
+          "to": "EMAIL_FAILURE",
+          "condition": "$S_LOAD_FX_RATES.Status = FAILED"
+        },
+        {
+          "from": "DEC_VALIDATE_LOADS",
+          "to": "WKL_RECONCILIATION",
+          "condition": "$DEC_VALIDATE_LOADS.condition = TRUE"
+        },
+        {
+          "from": "DEC_VALIDATE_LOADS",
+          "to": "EMAIL_FAILURE",
+          "condition": "$DEC_VALIDATE_LOADS.condition = FALSE"
+        },
+        {
+          "from": "WKL_RECONCILIATION",
+          "to": "EVT_RAISE_COMPLETE",
+          "condition": "$WKL_RECONCILIATION.Status = SUCCEEDED"
+        },
+        {
+          "from": "WKL_RECONCILIATION",
+          "to": "EMAIL_FAILURE",
+          "condition": "$WKL_RECONCILIATION.Status = FAILED"
+        },
+        {
+          "from": "EVT_RAISE_COMPLETE",
+          "to": "EMAIL_SUCCESS",
+          "condition": ""
+        }
+      ]
+    },
+    {
       "workflow": "WF_DAILY_SALES_LOAD",
       "nodes": [
         "DEC_CHECK_ORDERS",

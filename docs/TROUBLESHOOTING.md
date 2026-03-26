@@ -118,6 +118,52 @@ python dashboard.py --open
 - Contains `<dTemplate>` or `<connection>` elements (IICS format markers)
 - Isn't a partial export — include the full taskflow XML
 
+### 11. Databricks: Unity Catalog Table Not Found
+
+**Error:** `AnalysisException: Table or view not found: catalog.schema.table`
+
+**Cause:** Generated notebooks use 3-level namespace (`catalog.schema.table`) which requires Unity Catalog.
+
+**Fix:**
+1. Verify Unity Catalog is enabled on your Databricks workspace
+2. Check the catalog and schema exist: `SHOW SCHEMAS IN my_catalog`
+3. If using Hive metastore, switch table references to 2-level (`schema.table`)
+
+### 12. Databricks: dbutils.widgets.get() Fails
+
+**Error:** `InputWidgetNotDefined: No input widget named 'load_date'`
+
+**Cause:** Job parameters not passed to the notebook.
+
+**Fix:**
+1. When using Databricks Jobs API, set `base_parameters` in the notebook task config
+2. For interactive runs, add a `dbutils.widgets.text("load_date", "")` default cell
+3. Check that `--target databricks` was used during migration (produces `dbutils` code, not `notebookutils`)
+
+### 13. Databricks: Workflow JSON Rejected by Jobs API
+
+**Error:** `400 Bad Request` when creating a job via `databricks jobs create`
+
+**Cause:** Generated JSON may contain Fabric-specific fields.
+
+**Fix:**
+1. Ensure migration ran with `--target databricks`
+2. Check for `type: "NotebookActivity"` (Fabric) vs `notebook_task` (Databricks) in the JSON
+3. Re-run pipeline migration: `python run_pipeline_migration.py --target databricks`
+
+### 14. Databricks: Secret Scope Not Configured
+
+**Error:** `SecretDoesNotExistException: Secret does not exist with scope: ... and key: ...`
+
+**Cause:** Notebooks use `dbutils.secrets.get(scope=..., key=...)` but the secret scope isn't configured.
+
+**Fix:**
+1. Create the secret scope: `databricks secrets create-scope --scope my-scope`
+2. Add secrets: `databricks secrets put --scope my-scope --key my-secret`
+3. Or switch to Key Vault-backed scope for Azure-native integration
+
+---
+
 ## Getting Help
 
 1. Check `output/inventory/parse_issues.json` for structured error details

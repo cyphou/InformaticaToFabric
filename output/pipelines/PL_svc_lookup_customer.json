@@ -1,0 +1,23 @@
+{
+  "name": "PL_svc_lookup_customer",
+  "properties": {
+    "description": "Migrated from Informatica workflow svc_lookup_customer. ",
+    "activities": [],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
+    },
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:svc_lookup_customer"
+    ]
+  }
+}

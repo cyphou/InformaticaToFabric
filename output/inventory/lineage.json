@@ -1,0 +1,6206 @@
+[
+  {
+    "mapping": "m_load_contacts",
+    "complexity": "Medium",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "m_sync_accounts",
+    "complexity": "Simple",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "M_COMPLEX_MULTI_SOURCE",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4.5,
+    "field_lineage": [
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_TYPE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "AMOUNT",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CURRENCY",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TXN_DATE",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "TAGS",
+        "source_instance": "SQ_TRANSACTIONS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_ID",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_NAME",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "ACCOUNT_TYPE",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "REGION",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_LOW",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_VALUE",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TAG_INDEX",
+        "target_instance": "FACT_TXN_TAGS",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "NRM_TAGS",
+            "type": "Normalizer"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "ACCOUNT_NAME",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_ID",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "AMOUNT_USD",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "RISK_CATEGORY",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_DATE",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      },
+      {
+        "source_field": "RISK_LEVEL",
+        "source_instance": "SQ_ACCOUNTS",
+        "target_field": "TXN_RANK",
+        "target_instance": "FACT_TXN_HIGH",
+        "transformations": [
+          {
+            "instance": "JNR_TXN_ACCT",
+            "type": "Joiner"
+          },
+          {
+            "instance": "RTR_VALUE_TIER",
+            "type": "Router"
+          },
+          {
+            "instance": "RNK_TOP_TXN",
+            "type": "Rank"
+          }
+        ]
+      }
+    ],
+    "mermaid_diagram": "```mermaid\nflowchart LR\n    SQ_TRANSACTIONS[\"SQ_TRANSACTIONS<br/>📥 Source Qualifier\"]\n    JNR_TXN_ACCT[\"JNR_TXN_ACCT<br/>⚙️ JNR\"]\n    RTR_VALUE_TIER[\"RTR_VALUE_TIER<br/>⚙️ RTR\"]\n    FACT_TXN_LOW[\"FACT_TXN_LOW<br/>📤 Target\"]\n    NRM_TAGS[\"NRM_TAGS<br/>⚙️ NRM\"]\n    FACT_TXN_TAGS[\"FACT_TXN_TAGS<br/>📤 Target\"]\n    RNK_TOP_TXN[\"RNK_TOP_TXN<br/>⚙️ RNK\"]\n    FACT_TXN_HIGH[\"FACT_TXN_HIGH<br/>📤 Target\"]\n    SQ_ACCOUNTS[\"SQ_ACCOUNTS<br/>📥 Source Qualifier\"]\n    JNR_TXN_ACCT --> NRM_TAGS\n    JNR_TXN_ACCT --> RTR_VALUE_TIER\n    NRM_TAGS --> FACT_TXN_TAGS\n    RNK_TOP_TXN --> FACT_TXN_HIGH\n    RTR_VALUE_TIER --> FACT_TXN_LOW\n    RTR_VALUE_TIER --> RNK_TOP_TXN\n    SQ_ACCOUNTS --> JNR_TXN_ACCT\n    SQ_TRANSACTIONS --> JNR_TXN_ACCT\n```"
+  },
+  {
+    "mapping": "M_LOAD_CUSTOMERS",
+    "complexity": "Simple",
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
+    "field_lineage": [
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "FIRST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_NAME",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "EMAIL",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "STATUS",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "CREDIT_LIMIT",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "COUNTRY_CODE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "FULL_NAME",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "EMAIL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "STATUS_LABEL",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "CREDIT_LIMIT",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      },
+      {
+        "source_field": "COUNTRY_CODE",
+        "source_instance": "SQ_CUSTOMERS",
+        "target_field": "ETL_LOAD_DATE",
+        "target_instance": "DIM_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_DERIVE_FIELDS",
+            "type": "Expression"
+          },
+          {
+            "instance": "FIL_ACTIVE_CUSTOMERS",
+            "type": "Filter"
+          }
+        ]
+      }
+    ],
+    "mermaid_diagram": "```mermaid\nflowchart LR\n    SQ_CUSTOMERS[\"SQ_CUSTOMERS<br/>📥 Source Qualifier\"]\n    EXP_DERIVE_FIELDS[\"EXP_DERIVE_FIELDS<br/>⚙️ EXP\"]\n    FIL_ACTIVE_CUSTOMERS[\"FIL_ACTIVE_CUSTOMERS<br/>⚙️ FIL\"]\n    DIM_CUSTOMER[\"DIM_CUSTOMER<br/>📤 Target\"]\n    EXP_DERIVE_FIELDS --> FIL_ACTIVE_CUSTOMERS\n    FIL_ACTIVE_CUSTOMERS --> DIM_CUSTOMER\n    SQ_CUSTOMERS --> EXP_DERIVE_FIELDS\n```"
+  },
+  {
+    "mapping": "M_LOAD_EMPLOYEES",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "M_LOAD_ORDERS",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "LKP_PRODUCTS",
+            "type": "Lookup Procedure"
+          },
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CUSTOMER_ID",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "QUANTITY",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "UNIT_PRICE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "DISCOUNT_PCT",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_DATE",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "ORDER_STATUS",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CHANNEL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "PRODUCT_NAME",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CATEGORY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "QUANTITY",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "UNIT_PRICE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "LINE_TOTAL",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_DATE",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "ORDER_STATUS",
+        "target_instance": "FACT_ORDERS",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "CUSTOMER_ID",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_ORDERS",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "TOTAL_REVENUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANNEL",
+        "source_instance": "SQ_ORDERS",
+        "target_field": "AVG_ORDER_VALUE",
+        "target_instance": "AGG_ORDERS_BY_CUSTOMER",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_TOTAL",
+            "type": "Expression"
+          },
+          {
+            "instance": "AGG_BY_CUSTOMER",
+            "type": "Aggregator"
+          }
+        ]
+      }
+    ],
+    "mermaid_diagram": "```mermaid\nflowchart LR\n    SQ_ORDERS[\"SQ_ORDERS<br/>📥 Source Qualifier\"]\n    LKP_PRODUCTS[\"LKP_PRODUCTS<br/>⚙️ LKP\"]\n    EXP_CALC_TOTAL[\"EXP_CALC_TOTAL<br/>⚙️ EXP\"]\n    FACT_ORDERS[\"FACT_ORDERS<br/>📤 Target\"]\n    AGG_BY_CUSTOMER[\"AGG_BY_CUSTOMER<br/>⚙️ AGG\"]\n    AGG_ORDERS_BY_CUSTOMER[\"AGG_ORDERS_BY_CUSTOMER<br/>📤 Target\"]\n    AGG_BY_CUSTOMER --> AGG_ORDERS_BY_CUSTOMER\n    EXP_CALC_TOTAL --> AGG_BY_CUSTOMER\n    EXP_CALC_TOTAL --> FACT_ORDERS\n    LKP_PRODUCTS --> EXP_CALC_TOTAL\n    SQ_ORDERS --> EXP_CALC_TOTAL\n    SQ_ORDERS --> LKP_PRODUCTS\n```"
+  },
+  {
+    "mapping": "M_UPSERT_INVENTORY",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "PRODUCT_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "WAREHOUSE_ID",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_ON_HAND",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "QTY_RESERVED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "LAST_UPDATED",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "PRODUCT_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "WAREHOUSE_ID",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_ON_HAND",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_RESERVED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "QTY_AVAILABLE",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      },
+      {
+        "source_field": "CHANGE_FLAG",
+        "source_instance": "SQ_STG_INVENTORY",
+        "target_field": "LAST_UPDATED",
+        "target_instance": "DIM_INVENTORY",
+        "transformations": [
+          {
+            "instance": "EXP_CALC_AVAILABLE",
+            "type": "Expression"
+          },
+          {
+            "instance": "UPD_INVENTORY",
+            "type": "Update Strategy"
+          }
+        ]
+      }
+    ],
+    "mermaid_diagram": "```mermaid\nflowchart LR\n    SQ_STG_INVENTORY[\"SQ_STG_INVENTORY<br/>📥 Source Qualifier\"]\n    EXP_CALC_AVAILABLE[\"EXP_CALC_AVAILABLE<br/>⚙️ EXP\"]\n    UPD_INVENTORY[\"UPD_INVENTORY<br/>⚙️ UPD\"]\n    DIM_INVENTORY[\"DIM_INVENTORY<br/>📤 Target\"]\n    EXP_CALC_AVAILABLE --> UPD_INVENTORY\n    SQ_STG_INVENTORY --> EXP_CALC_AVAILABLE\n    UPD_INVENTORY --> DIM_INVENTORY\n```"
+  },
+  {
+    "mapping": "DQ_VALIDATE_EMAILS",
+    "complexity": "Complex",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "DQ_STANDARDIZE_ADDRESSES",
+    "complexity": "Complex",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "SYNC_CUSTOMER_DATA",
+    "complexity": "Simple",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "MI_BULK_LOAD_PRODUCTS",
+    "complexity": "Simple",
+    "conversion_score": 0,
+    "manual_effort_hours": 0,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  }
+]

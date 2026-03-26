@@ -1,6 +1,7 @@
-# Migration Summary
+# Migration Summary — Target: Fabric
 
-**Generated:** 2026-03-24 09:20 UTC
+**Generated:** 2026-03-26 17:12 UTC
+**Target Platform:** Fabric
 
 ## Phase Results
 
@@ -23,8 +24,8 @@
 | `output/inventory/` | Assessment inventory, complexity report, DAG, HTML report |
 | `output/sql/` | Converted SQL files (Oracle/SQL Server → Spark SQL) |
 | `output/notebooks/` | PySpark notebooks (one per mapping) |
-| `output/pipelines/` | Fabric Pipeline JSON (one per workflow) |
-| `output/schema/` | Delta Lake DDL + workspace setup notebook |
+| `output/pipelines/` | Pipeline definitions (one per workflow) |
+| `output/schema/` | DDL + workspace setup notebook |
 | `output/validation/` | Validation notebooks + test matrix |
 | `output/audit_log.json` | Structured audit log (JSON) |
 

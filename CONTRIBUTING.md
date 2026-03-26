@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 443 tests, 92% coverage.
+**Current status:** 747 tests, 98% coverage. Dual-target support: Microsoft Fabric + Azure Databricks.
 
 ## Test Files
 
@@ -42,6 +42,11 @@ py -m pytest tests/test_coverage.py::TestSqlConversion -v
 | `tests/test_e2e.py` | End-to-end integration | 19 |
 | `tests/test_iics.py` | IICS format support | 23 |
 | `tests/test_gaps.py` | Gap remediation (Sprint 20) | 52 |
+| `tests/test_sprint22_24.py` | Session config, scheduler, GTT/MV | ~57 |
+| `tests/test_sprint25.py` | Lineage, scoring, multi-DB | ~35 |
+| `tests/test_sprint26_30.py` | Templates, schema, waves, validation | ~112 |
+| `tests/test_sprint31_40.py` | Phase 2: PL/SQL, DQ, multi-tenant, PII | ~109 |
+| `tests/test_databricks_target.py` | Azure Databricks target (Unity Catalog, dbutils) | 50 |
 
 ## Code Style
 
@@ -64,15 +69,16 @@ Configuration is in `pyproject.toml`.
 ├── run_sql_migration.py       # Phase 1: Oracle/SQL Server → Spark SQL
 ├── run_notebook_migration.py  # Phase 2: Mappings → PySpark notebooks
 ├── run_pipeline_migration.py  # Phase 3: Workflows → Pipeline JSON
-├── run_validation.py          # Phase 4: Validation script generation
+├── run_schema_generator.py    # Phase 4: Delta Lake schema generation
+├── run_validation.py          # Phase 5: Validation script generation
 ├── run_migration.py           # Orchestrator (runs all phases)
 ├── generate_html_reports.py   # HTML report generation
 ├── dashboard.py               # Interactive dashboard
 ├── deploy_to_fabric.py        # Fabric deployment
-├── tests/                     # Test suite
+├── tests/                     # 747 tests (11 test files)
 ├── input/                     # Informatica XML exports
 ├── output/                    # Generated artifacts
-├── templates/                 # Notebook/pipeline templates
+├── templates/                 # Notebook/pipeline templates (Fabric + Databricks)
 └── docs/                      # Documentation
 ```
 
@@ -88,6 +94,15 @@ Configuration is in `pyproject.toml`.
 1. Add the regex pattern to `ORACLE_REPLACEMENTS` or `SQLSERVER_REPLACEMENTS` in `run_sql_migration.py`
 2. Add test cases in `tests/test_gaps.py::TestSqlConversionGapRules` or `tests/test_coverage.py::TestSqlConversion`
 3. Run the full suite to verify no regressions
+
+## Target Platform Considerations
+
+The tool supports **two targets**: Microsoft Fabric and Azure Databricks.
+
+- When adding notebook-related features, ensure both `notebookutils` (Fabric) and `dbutils` (Databricks) paths work
+- Pipeline generation must produce Fabric Pipeline JSON **or** Databricks Workflow JSON depending on `--target`
+- Databricks uses Unity Catalog 3-level namespace (`catalog.schema.table`) vs Fabric 2-level (`schema.table`)
+- Test Databricks paths with `py -m pytest tests/test_databricks_target.py -v`
 
 ## Pull Request Checklist
 

@@ -1,15 +1,26 @@
 # ─────────────────────────────────────────────
-#  Informatica → Fabric Migration Configuration
+#  Informatica → Fabric / Databricks Migration Configuration
 # ─────────────────────────────────────────────
 #
 # Copy this file and update values for your environment.
 # Referenced by: run_migration.py, deploy_to_fabric.py
 #
 
-# ── Fabric workspace ──
+# ── Target platform: "fabric" (default) or "databricks" ──
+target: "fabric"
+
+# ── Fabric workspace (used when target = fabric) ──
 fabric:
   workspace_id: ""                          # Fabric workspace GUID (required for deploy)
   # workspace_name: "Migration-Workspace"   # Optional display name for reports
+
+# ── Databricks workspace (used when target = databricks) ──
+databricks:
+  workspace_url: ""                         # e.g. https://adb-xxxx.azuredatabricks.net
+  catalog: "main"                           # Unity Catalog name
+  secret_scope: "migration-secrets"         # Databricks secret scope for credentials
+  cluster_id: ""                            # Default cluster ID for jobs
+  warehouse_id: ""                          # Optional SQL warehouse for DDL execution
 
 # ── Source connections (for validation notebooks) ──
 sources:

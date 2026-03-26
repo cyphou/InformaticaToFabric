@@ -1,9 +1,12 @@
-# Development Plan — Informatica to Fabric Migration Agents
+# Development Plan — Informatica to Fabric / Databricks Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-30%2F30%20complete-27AE60?style=for-the-badge" alt="30/30 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-37%2F40%20complete-F39C12?style=for-the-badge" alt="37/40 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
-  <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
+  <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
+  <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
+  <img src="https://img.shields.io/badge/phase_3-planned_(41--50)-2980B9?style=for-the-badge" alt="Phase 3 Planned"/>
+  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
 </p>
 
 > This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
@@ -43,6 +46,17 @@
 - [Sprint 28 — Migration Wave Planner](#sprint-28--migration-wave-planner)
 - [Sprint 29 — Data Validation Framework](#sprint-29--data-validation-framework)
 - [Sprint 30 — Production Hardening & Audit](#sprint-30--production-hardening--audit)
+- **Phase 2 — Enterprise & Fabric-Native (Sprints 31–40)**
+- [Sprint 31 — Remaining Object Gaps (P2/P3)](#sprint-31--remaining-object-gaps-p2p3)
+- [Sprint 32 — Fabric DevOps & Environment Promotion](#sprint-32--fabric-devops--environment-promotion)
+- [Sprint 33 — Advanced SQL & PL/SQL Conversion](#sprint-33--advanced-sql--plsql-conversion)
+- [Sprint 34 — Fabric-Native Features (OneLake, Warehouse, Shortcuts)](#sprint-34--fabric-native-features-onelake-warehouse-shortcuts)
+- [Sprint 35 — Multi-Tenant & Enterprise Scale](#sprint-35--multi-tenant--enterprise-scale)
+- [Sprint 36 — Observability & Azure Monitor Integration](#sprint-36--observability--azure-monitor-integration)
+- [Sprint 37 — Performance at Scale (100+ Mappings)](#sprint-37--performance-at-scale-100-mappings)
+- [Sprint 38 — Interactive Web UI & Migration Wizard](#sprint-38--interactive-web-ui--migration-wizard)
+- [Sprint 39 — Data Quality & Governance Migration](#sprint-39--data-quality--governance-migration)
+- [Sprint 40 — Enterprise Documentation & Runbook](#sprint-40--enterprise-documentation--runbook)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -757,7 +771,7 @@ gantt
 **Sprint 30 Exit Criteria:**
 - [x] Audit log captures every migration action
 - [x] `--dry-run` mode works end-to-end
-- [x] 588 tests, 587 passing (1 pre-existing e2e failure)
+- [x] 697 tests, 696 passing (1 pre-existing e2e failure)
 - [x] No credentials exposed in logs or output files
 
 ---
@@ -1052,9 +1066,628 @@ pie title Sprint Effort Distribution
 | **22** | Assessment, Notebook, Pipeline (IICS gaps) | DQ Task, App Integration, Taskflow edge cases | ✅ Complete |
 | **23** | Assessment, SQL (source DBs) | Teradata, DB2, MySQL/PostgreSQL detection + conversion | ✅ Complete |
 | **24** | All (coverage) | 92% coverage, 443 tests, 110 new Sprint 22-24 tests | ✅ Complete |
-| **25** | Assessment (lineage) | Field-level lineage, conversion quality score, Mermaid diagrams | ⏳ Planned |
-| **26** | Notebook (templates) | HTTP/XML/TC/Java/Custom/ULKP → PySpark templates | ⏳ Planned |
-| **27** | SQL, Assessment (schema) | Delta Lake DDL, type mapping, workspace setup script | ⏳ Planned |
-| **28** | Assessment, Orchestrator (waves) | DAG topological sort, parallel groups, critical path | ⏳ Planned |
-| **29** | Validation (data) | Row count/checksum/sampling comparisons, HTML report | ⏳ Planned |
-| **30** | All (production) | Audit log, dry-run mode, security review, 500+ tests | ⏳ Planned |
+| **25** | Assessment (lineage) | Field-level lineage, conversion quality score, Mermaid diagrams | ✅ Complete |
+| **26** | Notebook (templates) | HTTP/XML/TC/Java/Custom/ULKP → PySpark templates | ✅ Complete |
+| **27** | SQL, Assessment (schema) | Delta Lake DDL, type mapping, workspace setup script | ✅ Complete |
+| **28** | Assessment, Orchestrator (waves) | DAG topological sort, parallel groups, critical path | ✅ Complete |
+| **29** | Validation (data) | Row count/checksum/sampling comparisons, HTML report | ✅ Complete |
+| **30** | All (production) | Audit log, dry-run mode, security review, 500+ tests | ✅ Complete |
+
+---
+
+# Phase 2 — Enterprise & Fabric-Native (Sprints 31–40)
+
+> **Goal:** Evolve the migration tooling from a functional converter into an **enterprise-grade, Fabric-native migration platform** — closing all remaining object gaps, enabling multi-tenant deployments, DevOps-driven promotions, Fabric workspace provisioning, observability, and an interactive migration experience.
+
+```mermaid
+gantt
+    title Phase 2 Roadmap — Sprints 31–40
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Sprint 31 — Object Gaps
+    External/Advanced EP        :s31a, 2026-03-27, 5d
+    Association/Key Generator   :s31b, 2026-03-27, 3d
+    Roles & Permissions scripts :s31c, after s31b, 5d
+    Oracle Object Types         :s31d, after s31a, 3d
+
+    section Sprint 32 — DevOps
+    Fabric Deployment Pipelines :s32a, 2026-04-10, 7d
+    Git integration scaffolding :s32b, 2026-04-10, 5d
+    Env promotion (Dev→Test→Prod) :s32c, after s32a, 5d
+
+    section Sprint 33 — Advanced SQL
+    Dynamic SQL detection       :s33a, 2026-04-24, 5d
+    PL/SQL cursor → PySpark     :s33b, 2026-04-24, 7d
+    Recursive CTE (CONNECT BY) :s33c, after s33b, 5d
+
+    section Sprint 34 — Fabric-Native
+    OneLake shortcuts           :s34a, 2026-05-08, 5d
+    Warehouse vs Lakehouse      :s34b, 2026-05-08, 5d
+    Mirroring & Real-Time       :s34c, after s34a, 5d
+
+    section Sprint 35 — Enterprise
+    Multi-tenant templates      :s35a, 2026-05-22, 7d
+    Secrets management (KV)     :s35b, 2026-05-22, 5d
+    Parallel wave execution     :s35c, after s35a, 5d
+
+    section Sprint 36 — Observability
+    Azure Monitor integration   :s36a, 2026-06-05, 7d
+    Migration cost estimator    :s36b, 2026-06-05, 5d
+    Alerting & notifications    :s36c, after s36a, 5d
+
+    section Sprint 37 — Scale
+    Large-scale profiling       :s37a, 2026-06-19, 7d
+    Parallel generation         :s37b, 2026-06-19, 5d
+    Memory optimization         :s37c, after s37a, 5d
+
+    section Sprint 38 — Web UI
+    Streamlit migration wizard  :s38a, 2026-07-03, 10d
+    Interactive mapping review  :s38b, after s38a, 5d
+
+    section Sprint 39 — DQ & Governance
+    DQ rules migration          :s39a, 2026-07-17, 7d
+    Data catalog integration    :s39b, 2026-07-17, 5d
+    PII detection               :s39c, after s39a, 5d
+
+    section Sprint 40 — Docs & Runbook
+    Enterprise runbook          :s40a, 2026-07-31, 7d
+    Migration playbook          :s40b, 2026-07-31, 5d
+    Video walkthroughs          :s40c, after s40a, 5d
+```
+
+---
+
+## Sprint 31 — Remaining Object Gaps (P2/P3)
+
+**Goal:** Close the 7 remaining object gaps identified in GAP_ANALYSIS.md, achieving 98%+ object coverage.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 31.1 | External Procedure (EP) detection & template | Assessment + Notebook | `run_assessment.py`, `run_notebook_migration.py` | `EP` added to `TRANSFORMATION_ABBREV`; PySpark `subprocess.run()` / Python UDF stub generated with input/output port mapping |
+| 31.2 | Advanced External Procedure (AEP) detection & template | Assessment + Notebook | `run_assessment.py`, `run_notebook_migration.py` | `AEP` added to `TRANSFORMATION_ABBREV`; PySpark template with library import pattern + TODO for native library porting |
+| 31.3 | Association (ASSOC) detection & PySpark template | Assessment + Notebook | `run_assessment.py`, `run_notebook_migration.py` | `ASSOC` detected; generates PySpark window function–based grouping pattern |
+| 31.4 | Key Generator (KEYGEN) detection & PySpark template | Assessment + Notebook | `run_assessment.py`, `run_notebook_migration.py` | `KEYGEN` detected; generates `monotonically_increasing_id()` or `sha2()` hash-based key |
+| 31.5 | Address Validator (ADDRVAL) detection & placeholder | Assessment + Notebook | `run_assessment.py`, `run_notebook_migration.py` | `ADDRVAL` detected; generates placeholder with Azure Maps API + `requests` UDF + fallback regex |
+| 31.6 | Oracle Object Types (`CREATE TYPE`) detection | Assessment + SQL | `run_assessment.py`, `run_sql_migration.py` | `CREATE TYPE` detected; generates StructType schema mapping + struct-to-columns flattening pattern |
+| 31.7 | Roles & Permissions script generator | Orchestrator | `run_migration.py`, `output/scripts/` | Parse Informatica domain/folder permissions → generate Fabric workspace role assignment Python script using REST API |
+| 31.8 | Object gap tests | Validation | `tests/test_sprint31_40.py` | 25+ tests covering all 7 new object types |
+
+**Sprint 31 Exit Criteria:**
+- [ ] All 7 remaining object gaps addressed (detection + template/placeholder)
+- [ ] `TRANSFORMATION_ABBREV` includes EP, AEP, ASSOC, KEYGEN, ADDRVAL
+- [ ] Object coverage: 92% → 98%
+- [ ] 613+ tests passing
+
+---
+
+## Sprint 32 — Fabric DevOps & Environment Promotion
+
+**Goal:** Integrate with Fabric Deployment Pipelines and Git-based CI/CD for environment promotion (Dev → Test → Prod).
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 32.1 | Fabric Deployment Pipeline scaffolding | Orchestrator | `deploy_to_fabric.py` | Generate Fabric Deployment Pipeline definition JSON (Dev → Test → Prod stages) using REST API |
+| 32.2 | Git integration for Fabric workspace | Orchestrator | `output/git/` | Generate `.pbip`-style folder structure compatible with Fabric Git integration (notebooks, pipelines, SQL) |
+| 32.3 | Environment-specific config templates | Orchestrator | `templates/env_config/` | Generate `dev.yaml`, `test.yaml`, `prod.yaml` with parameterized connection strings, lakehouse names, Spark pool settings |
+| 32.4 | Deployment promotion script | Orchestrator | `deploy_to_fabric.py` | `--promote dev test` flag that copies artifacts between workspaces with config substitution |
+| 32.5 | Pre-deployment validation | Validation | `deploy_to_fabric.py` | `--validate` flag that checks schema compatibility, referenced notebooks exist, pipeline JSON valid |
+| 32.6 | Deployment rollback support | Orchestrator | `deploy_to_fabric.py` | `--rollback` flag that reverts to previous version using deployment log timestamps |
+| 32.7 | DevOps tests | Validation | `tests/test_sprint31_40.py` | 20+ tests covering promotion, config substitution, validation, rollback |
+
+**Sprint 32 Exit Criteria:**
+- [ ] Deployment Pipeline JSON generated for 3-stage promotion
+- [ ] Git-compatible folder structure matches Fabric workspace format
+- [ ] `--promote`, `--validate`, `--rollback` flags functional
+- [ ] 633+ tests passing
+
+---
+
+## Sprint 33 — Advanced SQL & PL/SQL Conversion
+
+**Goal:** Tackle the hardest SQL conversion cases — dynamic SQL, PL/SQL cursors, recursive CTEs, and BULK COLLECT — moving them from "flagged TODO" to partially automated conversion.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 33.1 | Dynamic SQL detection & extraction | SQL | `run_sql_migration.py` | Detect `EXECUTE IMMEDIATE`, `DBMS_SQL`, dynamic cursor patterns; extract embedded SQL strings for conversion |
+| 33.2 | PL/SQL cursor → PySpark iterator | SQL + Notebook | `run_sql_migration.py`, `run_notebook_migration.py` | Convert `CURSOR ... FETCH ... LOOP` to PySpark `foreach()` / `foreachBatch()` pattern with row-level processing |
+| 33.3 | BULK COLLECT → DataFrame collect | SQL | `run_sql_migration.py` | Convert `BULK COLLECT INTO` to `.collect()` / `.toPandas()` for small datasets, `.write` for large |
+| 33.4 | CONNECT BY → recursive CTE | SQL | `run_sql_migration.py` | Convert `CONNECT BY PRIOR ... START WITH` to Spark SQL recursive CTE (`WITH RECURSIVE`) or PySpark `graphframes` pattern |
+| 33.5 | EXCEPTION WHEN → try/except | SQL + Notebook | `run_sql_migration.py` | Convert PL/SQL exception blocks to Python try/except with logging |
+| 33.6 | FORALL → batch DML | SQL | `run_sql_migration.py` | Convert `FORALL ... INSERT/UPDATE/DELETE` to batch DataFrame operations |
+| 33.7 | Advanced SQL tests | Validation | `tests/test_sprint31_40.py` | 30+ tests covering all 6 advanced patterns |
+
+**Sprint 33 Exit Criteria:**
+- [ ] PL/SQL blocks previously flagged as "non-convertible TODO" now have partial auto-conversion
+- [ ] CONNECT BY hierarchical queries produce recursive CTE or graphframes pattern
+- [ ] 663+ tests passing
+
+---
+
+## Sprint 34 — Fabric-Native Features (OneLake, Warehouse, Shortcuts)
+
+**Goal:** Generate Fabric-native artifacts beyond notebooks and pipelines — OneLake shortcuts, Warehouse objects, mirroring configurations, and Eventstream definitions.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 34.1 | Lakehouse vs Warehouse decision engine | Assessment | `run_assessment.py` | Analyze mapping patterns to recommend Lakehouse (ETL-heavy) vs Warehouse (SQL-heavy) per target table |
+| 34.2 | Fabric Warehouse DDL generator | SQL | `run_schema_generator.py` | Generate T-SQL `CREATE TABLE` for Warehouse targets alongside Delta DDL for Lakehouse targets |
+| 34.3 | OneLake shortcut generator | Orchestrator | `output/shortcuts/` | Generate shortcut definitions for cross-lakehouse references (replacing DB links) |
+| 34.4 | Mirroring configuration | Orchestrator | `output/mirroring/` | Generate Fabric Mirroring setup for source databases (Oracle, SQL Server) that support it |
+| 34.5 | Eventstream definition generator | Pipeline | `run_pipeline_migration.py` | Convert real-time/event-driven Informatica workflows to Fabric Eventstream definitions |
+| 34.6 | Data Activator rules | Pipeline | `run_pipeline_migration.py` | Convert Informatica alert/notification triggers to Fabric Data Activator (Reflex) rules |
+| 34.7 | Fabric-native tests | Validation | `tests/test_sprint31_40.py` | 20+ tests covering decision engine, DDL, shortcuts, mirroring |
+
+**Sprint 34 Exit Criteria:**
+- [ ] Decision engine recommends Lakehouse vs Warehouse per mapping
+- [ ] Both Delta DDL and T-SQL DDL generated as appropriate
+- [ ] OneLake shortcuts replace DB link references
+- [ ] 683+ tests passing
+
+---
+
+## Sprint 35 — Multi-Tenant & Enterprise Scale
+
+**Goal:** Enable migration at enterprise scale — multi-tenant deployments, parameterized templates, secrets management, and parallel wave execution.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 35.1 | Multi-tenant template system | Orchestrator | `templates/`, `run_migration.py` | Support `${TENANT_ID}`, `${WORKSPACE}`, `${LAKEHOUSE}` placeholders with per-tenant YAML overrides |
+| 35.2 | Azure Key Vault integration | Orchestrator | `deploy_to_fabric.py` | Replace all placeholder secrets with `notebookutils.credentials.getSecret()` calls referencing Key Vault linked service |
+| 35.3 | Parallel wave execution engine | Orchestrator | `run_migration.py` | Execute independent wave groups in parallel using `concurrent.futures.ThreadPoolExecutor` (or Fabric pipeline parallel ForEach) |
+| 35.4 | Migration manifest generator | Orchestrator | `output/manifest.json` | Machine-readable manifest of all artifacts, dependencies, and deployment order for CI/CD tooling |
+| 35.5 | Bulk migration CLI | Orchestrator | `run_migration.py` | `--batch` flag that migrates a folder of Informatica exports in one invocation |
+| 35.6 | Tenant isolation validation | Validation | `run_validation.py` | Generate test that verifies no cross-tenant data leakage in multi-tenant setups |
+| 35.7 | Enterprise tests | Validation | `tests/test_sprint31_40.py` | 20+ tests covering templates, secrets, parallel, manifest, batch |
+
+**Sprint 35 Exit Criteria:**
+- [ ] Multi-tenant migration with 3 tenant configs produces isolated workspaces
+- [ ] Secrets fully parametrized via Key Vault
+- [ ] Parallel wave execution demonstrably faster than sequential
+- [ ] 703+ tests passing
+
+---
+
+## Sprint 36 — Observability & Azure Monitor Integration
+
+**Goal:** Production-grade observability — emit migration metrics to Azure Monitor, build cost estimation models, and generate operational alerting.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 36.1 | Azure Monitor metric emitter | Orchestrator | `run_migration.py` | Emit custom metrics (migration_duration, artifacts_generated, errors_count, conversion_score_avg) to Azure Monitor via REST API |
+| 36.2 | Migration cost estimator | Assessment | `run_assessment.py` | Estimate Fabric CU consumption per notebook/pipeline based on data volume, transformation complexity, Spark config |
+| 36.3 | Operational alerting integration | Orchestrator | `run_migration.py` | Send Teams/Slack webhook on migration failure, with error details and remediation suggestions |
+| 36.4 | Migration telemetry dashboard | Orchestrator | `dashboard.py` | Add Azure Monitor integration tab to HTML dashboard — link to Log Analytics queries |
+| 36.5 | RU/CU budget planner | Assessment | `output/inventory/cost_estimate.md` | Per-mapping and per-wave CU cost projection with total migration cost |
+| 36.6 | Observability tests | Validation | `tests/test_sprint31_40.py` | 15+ tests covering metric emission, cost estimation, alerting |
+
+**Sprint 36 Exit Criteria:**
+- [ ] Migration metrics visible in Azure Monitor after deployment
+- [ ] Cost estimates within 20% of actual CU usage (validated post-migration)
+- [ ] Teams webhook fires on simulated failure
+- [ ] 718+ tests passing
+
+---
+
+## Sprint 37 — Performance at Scale (100+ Mappings)
+
+**Goal:** Profile and optimize for large-scale migrations — 100+ mappings, 50+ workflows, parallel generation, and memory-efficient XML parsing.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 37.1 | Large-scale XML fixtures | Assessment | `tests/fixtures/` | Generate synthetic Informatica XML with 100 mappings, 50 workflows, 500 transformations |
+| 37.2 | XML streaming parser (SAX) | Assessment | `run_assessment.py` | Replace full DOM parse with SAX-based streaming for files >10MB to reduce memory footprint |
+| 37.3 | Parallel notebook generation | Notebook | `run_notebook_migration.py` | Generate notebooks in parallel using `multiprocessing.Pool` (configurable worker count) |
+| 37.4 | Parallel SQL conversion | SQL | `run_sql_migration.py` | Convert SQL files in parallel using `concurrent.futures.ProcessPoolExecutor` |
+| 37.5 | Generation timing & profiling | Orchestrator | `run_migration.py` | Per-phase and per-artifact timing in audit log; `--profile` flag for cProfile output |
+| 37.6 | Memory usage tracking | Orchestrator | `run_migration.py` | Log peak memory usage per phase; warn if >500MB |
+| 37.7 | Scale tests | Validation | `tests/test_sprint31_40.py` | 15+ tests including large-scale fixture parsing, parallel generation correctness, memory bounds |
+
+**Sprint 37 Exit Criteria:**
+- [ ] 100-mapping migration completes in <60s on standard hardware
+- [ ] Memory usage stays under 500MB for 100-mapping parse
+- [ ] Parallel generation shows 2x+ speedup vs sequential
+- [ ] 733+ tests passing
+
+---
+
+## Sprint 38 — Interactive Web UI & Migration Wizard
+
+**Goal:** Build a browser-based migration wizard for non-CLI users — upload XML, configure options, preview artifacts, and deploy.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 38.1 | Streamlit migration wizard | Orchestrator | `web/app.py` | 6-step wizard: Upload → Assess → Configure → Convert → Review → Deploy |
+| 38.2 | Interactive mapping review | Notebook | `web/app.py` | Side-by-side view: Informatica mapping XML ↔ generated PySpark notebook, with inline edit |
+| 38.3 | Pipeline visual preview | Pipeline | `web/app.py` | Render pipeline JSON as visual graph (Mermaid or D3) in browser |
+| 38.4 | Deployment progress tracker | Orchestrator | `web/app.py` | Real-time deployment progress with per-artifact status updates |
+| 38.5 | Export/import configuration | Orchestrator | `web/app.py` | Save/load migration configuration as JSON for repeatable runs |
+| 38.6 | Web UI tests | Validation | `tests/test_sprint31_40.py` | 10+ tests covering wizard flow, artifact rendering, config persistence |
+
+**Sprint 38 Exit Criteria:**
+- [ ] Web wizard runs locally via `python -m streamlit run web/app.py`
+- [ ] Full migration cycle possible through browser (upload → deploy)
+- [ ] Pipeline graph rendered visually
+- [ ] 743+ tests passing
+
+---
+
+## Sprint 39 — Data Quality & Governance Migration
+
+**Goal:** Migrate Informatica Data Quality (DQ) rules and governance metadata to Fabric equivalents — profiling, rules, PII detection, and cataloging.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 39.1 | DQ rules extraction | Assessment | `run_assessment.py` | Parse Informatica DQ task rules (standardization, validation, matching) from XML |
+| 39.2 | DQ rules → PySpark validation | Notebook | `run_notebook_migration.py` | Convert DQ rules to PySpark validation cells (regex, range checks, referential integrity) |
+| 39.3 | PII detection rules | Notebook | `run_notebook_migration.py` | Generate PySpark cells that scan target tables for PII patterns (email, phone, SSN, credit card) |
+| 39.4 | Microsoft Purview catalog integration | Orchestrator | `output/catalog/` | Generate Purview-compatible metadata JSON for registering migrated assets |
+| 39.5 | Data sensitivity classification | Assessment | `run_assessment.py` | Auto-classify columns as Public/Internal/Confidential/Restricted based on name patterns and DQ metadata |
+| 39.6 | Governance tests | Validation | `tests/test_sprint31_40.py` | 15+ tests covering DQ extraction, PII detection, Purview output |
+
+**Sprint 39 Exit Criteria:**
+- [ ] Informatica DQ rules converted to runnable PySpark validation
+- [ ] PII scanner detects 5+ pattern types with configurable sensitivity
+- [ ] Purview metadata JSON generated for all target tables
+- [ ] 758+ tests passing
+
+---
+
+## Sprint 40 — Enterprise Documentation & Runbook
+
+**Goal:** Production-grade documentation for enterprise migration teams — operational runbook, migration playbook, troubleshooting encyclopedia, and training materials.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 40.1 | Migration runbook | All | `docs/RUNBOOK.md` | Step-by-step operational guide: pre-migration checklist, execution, validation, cutover, rollback |
+| 40.2 | Enterprise migration playbook | All | `docs/ENTERPRISE_PLAYBOOK.md` | 8-phase playbook: Discover → Assess → Plan → Convert → Validate → Deploy → Monitor → Optimize |
+| 40.3 | Troubleshooting encyclopedia | All | `docs/TROUBLESHOOTING.md` | Expand to 30+ common issues with resolution steps, covering Fabric-specific errors |
+| 40.4 | Architecture Decision Records (Phase 2) | All | `docs/ADR/` | ADRs for: Lakehouse vs Warehouse decision, multi-tenant strategy, Key Vault integration, parallel execution |
+| 40.5 | Migration checklist template | All | `templates/migration_checklist.md` | Reusable per-wave checklist (pre/during/post) for migration teams |
+| 40.6 | Release notes generator | Orchestrator | `run_migration.py` | `--release-notes` flag that generates changelog from migration summary + deployment log |
+
+**Sprint 40 Exit Criteria:**
+- [ ] Runbook covers all operational scenarios (happy path, failure, rollback)
+- [ ] Enterprise playbook aligns with Fabric Well-Architected Framework
+- [ ] 30+ troubleshooting entries
+- [ ] 4 new ADRs for Phase 2 decisions
+
+---
+
+## Phase 2 Sprint Summary
+
+```mermaid
+pie title Phase 2 Sprint Effort Distribution
+    "Sprint 31 — Object Gaps" : 10
+    "Sprint 32 — DevOps" : 15
+    "Sprint 33 — Advanced SQL" : 20
+    "Sprint 34 — Fabric-Native" : 15
+    "Sprint 35 — Enterprise" : 15
+    "Sprint 36 — Observability" : 10
+    "Sprint 37 — Scale" : 15
+    "Sprint 38 — Web UI" : 15
+    "Sprint 39 — DQ & Governance" : 15
+    "Sprint 40 — Docs & Runbook" : 10
+```
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **31** | Assessment, Notebook, Orchestrator | EP, AEP, ASSOC, KEYGEN, ADDRVAL, Object Types, Roles scripts | ✅ Complete |
+| **32** | Orchestrator, Validation | Deployment Pipeline JSON, Git structure, env configs, promotion | ⏳ Deferred → Phase 3 |
+| **33** | SQL, Notebook | Dynamic SQL, cursors → PySpark, CONNECT BY → recursive CTE, BULK COLLECT | ✅ Complete |
+| **34** | Assessment, SQL, Pipeline, Orchestrator | Lakehouse/Warehouse decision, T-SQL DDL, OneLake shortcuts, Mirroring, Eventstream | ⏳ Deferred → Phase 3 |
+| **35** | Orchestrator, Validation | Multi-tenant templates, Key Vault, parallel waves, manifest, batch CLI | ✅ Complete |
+| **36** | Orchestrator, Assessment | Azure Monitor metrics, cost estimator, Teams/Slack alerting | ⏳ Deferred → Phase 3 |
+| **37** | Assessment, Notebook, SQL, Orchestrator | SAX parser, parallel generation, profiling, memory optimization | ✅ Complete |
+| **38** | Orchestrator, Notebook, Pipeline | Streamlit wizard, mapping review UI, pipeline graph, progress tracker | ✅ Complete |
+| **39** | Assessment, Notebook, Orchestrator | DQ rule extraction, PII detection, Purview catalog, sensitivity classification | ✅ Complete |
+| **40** | All (docs) | Runbook, playbook, troubleshooting 30+, ADRs, checklist, release notes | ✅ Complete |
+
+---
+
+# Phase 3 — Multi-Platform & Production Deployment (Sprints 41–50)
+
+> **Goal:** Complete the Databricks target integration, deliver deferred Fabric-native features, add cross-platform deployment automation, observability, and hardened CI/CD — making the tool production-ready for enterprise customers migrating to **either** Microsoft Fabric **or** Azure Databricks.
+
+```mermaid
+gantt
+    title Phase 3 Roadmap — Sprints 41–50
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Sprint 41 — Databricks Deploy
+    deploy_to_databricks.py     :s41a, 2026-08-14, 7d
+    Unity Catalog permissions   :s41b, 2026-08-14, 5d
+    Databricks tests expansion  :s41c, after s41a, 3d
+
+    section Sprint 42 — DevOps (Deferred 32)
+    Fabric Deployment Pipelines :s42a, 2026-08-28, 7d
+    Databricks Asset Bundles    :s42b, 2026-08-28, 7d
+    Env promotion (Dev→Test→Prod) :s42c, after s42a, 5d
+
+    section Sprint 43 — Platform-Native (Deferred 34)
+    OneLake shortcuts / Delta Sharing :s43a, 2026-09-11, 5d
+    Lakehouse vs Warehouse decision   :s43b, 2026-09-11, 5d
+    SQL Warehouse DDL (Databricks)    :s43c, after s43a, 5d
+
+    section Sprint 44 — Observability (Deferred 36)
+    Azure Monitor integration   :s44a, 2026-09-25, 7d
+    Cost estimator (per target) :s44b, 2026-09-25, 5d
+    Alerting & notifications    :s44c, after s44a, 5d
+
+    section Sprint 45 — Cross-Platform
+    Target comparison report    :s45a, 2026-10-09, 7d
+    Dual-target generation      :s45b, 2026-10-09, 5d
+    Migration advisor           :s45c, after s45a, 5d
+
+    section Sprint 46 — Synapse Target
+    Synapse Dedicated Pool DDL  :s46a, 2026-10-23, 7d
+    Synapse Pipelines           :s46b, 2026-10-23, 5d
+    Synapse Serverless SQL      :s46c, after s46a, 5d
+
+    section Sprint 47 — Advanced Databricks
+    Unity Catalog lineage       :s47a, 2026-11-06, 7d
+    DLT pipeline generation     :s47b, 2026-11-06, 5d
+    Cluster policy recommender  :s47c, after s47a, 5d
+
+    section Sprint 48 — Integration Testing
+    E2E multi-target tests      :s48a, 2026-11-20, 7d
+    Performance benchmarks      :s48b, 2026-11-20, 5d
+    Regression suite            :s48c, after s48a, 5d
+
+    section Sprint 49 — Enterprise Polish
+    Migration dashboard v2      :s49a, 2026-12-04, 7d
+    Plugin system               :s49b, 2026-12-04, 5d
+    API server (REST)           :s49c, after s49a, 5d
+
+    section Sprint 50 — Release & Docs
+    Phase 3 docs update         :s50a, 2026-12-18, 7d
+    Release packaging           :s50b, 2026-12-18, 5d
+    ADRs for Phase 3            :s50c, after s50a, 5d
+```
+
+---
+
+## Sprint 41 — Databricks Deployment & Permissions
+
+**Goal:** Complete the Databricks target with automated deployment (`deploy_to_databricks.py`) and Unity Catalog permission script generation.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 41.1 | Databricks deployment script | Orchestrator | `deploy_to_databricks.py` | Deploy notebooks via Databricks REST API (`/api/2.0/workspace/import`); deploy jobs via Jobs API (`/api/2.1/jobs/create`); support `--dry-run`, `--workspace-url`, `--token` flags |
+| 41.2 | Unity Catalog permission generator | Orchestrator | `output/scripts/uc_permissions.sql` | Parse Informatica roles → generate `GRANT` statements for Unity Catalog (catalog, schema, table, function levels) |
+| 41.3 | Databricks secret scope setup | Orchestrator | `deploy_to_databricks.py` | `--setup-secrets` flag that creates secret scope and populates from Key Vault or config |
+| 41.4 | Databricks cluster config recommendation | Assessment | `output/inventory/cluster_config.json` | Recommend cluster size (driver/worker node type, count) based on mapping complexity and data volume |
+| 41.5 | Expand Databricks test coverage | Validation | `tests/test_databricks_target.py` | 80+ Databricks tests (up from 50) covering deployment, permissions, and cluster config |
+| 41.6 | Update docs for Databricks target | All | `README.md`, `docs/USER_GUIDE.md` | Databricks Quick Start, `--target databricks` examples, Unity Catalog setup guide |
+
+**Sprint 41 Exit Criteria:**
+- [ ] `deploy_to_databricks.py` deploys notebooks + jobs to a Databricks workspace
+- [ ] Unity Catalog GRANT scripts cover catalog/schema/table/function permissions
+- [ ] 80+ Databricks tests passing
+- [ ] README and User Guide updated with Databricks instructions
+- [ ] 826+ total tests passing
+
+---
+
+## Sprint 42 — DevOps & Environment Promotion (Deferred Sprint 32)
+
+**Goal:** Enable CI/CD-driven deployments for both Fabric and Databricks — Fabric Deployment Pipelines, Databricks Asset Bundles, Git integration, and environment promotion.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 42.1 | Fabric Deployment Pipeline scaffolding | Orchestrator | `deploy_to_fabric.py` | Generate Fabric Deployment Pipeline definition JSON (Dev → Test → Prod stages) |
+| 42.2 | Databricks Asset Bundles (DAB) generation | Orchestrator | `output/databricks_bundle/` | Generate `databricks.yml` + bundle structure for `databricks bundle deploy` |
+| 42.3 | Git-compatible folder structure | Orchestrator | `output/git/` | Generate folder structure compatible with both Fabric Git integration and Databricks Repos |
+| 42.4 | Environment-specific config templates | Orchestrator | `templates/env_config/` | Generate `dev.yaml`, `test.yaml`, `prod.yaml` per target platform with parameterized connections |
+| 42.5 | Deployment promotion script | Orchestrator | `deploy_to_fabric.py`, `deploy_to_databricks.py` | `--promote dev test` flag for both platforms |
+| 42.6 | Pre-deployment validation | Validation | Deployment scripts | `--validate` flag checking schema compatibility, referenced notebooks exist, JSON valid |
+| 42.7 | Deployment rollback | Orchestrator | Deployment scripts | `--rollback` flag reverting to previous version via deployment log |
+| 42.8 | DevOps tests | Validation | `tests/test_phase3.py` | 25+ tests covering promotion, DAB, config substitution, rollback |
+
+**Sprint 42 Exit Criteria:**
+- [ ] Fabric Deployment Pipeline JSON generated
+- [ ] Databricks Asset Bundle (`databricks.yml`) generated and structurally valid
+- [ ] `--promote`, `--validate`, `--rollback` functional for both platforms
+- [ ] 851+ tests passing
+
+---
+
+## Sprint 43 — Platform-Native Features (Deferred Sprint 34)
+
+**Goal:** Generate platform-native artifacts — OneLake shortcuts, Delta Sharing, Lakehouse vs Warehouse decision engine, and Databricks SQL Warehouse DDL.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 43.1 | Lakehouse vs Warehouse decision engine | Assessment | `run_assessment.py` | Analyze mapping patterns → recommend Lakehouse (ETL-heavy) vs Warehouse (SQL-heavy) per target table |
+| 43.2 | Fabric Warehouse DDL generator | SQL | `run_schema_generator.py` | Generate T-SQL `CREATE TABLE` for Warehouse targets alongside Delta DDL for Lakehouse |
+| 43.3 | Databricks SQL Warehouse DDL | SQL | `run_schema_generator.py` | Generate SQL Warehouse-optimized DDL (CLUSTER BY, Z-ORDER recommendations) |
+| 43.4 | OneLake shortcut generator | Orchestrator | `output/shortcuts/` | Generate shortcut definitions for cross-lakehouse references (replacing DB links) |
+| 43.5 | Delta Sharing configuration | Orchestrator | `output/delta_sharing/` | Generate Delta Sharing provider/recipient config for cross-workspace data access in Databricks |
+| 43.6 | Mirroring configuration | Orchestrator | `output/mirroring/` | Generate Fabric Mirroring setup for Oracle/SQL Server sources |
+| 43.7 | Platform-native tests | Validation | `tests/test_phase3.py` | 20+ tests covering decision engine, DDL variants, shortcuts, Delta Sharing |
+
+**Sprint 43 Exit Criteria:**
+- [ ] Decision engine recommends Lakehouse vs Warehouse per mapping
+- [ ] Both Delta DDL and T-SQL DDL / SQL Warehouse DDL generated
+- [ ] OneLake shortcuts and Delta Sharing configs replace DB link references
+- [ ] 871+ tests passing
+
+---
+
+## Sprint 44 — Observability & Cost Estimation (Deferred Sprint 36)
+
+**Goal:** Production-grade observability — emit metrics to Azure Monitor, build per-target cost estimation models, and generate alerting.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 44.1 | Azure Monitor metric emitter | Orchestrator | `run_migration.py` | Emit custom metrics (duration, artifacts generated, errors, conversion score) to Azure Monitor |
+| 44.2 | Migration cost estimator — Fabric | Assessment | `output/inventory/cost_estimate.md` | Per-mapping CU projection for Fabric (Spark pool, Pipeline activity, storage) |
+| 44.3 | Migration cost estimator — Databricks | Assessment | `output/inventory/cost_estimate.md` | Per-mapping DBU projection for Databricks (cluster hours, Jobs compute, storage) |
+| 44.4 | Operational alerting | Orchestrator | `run_migration.py` | Teams/Slack webhook on migration failure with error details |
+| 44.5 | Databricks cluster policy recommender | Assessment | `output/inventory/cluster_config.json` | Recommend cluster policy based on workload profile (interactive vs job vs SQL warehouse) |
+| 44.6 | Telemetry dashboard v2 | Orchestrator | `dashboard.py` | Add target platform tab, cost breakdown, Azure Monitor links |
+| 44.7 | Observability tests | Validation | `tests/test_phase3.py` | 15+ tests covering metrics, cost estimation, alerting |
+
+**Sprint 44 Exit Criteria:**
+- [ ] Migration metrics visible in Azure Monitor
+- [ ] Cost estimates generated per target platform
+- [ ] Teams webhook fires on simulated failure
+- [ ] 886+ tests passing
+
+---
+
+## Sprint 45 — Cross-Platform Comparison & Dual-Target
+
+**Goal:** Enable side-by-side comparison of migration outputs for Fabric vs Databricks, and support dual-target generation in a single run.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 45.1 | Target comparison report | Orchestrator | `output/comparison_report.md` | Side-by-side comparison: notebook API calls, pipeline structure, DDL syntax, cost projections |
+| 45.2 | Dual-target generation | Orchestrator | `run_migration.py` | `--target all` flag generates both Fabric and Databricks artifacts in separate output dirs |
+| 45.3 | Migration advisor | Assessment | `output/inventory/target_recommendation.md` | Recommend Fabric vs Databricks based on workload characteristics (SQL-heavy → Fabric Warehouse, ML → Databricks, etc.) |
+| 45.4 | Unified deployment manifest | Orchestrator | `output/manifest.json` | Single manifest referencing both Fabric and Databricks artifacts with deployment order |
+| 45.5 | Cross-platform tests | Validation | `tests/test_phase3.py` | 15+ tests covering comparison report, dual-target, advisor |
+
+**Sprint 45 Exit Criteria:**
+- [ ] Comparison report clearly shows Fabric vs Databricks differences per mapping
+- [ ] `--target all` produces both artifact sets
+- [ ] Migration advisor provides actionable recommendation
+- [ ] 901+ tests passing
+
+---
+
+## Sprint 46 — Synapse Analytics Target
+
+**Goal:** Add Azure Synapse Analytics (Dedicated SQL Pools) as a third target platform for SQL-heavy workloads.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 46.1 | Synapse Dedicated Pool DDL | SQL | `run_schema_generator.py` | Generate Synapse-optimized DDL (DISTRIBUTION, CLUSTERED COLUMNSTORE INDEX, PARTITION) |
+| 46.2 | Synapse Pipeline generation | Pipeline | `run_pipeline_migration.py` | Generate Synapse Pipelines (ADF-compatible JSON) |
+| 46.3 | Synapse Serverless SQL views | SQL | `run_sql_migration.py` | Generate Serverless SQL views over Delta tables (OPENROWSET patterns) |
+| 46.4 | T-SQL stored procedure migration | SQL | `run_sql_migration.py` | Convert Oracle SPs to Synapse T-SQL stored procedures (not just Spark SQL) |
+| 46.5 | Synapse deployment script | Orchestrator | `deploy_to_synapse.py` | Deploy artifacts to Synapse workspace via REST API |
+| 46.6 | Synapse tests | Validation | `tests/test_phase3.py` | 20+ tests for Synapse DDL, pipelines, deployment |
+
+**Sprint 46 Exit Criteria:**
+- [ ] Synapse DDL uses DISTRIBUTION, CLUSTERED COLUMNSTORE INDEX
+- [ ] Synapse Pipelines generated as ADF-compatible JSON
+- [ ] `--target synapse` flag functional
+- [ ] 921+ tests passing
+
+---
+
+## Sprint 47 — Advanced Databricks Features
+
+**Goal:** Deep Databricks integration — Unity Catalog lineage, Delta Live Tables (DLT), and intelligent cluster policy recommendations.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 47.1 | Unity Catalog lineage metadata | Assessment | `output/inventory/uc_lineage.json` | Generate UC lineage API-compatible metadata for migrated tables and notebooks |
+| 47.2 | Delta Live Tables (DLT) pipeline generation | Notebook | `run_notebook_migration.py` | `--databricks-dlt` flag generates DLT notebooks with `@dlt.table` decorators instead of raw PySpark |
+| 47.3 | Databricks SQL dashboard generation | Validation | `output/databricks/dashboards/` | Convert validation notebooks to Databricks SQL dashboard queries |
+| 47.4 | Cluster policy recommendation engine | Assessment | `output/inventory/cluster_policies.json` | Recommend photon-enabled, GPU, memory-optimized, or standard based on transformation patterns |
+| 47.5 | Databricks Workflows advanced features | Pipeline | `run_pipeline_migration.py` | Add job clusters, task dependencies with condition, repair run config |
+| 47.6 | Advanced Databricks tests | Validation | `tests/test_phase3.py` | 20+ tests covering DLT, UC lineage, dashboards, cluster policies |
+
+**Sprint 47 Exit Criteria:**
+- [ ] DLT notebooks generated with `@dlt.table` / `@dlt.view` decorators
+- [ ] Unity Catalog lineage metadata passes UC validation
+- [ ] Cluster policy recommendations vary by workload type
+- [ ] 941+ tests passing
+
+---
+
+## Sprint 48 — Integration Testing & Benchmarks
+
+**Goal:** Comprehensive cross-platform integration tests, performance benchmarks, and regression suite for all three targets.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 48.1 | E2E multi-target tests | Validation | `tests/test_e2e_multitarget.py` | Full migration pipeline tested for Fabric, Databricks, and Synapse targets |
+| 48.2 | Performance benchmarks | Orchestrator | `tests/benchmarks/` | Measure generation time for 10/50/100/500 mapping workloads per target |
+| 48.3 | Regression snapshot suite | Validation | `tests/snapshots/` | Golden-file comparison for all generated notebooks, pipelines, DDL across targets |
+| 48.4 | Error recovery testing | Orchestrator | `tests/test_phase3.py` | Test graceful degradation: missing XML, corrupt config, network timeout during deploy |
+| 48.5 | Memory & CPU profiling | Orchestrator | `tests/benchmarks/` | Profile peak memory and CPU for large workloads; validate <500MB threshold |
+| 48.6 | Integration test infrastructure | Validation | `tests/conftest.py` | Shared fixtures, parametrized target tests, CI matrix for all targets |
+
+**Sprint 48 Exit Criteria:**
+- [ ] E2E tests pass for all 3 targets with identical input
+- [ ] Performance benchmarks documented in `output/benchmarks/`
+- [ ] Regression snapshots capture all artifact types
+- [ ] 961+ tests passing
+
+---
+
+## Sprint 49 — Enterprise Polish & Extensibility
+
+**Goal:** Production polish — migration dashboard v2 with multi-target support, plugin system for custom transformations, and REST API server.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 49.1 | Migration dashboard v2 | Orchestrator | `dashboard.py` | Multi-target dashboard with tabs per platform, cost breakdown, deployment status, lineage viz |
+| 49.2 | Plugin system for custom transformations | Notebook | `plugins/` | Register custom transformation handlers (PySpark function) that integrate into notebook generation |
+| 49.3 | REST API server | Orchestrator | `api/server.py` | HTTP API for programmatic migration (POST `/migrate`, GET `/status`, GET `/artifacts`) |
+| 49.4 | Web UI v2 — multi-target | All | `web/app.py` | Web wizard supports Fabric, Databricks, and Synapse targets with target-specific config |
+| 49.5 | Migration template marketplace | Orchestrator | `templates/marketplace/` | Pre-built migration patterns (e.g., Oracle EBS → Fabric, SAP → Databricks) |
+| 49.6 | Enterprise polish tests | Validation | `tests/test_phase3.py` | 15+ tests for dashboard, plugins, API, marketplace |
+
+**Sprint 49 Exit Criteria:**
+- [ ] Dashboard renders multi-target migration status
+- [ ] Plugin system allows custom transformation registration
+- [ ] REST API serves migration requests
+- [ ] 976+ tests passing
+
+---
+
+## Sprint 50 — Release Packaging & Documentation
+
+**Goal:** Final Phase 3 release — updated documentation, ADRs, release packaging, and comprehensive migration guide for all target platforms.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 50.1 | Phase 3 documentation update | All | `README.md`, `docs/USER_GUIDE.md`, `docs/TROUBLESHOOTING.md` | All docs reflect 3 target platforms, 50 sprints, full feature set |
+| 50.2 | Architecture Decision Records (Phase 3) | All | `docs/ADR/` | ADRs for: multi-target architecture, Databricks Asset Bundles, DLT generation, Synapse target, plugin system |
+| 50.3 | Release packaging | Orchestrator | `pyproject.toml`, CI/CD | PyPI package with optional deps per target (`[databricks]`, `[synapse]`, `[all]`) |
+| 50.4 | Migration certification checklist | All | `templates/certification_checklist.md` | Per-target pre/post migration certification checklist for enterprise sign-off |
+| 50.5 | Video walkthrough scripts | All | `docs/walkthroughs/` | Script outlines for Fabric, Databricks, and Synapse migration walkthroughs |
+| 50.6 | AGENTS.md and CONTRIBUTING.md update | All | `AGENTS.md`, `CONTRIBUTING.md` | Reflect multi-target support, new modules, updated agent responsibilities |
+
+**Sprint 50 Exit Criteria:**
+- [ ] All documentation reflects 3 targets and 50 sprints
+- [ ] 5 new ADRs for Phase 3 decisions
+- [ ] PyPI package installable with target-specific extras
+- [ ] 990+ total tests passing
+- [ ] AGENTS.md describes deploy-to-databricks and deploy-to-synapse modules
+
+---
+
+## Phase 3 Sprint Summary
+
+```mermaid
+pie title Phase 3 Sprint Effort Distribution
+    "Sprint 41 — Databricks Deploy" : 15
+    "Sprint 42 — DevOps (Deferred 32)" : 20
+    "Sprint 43 — Platform-Native (Deferred 34)" : 15
+    "Sprint 44 — Observability (Deferred 36)" : 15
+    "Sprint 45 — Cross-Platform" : 15
+    "Sprint 46 — Synapse Target" : 20
+    "Sprint 47 — Advanced Databricks" : 20
+    "Sprint 48 — Integration Testing" : 15
+    "Sprint 49 — Enterprise Polish" : 15
+    "Sprint 50 — Release & Docs" : 10
+```
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **41** | Orchestrator, Assessment, Validation | `deploy_to_databricks.py`, UC permissions, cluster config | ⏳ Planned |
+| **42** | Orchestrator, Validation | Fabric Deployment Pipelines, Databricks Asset Bundles, env promotion | ⏳ Planned |
+| **43** | Assessment, SQL, Orchestrator | Lakehouse/Warehouse decision, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing | ⏳ Planned |
+| **44** | Orchestrator, Assessment | Azure Monitor metrics, per-target cost estimator, alerting | ⏳ Planned |
+| **45** | Orchestrator, Assessment | Comparison report, dual-target generation, migration advisor | ⏳ Planned |
+| **46** | SQL, Pipeline, Orchestrator | Synapse DDL, Synapse Pipelines, `deploy_to_synapse.py` | ⏳ Planned |
+| **47** | Notebook, Assessment, Pipeline | DLT notebooks, UC lineage, SQL dashboards, cluster policies | ⏳ Planned |
+| **48** | Validation, Orchestrator | E2E multi-target tests, benchmarks, regression snapshots | ⏳ Planned |
+| **49** | Orchestrator, Notebook, All | Dashboard v2, plugin system, REST API, web UI v2 | ⏳ Planned |
+| **50** | All (docs) | Phase 3 docs, ADRs, PyPI packaging, certification checklist | ⏳ Planned |

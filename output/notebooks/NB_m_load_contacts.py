@@ -11,7 +11,7 @@
 # Sources: src_sf_contacts
 # Targets: tgt_lh_contacts
 # Flow: EXP → port → FIL → LKP → AGG → DM
-# Generated: 2026-03-23
+# Generated: 2026-03-24
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -39,9 +39,9 @@ df = df_source.withColumn(
 # COMMAND ----------
 
 # CELL 4 — Transformation: port
-# --- port transformation (PLACEHOLDER) ---
-# TODO: Manual conversion required for port
-#   This transformation type requires manual review and PySpark implementation.
+# --- port transformation (UNKNOWN) ---
+# This transformation type (port) is not recognized.
+# Manual conversion required.
 df = df
 # COMMAND ----------
 

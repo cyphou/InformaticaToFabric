@@ -145,7 +145,78 @@ for c in dq_checks:
     print(f'  - {c["rule"]}: {c["result"]} ({c["detail"]})')
 # COMMAND ----------
 
-# Cell 5: Summary Report
+# Cell 5: Level 4 — Key Field Sampling
+try:
+    sample_size = 100
+    source_sample = df_source.orderBy(col(key_columns[0])).limit(sample_size)
+    target_sample = df_target.orderBy(col(key_columns[0])).limit(sample_size)
+
+    # Compare key column values
+    source_keys = set(row[key_columns[0]] for row in source_sample.select(key_columns[0]).collect())
+    target_keys = set(row[key_columns[0]] for row in target_sample.select(key_columns[0]).collect())
+    common_keys = source_keys & target_keys
+    missing_in_target = source_keys - target_keys
+
+    if not missing_in_target:
+        sampling_result = "PASS"
+        sampling_detail = f"All {len(common_keys)} sampled keys present in target"
+    else:
+        sampling_result = "FAIL"
+        sampling_detail = f"{len(missing_in_target)} of {len(source_keys)} sampled keys missing in target"
+except Exception as e:
+    sampling_result = "SKIPPED"
+    sampling_detail = f"Sampling failed — {e}"
+
+results.append({
+    "check": "Key Sampling", "level": 4,
+    "result": sampling_result, "detail": sampling_detail
+})
+print(f"[Level 4] Key Sampling: {sampling_result} — {sampling_detail}")
+# COMMAND ----------
+
+# Cell 6: Level 5 — Aggregate Comparison
+try:
+    # Compare aggregate stats between source and target
+    numeric_cols = [f.name for f in df_target.schema.fields
+                    if str(f.dataType) in ('IntegerType()', 'LongType()',
+                                           'DoubleType()', 'FloatType()',
+                                           'DecimalType()')]
+    agg_checks = []
+    for nc in numeric_cols[:5]:  # Limit to first 5 numeric columns
+        src_sum = df_source.agg(spark_sum(col(nc))).collect()[0][0]
+        tgt_sum = df_target.agg(spark_sum(col(nc))).collect()[0][0]
+        if src_sum is None and tgt_sum is None:
+            agg_checks.append(("PASS", f"{nc}: both NULL"))
+        elif src_sum is not None and tgt_sum is not None:
+            diff_pct = abs(float(src_sum) - float(tgt_sum)) / max(abs(float(src_sum)), 1) * 100
+            if diff_pct < 0.01:
+                agg_checks.append(("PASS", f"{nc}: src={src_sum}, tgt={tgt_sum}"))
+            else:
+                agg_checks.append(("FAIL", f"{nc}: src={src_sum}, tgt={tgt_sum}, diff={diff_pct:.2f}%"))
+        else:
+            agg_checks.append(("FAIL", f"{nc}: src={src_sum}, tgt={tgt_sum}"))
+
+    if not agg_checks:
+        agg_result = "SKIPPED"
+        agg_detail = "No numeric columns found"
+    elif all(r[0] == "PASS" for r in agg_checks):
+        agg_result = "PASS"
+        agg_detail = "; ".join(r[1] for r in agg_checks)
+    else:
+        agg_result = "FAIL"
+        agg_detail = "; ".join(r[1] for r in agg_checks)
+except Exception as e:
+    agg_result = "SKIPPED"
+    agg_detail = f"Aggregate comparison failed — {e}"
+
+results.append({
+    "check": "Aggregate Comparison", "level": 5,
+    "result": agg_result, "detail": agg_detail
+})
+print(f"[Level 5] Aggregate Comparison: {agg_result} — {agg_detail}")
+# COMMAND ----------
+
+# Cell 7: Summary Report
 overall = "PASS" if all(r["result"] == "PASS" for r in results) else (
     "FAIL" if any(r["result"] == "FAIL" for r in results) else "SKIPPED"
 )

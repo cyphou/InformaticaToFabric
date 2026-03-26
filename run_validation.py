@@ -13,6 +13,7 @@ Usage:
 """
 
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,15 +27,30 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 SEP = "# COMMAND ----------\n\n"
 
 
+def _get_target():
+    """Return the target platform ('fabric' or 'databricks')."""
+    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+
+
+def _get_catalog():
+    """Return the Unity Catalog name for Databricks target."""
+    return os.environ.get("INFORMATICA_DATABRICKS_CATALOG", "main")
+
+
 def _infer_target_table(target_name, transformations):
-    """Infer lakehouse tier from target name and transformation types."""
+    """Infer fully-qualified table name from target name and transformation types."""
     name_lower = target_name.lower()
+    target = _get_target()
     if any(x in name_lower for x in ("agg", "gold", "rpt", "kpi", "summary")):
-        return f"gold.{name_lower}"
+        tier = "gold"
     elif any(x in name_lower for x in ("dim", "fact", "silver", "stg")):
-        return f"silver.{name_lower}"
+        tier = "silver"
     else:
-        return f"silver.{name_lower}"
+        tier = "silver"
+    if target == "databricks":
+        catalog = _get_catalog()
+        return f"{catalog}.{tier}.{name_lower}"
+    return f"{tier}.{name_lower}"
 
 
 def _infer_key_columns(target_name):
@@ -89,7 +105,7 @@ def generate_validation(mapping, source_type):
 
         # Header
         cells.append(
-            f"# Databricks notebook source / Fabric Notebook\n"
+            f"# {'Databricks' if _get_target() == 'databricks' else 'Fabric'} notebook source\n"
             f"# =============================================================================\n"
             f"# Validation Notebook: VAL_{safe_name}\n"
             f"# Source: {', '.join(sources)} → Target: {target_table}\n"
@@ -417,7 +433,7 @@ def generate_test_matrix(inventory, generated_files):
         "",
         "## How to Run",
         "",
-        "1. Upload validation notebooks to a Fabric workspace",
+        "1. Upload validation notebooks to your Fabric workspace or Databricks workspace",
         "2. Configure source JDBC connection strings in Cell 1",
         "3. Run all cells — review OVERALL RESULT in final cell",
         "4. Address any FAIL results before sign-off",
@@ -478,8 +494,11 @@ def main():
     with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
+    target = _get_target()
+    target_label = "Databricks" if target == "databricks" else "Fabric"
+
     print("=" * 60)
-    print("  Validation Generation — Phase 4")
+    print(f"  Validation Generation — Phase 4 [{target_label}]")
     print("=" * 60)
     print()
 

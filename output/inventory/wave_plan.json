@@ -1,0 +1,72 @@
+{
+  "total_waves": 3,
+  "total_mappings": 12,
+  "total_effort_hours": 24.0,
+  "critical_path": [
+    "M_COMPLEX_MULTI_SOURCE"
+  ],
+  "critical_path_effort_hours": 4.5,
+  "waves": [
+    {
+      "wave_number": 1,
+      "mappings": [
+        "DQ_STANDARDIZE_ADDRESSES",
+        "DQ_VALIDATE_EMAILS",
+        "MI_BULK_LOAD_PRODUCTS",
+        "M_COMPLEX_MULTI_SOURCE",
+        "M_LOAD_CUSTOMERS",
+        "M_LOAD_EMPLOYEES",
+        "M_UPSERT_INVENTORY",
+        "SYNC_CUSTOMER_DATA",
+        "m_load_contacts",
+        "m_sync_accounts"
+      ],
+      "parallel_count": 10,
+      "dependencies": [],
+      "estimated_effort_hours": 19.0,
+      "complexity_breakdown": {
+        "Complex": 5,
+        "Simple": 4,
+        "Medium": 1
+      }
+    },
+    {
+      "wave_number": 2,
+      "mappings": [
+        "M_LOAD_ORDERS"
+      ],
+      "parallel_count": 1,
+      "dependencies": [
+        {
+          "mapping": "M_LOAD_ORDERS",
+          "depends_on": [
+            "M_LOAD_CUSTOMERS"
+          ]
+        }
+      ],
+      "estimated_effort_hours": 4,
+      "complexity_breakdown": {
+        "Complex": 1
+      }
+    },
+    {
+      "wave_number": 3,
+      "mappings": [
+        "M_VARIANCE_REPORT"
+      ],
+      "parallel_count": 1,
+      "dependencies": [
+        {
+          "mapping": "M_VARIANCE_REPORT",
+          "depends_on": [
+            "M_RECONCILE_TOTALS"
+          ]
+        }
+      ],
+      "estimated_effort_hours": 1,
+      "complexity_breakdown": {
+        "Unknown": 1
+      }
+    }
+  ]
+}

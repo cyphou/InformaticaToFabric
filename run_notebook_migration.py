@@ -12,7 +12,9 @@ Usage:
 """
 
 import json
+import os
 import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,6 +24,41 @@ SQL_DIR = WORKSPACE / "output" / "sql"
 INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _get_target():
+    """Return the target platform ('fabric' or 'databricks')."""
+    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+
+
+def _get_catalog():
+    """Return the Unity Catalog name for Databricks target."""
+    return os.environ.get("INFORMATICA_DATABRICKS_CATALOG", "main")
+
+
+def _table_ref(tier, table_name):
+    """Return a fully-qualified table reference for the active target platform."""
+    target = _get_target()
+    if target == "databricks":
+        catalog = _get_catalog()
+        return f"{catalog}.{tier}.{table_name}"
+    return f"{tier}.{table_name}"
+
+
+def _widget_get(param_name):
+    """Return the widget-get call for the active target platform."""
+    target = _get_target()
+    if target == "databricks":
+        return f'dbutils.widgets.get("{param_name}")'
+    return f'notebookutils.widgets.get("{param_name}")'
+
+
+def _secret_get(vault_or_scope, secret_name):
+    """Return the secret-retrieval call for the active target platform."""
+    target = _get_target()
+    if target == "databricks":
+        return f'dbutils.secrets.get(scope="{vault_or_scope}", key="{secret_name}")'
+    return f'notebookutils.credentials.getSecret("{vault_or_scope}", "{secret_name}")'
 
 # Mapping from transformation abbreviation to PySpark code generation
 TX_TEMPLATES = {
@@ -51,6 +88,12 @@ TX_TEMPLATES = {
     "XMLP": "xml_parser",
     "TC": "transaction_control",
     "ULKP": "unconnected_lookup",
+    # Sprint 31: Remaining object gaps
+    "EP": "external_procedure",
+    "AEP": "advanced_external_procedure",
+    "ASSOC": "association",
+    "KEYGEN": "key_generator",
+    "ADDRVAL": "address_validator",
 }
 
 
@@ -68,11 +111,15 @@ def _metadata_cell(mapping):
     params = mapping.get("parameters", [])
 
     lines = [
-        "# Fabric notebook source",
+        f"# {'Databricks' if _get_target() == 'databricks' else 'Fabric'} notebook source",
         "",
         "# METADATA_START",
-        '# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}',
-        "# METADATA_END",
+    ]
+    if _get_target() == "databricks":
+        lines.append('# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}')
+    else:
+        lines.append('# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}')
+    lines.extend([
         "",
         "# CELL 1 — Metadata & Parameters",
         f"# Notebook: NB_{name}",
@@ -90,14 +137,14 @@ def _metadata_cell(mapping):
         ")",
         "from pyspark.sql.window import Window",
         "from delta.tables import DeltaTable",
-    ]
+    ])
 
     if params:
         lines.append("")
         lines.append("# Parameters (from Informatica $$params / pipeline)")
         for p in params:
             safe_name = p.replace("$$", "").lower()
-            lines.append(f'{safe_name} = notebookutils.widgets.get("{safe_name}")')
+            lines.append(f'{safe_name} = {_widget_get(safe_name)}')
 
     return "\n".join(lines)
 
@@ -111,13 +158,13 @@ def _source_cell(mapping, cell_num):
         parts = src.split(".")
         if len(parts) >= 3:
             schema_table = f"{parts[1]}.{parts[2]}"
-            lakehouse_table = f"bronze.{parts[2].lower()}"
+            lakehouse_table = _table_ref("bronze", parts[2].lower())
         elif len(parts) == 2:
             schema_table = src
-            lakehouse_table = f"bronze.{parts[1].lower()}"
+            lakehouse_table = _table_ref("bronze", parts[1].lower())
         else:
             schema_table = src
-            lakehouse_table = f"bronze.{src.lower()}"
+            lakehouse_table = _table_ref("bronze", src.lower())
 
         var_name = "df_source" if i == 0 else f"df_source_{i + 1}"
         lines.append(f"# --- Source: {src} ---")
@@ -192,7 +239,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
             lines.extend([
                 f"# --- Lookup: {lkp_name} ---",
                 "# Using broadcast join for lookup table (< 100MB)",
-                'df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table',
+                f'df_lookup = spark.table("{_table_ref("bronze", "lookup_table")}")  # TODO: Replace with actual lookup table',
                 f"df = {prev_df}.join(",
                 '    broadcast(df_lookup),',
                 '    on="LOOKUP_KEY",  # TODO: Replace with actual lookup condition',
@@ -202,7 +249,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
         else:
             lines.extend([
                 "# --- Lookup transformation ---",
-                'df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace',
+                f'df_lookup = spark.table("{_table_ref("bronze", "lookup_table")}")  # TODO: Replace',
                 f"df = {prev_df}.join(broadcast(df_lookup), on=\"KEY\", how=\"left\")",
             ])
 
@@ -219,9 +266,10 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
     elif tx_type == "UPD":
         targets = mapping.get("targets", ["target_table"])
         target = targets[0].lower() if targets else "target_table"
+        merge_table = _table_ref("silver", target)
         lines.extend([
             "# --- Update Strategy → Delta MERGE ---",
-            f'target_table = DeltaTable.forName(spark, "silver.{target}")',
+            f'target_table = DeltaTable.forName(spark, "{merge_table}")',
             "target_table.alias('tgt').merge(",
             f"    {prev_df}.alias('src'),",
             "    'tgt.ID = src.ID'  # TODO: Replace with actual merge key",
@@ -452,7 +500,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
             "",
             "# Delta Lake provides ACID guarantees on every write.",
             "# Pattern: Write in a single atomic operation with error handling.",
-            "target_table = 'silver.target_table'  # TODO: Replace with actual table",
+            f"target_table = '{_table_ref('silver', 'target_table')}'  # TODO: Replace with actual table",
             "",
             "try:",
             f"    {prev_df}.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(target_table)",
@@ -471,7 +519,7 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
             "# Pattern: Pre-load lookup table, broadcast join, then use when().",
             "",
             "# Load lookup table (broadcast for performance < 100MB)",
-            'df_ulkp = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table',
+            f'df_ulkp = spark.table("{_table_ref("bronze", "lookup_table")}")  # TODO: Replace with actual lookup table',
             'ulkp_key = "LOOKUP_KEY"  # TODO: Replace with actual key column',
             'ulkp_value = "LOOKUP_VALUE"  # TODO: Replace with actual return column',
             'default_value = None  # TODO: Set default value on no-match',
@@ -483,6 +531,122 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
             ")",
             'df = df.withColumn("LOOKUP_RESULT", coalesce(col("_ulkp_val"), lit(default_value)))',
             'df = df.drop("_ulkp_val", ulkp_key)',
+        ])
+
+    # --- Sprint 31: Remaining Object Gap Templates ---
+
+    elif tx_type == "EP":
+        lines.extend([
+            "# --- External Procedure → Python subprocess / UDF ---",
+            "# The original Informatica External Procedure called an external program.",
+            "# Rewrite as a Python subprocess call or native PySpark logic.",
+            "import subprocess",
+            "from pyspark.sql.functions import udf",
+            "from pyspark.sql.types import StringType  # TODO: Match actual return type",
+            "",
+            "@udf(returnType=StringType())",
+            "def external_proc_udf(input_col):",
+            '    \"\"\"Calls external program — replace with actual logic.',
+            '    ',
+            '    Original procedure: TODO — paste procedure name from mapping XML.',
+            '    Input ports: TODO — list input port names.',
+            '    Output ports: TODO — list output port names.',
+            '    \"\"\"',
+            '    # Option 1: Call external executable',
+            '    # result = subprocess.run(["program", str(input_col)], capture_output=True, text=True, timeout=30)',
+            '    # return result.stdout.strip()',
+            '    # Option 2: Rewrite in Python',
+            '    return input_col  # Placeholder',
+            "",
+            f'df = {prev_df}.withColumn("EP_OUTPUT", external_proc_udf(col("INPUT_COL")))  # TODO: Replace columns',
+        ])
+
+    elif tx_type == "AEP":
+        lines.extend([
+            "# --- Advanced External Procedure → Python library call ---",
+            "# The original used a C/C++/Java shared library (.dll/.so/.jar).",
+            "# Port the logic to Python or wrap via ctypes/JNI.",
+            "from pyspark.sql.functions import udf",
+            "from pyspark.sql.types import StringType  # TODO: Match actual return type",
+            "",
+            "# Option 1: ctypes for C/C++ library",
+            "# import ctypes",
+            "# lib = ctypes.CDLL('path/to/library.so')",
+            "",
+            "# Option 2: jpype for Java library",
+            "# import jpype",
+            "",
+            "@udf(returnType=StringType())",
+            "def advanced_ext_proc_udf(input_col):",
+            '    \"\"\"Advanced External Procedure — rewrite native library logic.',
+            '    ',
+            '    Original library: TODO — paste DLL/SO/JAR name from mapping.',
+            '    Function: TODO — paste function/method name.',
+            '    \"\"\"',
+            '    return input_col  # Placeholder — replace with actual logic',
+            "",
+            f'df = {prev_df}.withColumn("AEP_OUTPUT", advanced_ext_proc_udf(col("INPUT_COL")))  # TODO: Replace columns',
+        ])
+
+    elif tx_type == "ASSOC":
+        lines.extend([
+            "# --- Association → PySpark window-based grouping ---",
+            "# Informatica Association groups related records (e.g., duplicate detection).",
+            "# Replicate with window functions or groupBy.",
+            "from pyspark.sql.window import Window",
+            "from pyspark.sql.functions import row_number, col, dense_rank",
+            "",
+            "# Define grouping criteria (replace with actual association logic)",
+            'group_cols = ["MATCH_KEY"]  # TODO: Replace with actual matching columns',
+            'rank_col = "CONFIDENCE_SCORE"  # TODO: Replace with ranking column',
+            "",
+            f"w = Window.partitionBy(*group_cols).orderBy(col(rank_col).desc())",
+            f'df = {prev_df}.withColumn("ASSOC_GROUP_RANK", dense_rank().over(w))',
+            '# Keep best match per group:',
+            '# df = df.filter(col("ASSOC_GROUP_RANK") == 1)',
+        ])
+
+    elif tx_type == "KEYGEN":
+        lines.extend([
+            "# --- Key Generator → PySpark surrogate key ---",
+            "# Generates unique surrogate keys for dimension tables.",
+            "from pyspark.sql.functions import monotonically_increasing_id, sha2, concat_ws, col",
+            "",
+            "# Option 1: Sequential-style IDs (not globally unique across partitions)",
+            f'df = {prev_df}.withColumn("GENERATED_KEY", monotonically_increasing_id())',
+            "",
+            "# Option 2: Hash-based key (deterministic, globally unique)",
+            '# natural_key_cols = ["COL1", "COL2"]  # TODO: Replace with natural key columns',
+            '# df = df.withColumn("GENERATED_KEY", sha2(concat_ws("|", *[col(c).cast("string") for c in natural_key_cols]), 256))',
+        ])
+
+    elif tx_type == "ADDRVAL":
+        lines.extend([
+            "# --- Address Validator → Azure Maps API / regex ---",
+            "# Informatica Address Validator uses third-party data to standardize/validate.",
+            "# Replace with Azure Maps Geocoding API or regex-based validation.",
+            "import requests",
+            "from pyspark.sql.functions import udf, col, regexp_replace, upper, trim",
+            "from pyspark.sql.types import StringType",
+            "",
+            "# Option 1: Azure Maps API (requires subscription key)",
+            f"# AZURE_MAPS_KEY = {_secret_get('keyvault', 'azure-maps-key')}",
+            "# @udf(returnType=StringType())",
+            "# def validate_address(address):",
+            '#     resp = requests.get(',
+            '#         "https://atlas.microsoft.com/search/address/json",',
+            '#         params={"api-version": "1.0", "query": address, "subscription-key": AZURE_MAPS_KEY},',
+            '#         timeout=10',
+            '#     )',
+            '#     if resp.ok and resp.json().get("results"):",',
+            '#         return resp.json()["results"][0].get("address", {}).get("freeformAddress", address)',
+            '#     return address',
+            "",
+            "# Option 2: Basic regex standardization",
+            f"df = {prev_df}.withColumn(",
+            '    "STD_ADDRESS",',
+            '    upper(trim(regexp_replace(col("ADDRESS"), r"\\s+", " ")))  # TODO: Replace ADDRESS column',
+            ")",
         ])
 
     else:
@@ -507,13 +671,13 @@ def _target_cell(mapping, cell_num):
         target_lower = target.lower()
         # Determine lakehouse tier from context
         if "agg" in target_lower or "gold" in target_lower:
-            lakehouse = "gold"
+            tier = "gold"
         elif "dim" in target_lower or "fact" in target_lower:
-            lakehouse = "silver"
+            tier = "silver"
         else:
-            lakehouse = "silver"
+            tier = "silver"
 
-        table_name = f"{lakehouse}.{target_lower}"
+        table_name = _table_ref(tier, target_lower)
 
         if has_upd and i == 0:
             lines.append(f"# MERGE handled in Update Strategy cell above → {table_name}")
@@ -566,10 +730,39 @@ def generate_notebook(mapping):
     cells.append(_target_cell(mapping, cell_num))
     cell_num += 1
 
+    # Sprint 39: PII scanning cell (if PII columns detected)
+    pii_columns = mapping.get("pii_columns", [])
+    if pii_columns:
+        pii_lines = [f"# CELL {cell_num} — PII Data Scanning (Sprint 39)"]
+        pii_lines.append("# Auto-detected PII columns — apply masking or encryption before production use.")
+        pii_lines.append("from pyspark.sql.functions import md5, sha2, regexp_replace, lit")
+        pii_lines.append("")
+        for pii in pii_columns:
+            col_name = pii.get("field", "UNKNOWN").split(".")[-1]
+            category = pii.get("pii_category", "UNKNOWN")
+            sensitivity = pii.get("sensitivity", "Internal")
+            pii_lines.append(f'# PII: {col_name} → {category} ({sensitivity})')
+            if sensitivity == "Highly Confidential":
+                pii_lines.append(f'# df = df.withColumn("{col_name}", sha2(col("{col_name}").cast("string"), 256))')
+            else:
+                pii_lines.append(f'# df = df.withColumn("{col_name}", md5(col("{col_name}").cast("string")))')
+        cells.append("\n".join(pii_lines))
+        cell_num += 1
+
     # Audit cell
     cells.append(_audit_cell(mapping, cell_num))
 
     return _cell_sep().join(cells)
+
+
+def _write_notebook(mapping_and_output):
+    """Write a single notebook — for use with ProcessPoolExecutor."""
+    mapping, out_dir = mapping_and_output
+    name = mapping["name"]
+    out_path = Path(out_dir) / f"NB_{name}.py"
+    content = generate_notebook(mapping)
+    out_path.write_text(content, encoding="utf-8")
+    return name, mapping.get("complexity", "?"), len(mapping.get("transformations", []))
 
 
 def main():
@@ -581,24 +774,42 @@ def main():
     with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
+    # Sprint 37: Check for --parallel flag (passed via env or argv)
+    parallel = "--parallel" in sys.argv
+
+    target = _get_target()
+    target_label = "Databricks (Unity Catalog)" if target == "databricks" else "Fabric"
+
     print("=" * 60)
-    print("  Notebook Migration — Phase 2")
+    print(f"  Notebook Migration — Phase 2 [{target_label}]")
+    if parallel:
+        print("  (Parallel generation enabled)")
     print("=" * 60)
     print()
 
     mappings = inv.get("mappings", [])
     generated = 0
 
-    for m in mappings:
-        name = m["name"]
-        out_path = OUTPUT_DIR / f"NB_{name}.py"
-        content = generate_notebook(m)
-        out_path.write_text(content, encoding="utf-8")
-        generated += 1
+    if parallel and len(mappings) > 4:
+        # Use ProcessPoolExecutor for large batches
+        work_items = [(m, str(OUTPUT_DIR)) for m in mappings]
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(_write_notebook, wi) for wi in work_items]
+            for future in as_completed(futures):
+                name, complexity, tx_count = future.result()
+                generated += 1
+                print(f"  ✅ NB_{name}.py ({complexity}, {tx_count} transformations)")
+    else:
+        for m in mappings:
+            name = m["name"]
+            out_path = OUTPUT_DIR / f"NB_{name}.py"
+            content = generate_notebook(m)
+            out_path.write_text(content, encoding="utf-8")
+            generated += 1
 
-        tx_count = len(m.get("transformations", []))
-        complexity = m.get("complexity", "?")
-        print(f"  ✅ NB_{name}.py ({complexity}, {tx_count} transformations)")
+            tx_count = len(m.get("transformations", []))
+            complexity = m.get("complexity", "?")
+            print(f"  ✅ NB_{name}.py ({complexity}, {tx_count} transformations)")
 
     print()
     print("=" * 60)

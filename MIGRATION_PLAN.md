@@ -2,27 +2,28 @@
   <img src="https://img.shields.io/badge/Informatica-FF4500?style=for-the-badge&logo=informatica&logoColor=white" alt="Informatica"/>
   <img src="https://img.shields.io/badge/%E2%86%92-gray?style=for-the-badge" alt="arrow"/>
   <img src="https://img.shields.io/badge/Microsoft%20Fabric-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Fabric"/>
+  <img src="https://img.shields.io/badge/Azure%20Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white" alt="Databricks"/>
 </p>
 
-<h1 align="center">Migration Plan — Informatica to Microsoft Fabric</h1>
+<h1 align="center">Migration Plan — Informatica to Microsoft Fabric / Azure Databricks</h1>
 
 <p align="center">
-  <strong>A 6-phase strategy to migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric.</strong>
+  <strong>A 6-phase strategy to migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric or Azure Databricks.</strong>
 </p>
 
 ---
 
 ## Executive Summary
 
-This plan outlines the migration strategy from **Informatica PowerCenter/IICS** to **Microsoft Fabric**, replacing ETL/ELT workloads with a combination of:
+This plan outlines the migration strategy from **Informatica PowerCenter/IICS** to **Microsoft Fabric** or **Azure Databricks**, replacing ETL/ELT workloads with a combination of:
 
-| Informatica Component | Fabric Target | Agent |
-|---|---|---|
-| Mappings (transformations) | **Fabric Notebooks** (PySpark / Spark SQL) | `@notebook-migration` |
-| Workflows / Taskflows | **Fabric Data Pipelines** (ADF-based orchestration) | `@pipeline-migration` |
-| SQL overrides / Stored Procs | **Fabric SQL / Warehouse SQL** | `@sql-migration` |
-| Sessions / connections | **Fabric Lakehouses + Shortcuts** | `@assessment` |
-| Scheduler | **Pipeline Triggers + Fabric Scheduler** | `@pipeline-migration` |
+| Informatica Component | Fabric Target | Databricks Target | Agent |
+|---|---|---|---|
+| Mappings (transformations) | **Fabric Notebooks** (PySpark / Spark SQL) | **Databricks Notebooks** (PySpark / Spark SQL) | `@notebook-migration` |
+| Workflows / Taskflows | **Fabric Data Pipelines** (ADF-based orchestration) | **Databricks Workflows** (Jobs API) | `@pipeline-migration` |
+| SQL overrides / Stored Procs | **Fabric SQL / Warehouse SQL** | **Databricks SQL** | `@sql-migration` |
+| Sessions / connections | **Fabric Lakehouses + Shortcuts** | **Unity Catalog + Volumes** | `@assessment` |
+| Scheduler | **Pipeline Triggers + Fabric Scheduler** | **Job Scheduler (cron)** | `@pipeline-migration` |
 
 ### Migration Overview
 
@@ -41,11 +42,11 @@ flowchart LR
         VAL["✅ Validate"]
     end
 
-    subgraph "Target (Microsoft Fabric)"
+    subgraph "Target (Microsoft Fabric / Azure Databricks)"
         NB["📓 Notebooks\nPySpark"]
-        PL["⚡ Pipelines\nJSON"]
+        PL["⚡ Pipelines / Workflows\nJSON"]
         SQL_T["🗄️ SQL\nSpark SQL"]
-        LH["🏠 Lakehouses\nBronze/Silver/Gold"]
+        LH["🏠 Lakehouses / Unity Catalog\nBronze/Silver/Gold"]
     end
 
     WF --> ASS
@@ -112,9 +113,11 @@ pie title Expected Complexity Distribution
 
 ---
 
-## Phase 1 — Foundation Setup in Fabric
+## Phase 1 — Foundation Setup
 
-### 1.1 Fabric Workspace Architecture
+### 1.1 Workspace Architecture
+
+**Microsoft Fabric:**
 
 ```mermaid
 flowchart TB
@@ -156,10 +159,12 @@ flowchart TB
 ```
 
 ### 1.2 Connection Setup
-- Configure **Shortcuts** or **Pipelines** for Oracle source ingestion
-- Set up **OneLake** storage for intermediate and target data
-- Configure **Fabric SQL Warehouse** for SQL-heavy transformations
-- Create **Fabric Environment** with required Python/Spark libraries
+- Configure **Shortcuts** or **Pipelines** for Oracle source ingestion (Fabric) or **External Locations** (Databricks)
+- Set up **OneLake** (Fabric) or **Unity Catalog Volumes** (Databricks) for storage
+- Configure **Fabric SQL Warehouse** or **Databricks SQL Warehouse** for SQL-heavy transformations
+- Create **Fabric Environment** or **Databricks Cluster Policy** with required Python/Spark libraries
+
+> **Databricks alternative:** Replace Fabric Lakehouses with Unity Catalog 3-level namespace (`catalog.schema.table`). Use `--target databricks` during migration.
 
 ---
 
@@ -185,13 +190,25 @@ flowchart TB
 | Sequence Generator | `monotonically_increasing_id()` or Delta identity |
 
 ### 2.2 Notebook Template
-Each migrated mapping produces a notebook following this pattern:
+Each migrated mapping produces a notebook. The template varies by target platform:
 
+**Fabric (default):**
 ```python
 # Cell 1: Parameters (mapped from Informatica parameter file)
 source_table = "schema.table_name"
 target_lakehouse = "Silver"
+load_date = notebookutils.widgets.get("load_date")
+```
+
+**Azure Databricks (`--target databricks`):**
+```python
+# Cell 1: Parameters
+source_table = "catalog.schema.table_name"
+target_catalog = "silver"
 load_date = dbutils.widgets.get("load_date")
+```
+
+Common cells (both targets):
 
 # Cell 2: Read Source
 df_source = spark.read.format("jdbc").options(**oracle_config).load()
@@ -214,6 +231,8 @@ df_transformed.write.format("delta").mode("overwrite").saveAsTable(f"{target_lak
 
 ### 3.1 Workflow-to-Pipeline Mapping
 
+**Fabric Data Pipelines:**
+
 | Informatica Workflow Element | Fabric Data Pipeline |
 |---|---|
 | Workflow | Data Pipeline |
@@ -226,6 +245,21 @@ df_transformed.write.format("delta").mode("overwrite").saveAsTable(f"{target_lak
 | Email Task | Web Activity (Logic App / webhook) |
 | Link conditions | Activity dependency conditions (Success/Failure/Completion) |
 | Worklet | Child Pipeline (Invoke Pipeline Activity) |
+
+**Azure Databricks Workflows:**
+
+| Informatica Workflow Element | Databricks Workflow (Jobs API) |
+|---|---|
+| Workflow | Multi-task Job |
+| Session | Notebook Task |
+| Command Task | Spark Submit Task or Python Wheel Task |
+| Timer | Job Schedule (cron expression) |
+| Decision | `if/else` task with `task_key` conditions |
+| Event Wait/Raise | Task dependency with `depends_on` |
+| Assignment | Job Parameters |
+| Email Task | Webhook notification |
+| Link conditions | Task dependency conditions (success/failure/all) |
+| Worklet | Run Job Task |
 
 ### 3.2 Pipeline Template Structure
 ```json
@@ -320,9 +354,9 @@ flowchart LR
     style D fill:#E74C3C,color:#fff
 ```
 
-1. **Parallel Run** — Run Informatica and Fabric side-by-side for 2-4 weeks
+1. **Parallel Run** — Run Informatica and target platform (Fabric/Databricks) side-by-side for 2-4 weeks
 2. **Incremental Cutover** — Migrate workflows in batches by priority and dependency order
-3. **Monitoring** — Fabric Monitor + Pipeline run history + alerting
+3. **Monitoring** — Fabric Monitor / Databricks Jobs UI + pipeline run history + alerting
 4. **Decommission** — Disable Informatica workflows after validation sign-off
 
 ---
@@ -331,7 +365,7 @@ flowchart LR
 
 ```mermaid
 gantt
-    title Informatica → Fabric Migration Phases
+    title Informatica → Fabric / Databricks Migration Phases
     dateFormat  YYYY-MM-DD
     axisFormat %b %Y
 

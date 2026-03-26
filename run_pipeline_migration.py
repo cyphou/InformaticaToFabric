@@ -12,6 +12,7 @@ Usage:
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -20,6 +21,11 @@ OUTPUT_DIR = WORKSPACE / "output" / "pipelines"
 INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _get_target():
+    """Return the target platform ('fabric' or 'databricks')."""
+    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
 
 
 def _notebook_activity(session_name, mapping_name, depends_on, params):
@@ -272,6 +278,79 @@ def generate_pipeline(workflow, mappings_by_name):
     return pipeline
 
 
+def generate_databricks_workflow(workflow, mappings_by_name):
+    """Generate a Databricks Workflow JSON for a workflow."""
+    name = workflow["name"]
+    sessions = workflow.get("sessions", [])
+    session_to_mapping = workflow.get("session_to_mapping", {})
+    dependencies = workflow.get("dependencies", {})
+    schedule = workflow.get("schedule", "")
+    schedule_cron = workflow.get("schedule_cron", {})
+
+    tasks = []
+    for session in sessions:
+        mapping_name = session_to_mapping.get(session, session.replace("S_", ""))
+        mapping = mappings_by_name.get(mapping_name, {})
+        params = mapping.get("parameters", [])
+
+        # Resolve dependencies
+        deps = dependencies.get(session, [])
+        depends_on = []
+        for dep in deps:
+            if dep == "Start":
+                continue
+            resolved = _resolve_activity_name(dep, session_to_mapping)
+            depends_on.append({"task_key": resolved})
+
+        task = {
+            "task_key": f"NB_{mapping_name}" if mapping_name else session,
+            "description": f"Migrated from Informatica session {session}.",
+            "notebook_task": {
+                "notebook_path": f"/Workspace/Shared/migration/NB_{mapping_name}" if mapping_name else f"/Workspace/Shared/migration/NB_{session}",
+                "base_parameters": {},
+            },
+            "timeout_seconds": 7200,
+            "max_retries": 2,
+            "min_retry_interval_millis": 60000,
+        }
+
+        if depends_on:
+            task["depends_on"] = depends_on
+
+        # Add parameters
+        if params:
+            for p in params:
+                param_name = p.replace("$$", "").lower()
+                task["notebook_task"]["base_parameters"][param_name] = ""
+        else:
+            task["notebook_task"]["base_parameters"]["load_date"] = "{{job.start_time.iso_date}}"
+
+        tasks.append(task)
+
+    # Build the workflow job definition
+    job = {
+        "name": f"PL_{name}",
+        "description": f"Migrated from Informatica workflow {name}. {f'Original schedule: {schedule}.' if schedule else ''}",
+        "tasks": tasks,
+        "tags": {
+            "migrated_from": "informatica",
+            "original_workflow": name,
+        },
+        "format": "MULTI_TASK",
+    }
+
+    # Schedule (cron)
+    cron_expr = schedule_cron.get("cron", "") if schedule_cron else ""
+    if cron_expr:
+        job["schedule"] = {
+            "quartz_cron_expression": cron_expr,
+            "timezone_id": "UTC",
+            "pause_status": "PAUSED",
+        }
+
+    return job
+
+
 def main():
     inv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else INVENTORY_PATH
     if not inv_path.exists():
@@ -281,8 +360,11 @@ def main():
     with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
+    target = _get_target()
+    target_label = "Databricks Workflows" if target == "databricks" else "Fabric Pipelines"
+
     print("=" * 60)
-    print("  Pipeline Migration — Phase 3")
+    print(f"  Pipeline Migration — Phase 3 [{target_label}]")
     print("=" * 60)
     print()
 
@@ -292,7 +374,10 @@ def main():
     generated = 0
 
     for wf in workflows:
-        pipeline = generate_pipeline(wf, mappings_by_name)
+        if target == "databricks":
+            pipeline = generate_databricks_workflow(wf, mappings_by_name)
+        else:
+            pipeline = generate_pipeline(wf, mappings_by_name)
         out_path = OUTPUT_DIR / f"PL_{wf['name']}.json"
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(pipeline, f, indent=2, ensure_ascii=False)

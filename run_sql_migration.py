@@ -13,6 +13,7 @@ Usage:
 """
 
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -73,6 +74,42 @@ ORACLE_REPLACEMENTS = [
     (r"\bDBMS_OUTPUT\.PUT_LINE\s*\(([^)]+)\)", r"-- TODO: print(\1) in PySpark notebook"),
     (r"\bDBMS_\w+\.\w+", "-- TODO: Replace Oracle DBMS package call"),
     (r"\bUTL_\w+\.\w+", "-- TODO: Replace Oracle UTL package call"),
+    # Sprint 31: Oracle Object Types → StructType
+    (r"\bCREATE\s+(?:OR\s+REPLACE\s+)?TYPE\s+(\w+)\s+AS\s+OBJECT\b",
+     r"-- TODO: Flatten Oracle Object Type '\1' to StructType or individual columns"),
+    (r"\bCREATE\s+(?:OR\s+REPLACE\s+)?TYPE\s+(\w+)\s+AS\s+TABLE\s+OF\b",
+     r"-- TODO: Replace Oracle collection type '\1' with ArrayType"),
+    # Sprint 33: Advanced PL/SQL → PySpark patterns
+    # Dynamic SQL
+    (r"\bEXECUTE\s+IMMEDIATE\s+'([^']+)'",
+     r"spark.sql('\1')  -- Dynamic SQL extracted from EXECUTE IMMEDIATE"),
+    (r"\bEXECUTE\s+IMMEDIATE\s+(\w+)",
+     r"spark.sql(\1)  -- TODO: Dynamic SQL variable; review constructed query"),
+    (r"\bDBMS_SQL\.\w+", "-- TODO: Replace DBMS_SQL with spark.sql() or DataFrame API"),
+    # PL/SQL Cursor → PySpark iterator
+    (r"\bCURSOR\s+(\w+)\s+IS\s+SELECT\b",
+     r"# PySpark: df_\1 = spark.sql('SELECT"),
+    (r"\bOPEN\s+(\w+)\s*;", r"# Cursor '\1' opened — use DataFrame instead"),
+    (r"\bFETCH\s+(\w+)\s+INTO\b", r"# Cursor FETCH \1 — use .collect() or .foreach()"),
+    (r"\bCLOSE\s+(\w+)\s*;", r"# Cursor '\1' closed — no action needed with DataFrames"),
+    (r"\bFOR\s+(\w+)\s+IN\s+(\w+)\s+LOOP",
+     r"for \1 in df_\2.collect():  # Cursor loop → DataFrame collect"),
+    # BULK COLLECT → DataFrame
+    (r"\bBULK\s+COLLECT\s+INTO\s+(\w+)",
+     r"# BULK COLLECT → DataFrame: \1 = spark.sql('...').collect()  # Small datasets only"),
+    (r"\bFORALL\s+(\w+)\s+IN\s+\d+\s*\.\.\s*(\w+)\.COUNT",
+     r"# FORALL batch DML → Use DataFrame .write or MERGE for batch operations"),
+    # CONNECT BY → Recursive CTE
+    (r"\bCONNECT\s+BY\s+(?:NOCYCLE\s+)?PRIOR\s+(\w+)\s*=\s*(\w+)",
+     r"-- TODO: CONNECT BY → Recursive CTE pattern:\n-- WITH RECURSIVE cte AS (\n--   SELECT * FROM table WHERE \2 IS NULL  -- root nodes\n--   UNION ALL\n--   SELECT t.* FROM table t JOIN cte ON t.\2 = cte.\1\n-- ) SELECT * FROM cte"),
+    (r"\bSTART\s+WITH\s+(.+?)(?=\s+CONNECT\s+BY|\s*;|\s*\))",
+     r"-- START WITH \1 → use as the anchor in WITH RECURSIVE"),
+    # EXCEPTION WHEN → try/except
+    (r"\bEXCEPTION\s+WHEN\s+(\w+)\s+THEN",
+     r"except Exception as e:  # PL/SQL EXCEPTION WHEN \1"),
+    (r"\bRAISE_APPLICATION_ERROR\s*\(([^,]+),\s*([^)]+)\)",
+     r"raise ValueError(\2)  # Oracle RAISE_APPLICATION_ERROR code=\1"),
+    (r"\bRAISE\s*;", "raise  # Re-raise current exception"),
 ]
 
 # Compile Oracle patterns
@@ -423,8 +460,11 @@ def main():
     with open(inv_path, encoding="utf-8") as f:
         inv = json.load(f)
 
+    target = os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+    target_label = "Databricks Spark SQL" if target == "databricks" else "Fabric Spark SQL"
+
     print("=" * 60)
-    print("  SQL Migration — Phase 1")
+    print(f"  SQL Migration — Phase 1 [{target_label}]")
     print("=" * 60)
     print()
 

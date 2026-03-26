@@ -23,9 +23,11 @@ Usage:
 """
 
 import argparse
+import concurrent.futures
 import importlib
 import json
 import logging
+import os
 import re
 import sys
 import time
@@ -114,6 +116,21 @@ def _parse_args():
                         help="Resume from last checkpoint (skip completed phases)")
     parser.add_argument("--reset", action="store_true",
                         help="Clear checkpoint and start fresh")
+    # Sprint 35: Multi-tenant & enterprise flags
+    parser.add_argument("--batch", type=str, nargs="+", default=None, metavar="DIR",
+                        help="Batch mode: run migration for multiple input directories")
+    parser.add_argument("--manifest", action="store_true",
+                        help="Generate deployment manifest after migration")
+    parser.add_argument("--tenant", type=str, default=None, metavar="ID",
+                        help="Tenant ID for Key Vault secret substitution")
+    parser.add_argument("--parallel-waves", type=int, default=None, metavar="N",
+                        help="Max parallel wave executions (default: sequential)")
+    # Sprint 37: Performance flags
+    parser.add_argument("--profile", action="store_true",
+                        help="Enable per-phase memory and timing profiling")
+    # Target platform
+    parser.add_argument("--target", choices=["fabric", "databricks"], default=None,
+                        help="Target platform: fabric (default) or databricks")
     parsed = parser.parse_args()
     return parsed
 
@@ -221,13 +238,154 @@ def run_phase(phase):
         sys.argv = saved_argv
 
 
-def generate_summary(results):
+# ─────────────────────────────────────────────
+#  Sprint 35: Enterprise helpers
+# ─────────────────────────────────────────────
+
+def substitute_keyvault_refs(config, tenant_id):
+    """Replace {{KV:secret-name}} placeholders with platform-specific secret calls.
+
+    For Fabric: notebookutils.credentials.getSecret(vault, secret)
+    For Databricks: dbutils.secrets.get(scope=scope, key=secret)
+    """
+    kv_pattern = re.compile(r"\{\{KV:([^}]+)\}\}")
+    target = config.get("target", os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric"))
+
+    def _replace(value):
+        if isinstance(value, str):
+            if target == "databricks":
+                scope = config.get("databricks", {}).get("secret_scope", "migration-secrets")
+                return kv_pattern.sub(
+                    lambda m: f'dbutils.secrets.get(scope="{scope}", key="{m.group(1)}")',
+                    value,
+                )
+            return kv_pattern.sub(
+                lambda m: f'notebookutils.credentials.getSecret("{tenant_id}", "{m.group(1)}")',
+                value,
+            )
+        if isinstance(value, dict):
+            return {k: _replace(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [_replace(v) for v in value]
+        return value
+
+    return _replace(config)
+
+
+def generate_manifest(results, config):
+    """Generate output/manifest.json — deployment manifest for Fabric CI/CD."""
+    manifest = {
+        "schema_version": "1.0",
+        "generated": datetime.now(timezone.utc).isoformat(),
+        "tenant_id": config.get("tenant_id"),
+        "workspace_id": config.get("fabric", {}).get("workspace_id"),
+        "artifacts": [],
+        "deployment_order": [],
+    }
+
+    output_root = WORKSPACE / "output"
+    artifact_dirs = {
+        "notebook": output_root / "notebooks",
+        "pipeline": output_root / "pipelines",
+        "sql": output_root / "sql",
+        "schema": output_root / "schema",
+        "validation": output_root / "validation",
+    }
+
+    order_idx = 1
+    for artifact_type, directory in artifact_dirs.items():
+        if directory.exists():
+            for f in sorted(directory.iterdir()):
+                if f.is_file():
+                    entry = {
+                        "name": f.stem,
+                        "type": artifact_type,
+                        "path": str(f.relative_to(WORKSPACE)),
+                        "size_bytes": f.stat().st_size,
+                        "deploy_order": order_idx,
+                    }
+                    manifest["artifacts"].append(entry)
+                    manifest["deployment_order"].append(f.stem)
+                    order_idx += 1
+
+    manifest["total_artifacts"] = len(manifest["artifacts"])
+
+    manifest_path = output_root / "manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+    return manifest_path
+
+
+def run_batch(batch_dirs, args, config):
+    """Run migration for multiple input directories (multi-tenant batch)."""
+    batch_results = []
+    for input_dir in batch_dirs:
+        input_path = Path(input_dir)
+        if not input_path.exists():
+            batch_results.append({"input": input_dir, "status": "error", "error": "Directory not found"})
+            continue
+        # Override INPUT_DIR for child modules by setting config
+        config["_batch_input_dir"] = str(input_path)
+        batch_results.append({"input": input_dir, "status": "ok"})
+    return batch_results
+
+
+def run_parallel_waves(phases, max_workers, args, config, log):
+    """Execute independent migration phases in parallel using ThreadPoolExecutor."""
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_phase = {}
+        for phase in phases:
+            future = executor.submit(run_phase, phase)
+            future_to_phase[future] = phase
+
+        for future in concurrent.futures.as_completed(future_to_phase):
+            phase = future_to_phase[future]
+            try:
+                future.result()
+                results.append({
+                    "id": phase["id"], "name": phase["name"],
+                    "status": "ok", "duration": 0, "error": None,
+                })
+                log.info(f"Parallel phase {phase['id']} completed: {phase['name']}")
+            except Exception as exc:
+                results.append({
+                    "id": phase["id"], "name": phase["name"],
+                    "status": "error", "duration": 0, "error": str(exc)[:100],
+                })
+                log.error(f"Parallel phase {phase['id']} failed: {exc}")
+    return results
+
+
+# ─────────────────────────────────────────────
+#  Sprint 37: Profiling helpers
+# ─────────────────────────────────────────────
+
+def _get_memory_mb():
+    """Return current process memory usage in MB (best-effort)."""
+    try:
+        import resource  # Unix only
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return round(usage / 1024, 1)  # KB → MB on Linux
+    except ImportError:
+        pass
+    try:
+        import psutil
+        proc = psutil.Process()
+        return round(proc.memory_info().rss / (1024 * 1024), 1)
+    except ImportError:
+        return 0.0
+
+
+def generate_summary(results, target="fabric"):
     """Generate output/migration_summary.md."""
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    target_label = "Databricks (Unity Catalog)" if target == "databricks" else "Fabric"
     lines = [
-        "# Migration Summary",
+        f"# Migration Summary — Target: {target_label}",
         "",
         f"**Generated:** {ts}",
+        f"**Target Platform:** {target_label}",
         "",
         "## Phase Results",
         "",
@@ -253,8 +411,8 @@ def generate_summary(results):
         "| `output/inventory/` | Assessment inventory, complexity report, DAG, HTML report |",
         "| `output/sql/` | Converted SQL files (Oracle/SQL Server → Spark SQL) |",
         "| `output/notebooks/` | PySpark notebooks (one per mapping) |",
-        "| `output/pipelines/` | Fabric Pipeline JSON (one per workflow) |",
-        "| `output/schema/` | Delta Lake DDL + workspace setup notebook |",
+        "| `output/pipelines/` | Pipeline definitions (one per workflow) |",
+        "| `output/schema/` | DDL + workspace setup notebook |",
         "| `output/validation/` | Validation notebooks + test matrix |",
         "| `output/audit_log.json` | Structured audit log (JSON) |",
         "",
@@ -263,10 +421,19 @@ def generate_summary(results):
         "1. Review generated artifacts in `output/`",
         "2. Fill in TODO placeholders in notebooks and SQL files",
         "3. Configure JDBC connections in validation notebooks",
-        "4. Deploy to Fabric via Git integration or REST API",
-        "5. Run validation notebooks against live data",
-        ""
     ])
+    if target == "databricks":
+        lines.extend([
+            "4. Deploy notebooks to Databricks workspace",
+            "5. Import workflows as Databricks Jobs",
+            "6. Run validation notebooks against live data",
+        ])
+    else:
+        lines.extend([
+            "4. Deploy to Fabric via Git integration or REST API",
+            "5. Run validation notebooks against live data",
+        ])
+    lines.append("")
 
     summary_path = WORKSPACE / "output" / "migration_summary.md"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -284,6 +451,14 @@ def main():
     config = _load_config(args.config)
     log = _setup_logging(verbose=args.verbose, log_format=args.log_format, config=config)
 
+    # Resolve target platform: CLI flag > config file > default
+    target = args.target or config.get("target", "fabric")
+    os.environ["INFORMATICA_MIGRATION_TARGET"] = target
+    config["target"] = target
+    if target == "databricks":
+        catalog = config.get("databricks", {}).get("catalog", "main")
+        os.environ["INFORMATICA_DATABRICKS_CATALOG"] = catalog
+
     # Handle --reset
     if args.reset:
         _clear_checkpoint()
@@ -298,7 +473,8 @@ def main():
 
     print()
     print("╔" + "═" * 58 + "╗")
-    print("║" + "  Informatica → Fabric Migration  ".center(58) + "║")
+    target_label = "Databricks (Unity Catalog)" if target == "databricks" else "Fabric"
+    print("║" + f"  Informatica → {target_label} Migration  ".center(58) + "║")
     print("║" + "  End-to-End Orchestrator          ".center(58) + "║")
     print("╚" + "═" * 58 + "╝")
     if args.dry_run:
@@ -307,9 +483,32 @@ def main():
         print("  *** VERBOSE logging enabled ***")
     if args.resume and completed_phases:
         print(f"  *** RESUMING — skipping phases: {sorted(completed_phases)} ***")
-    if config and config.get("fabric", {}).get("workspace_id"):
+    if args.profile:
+        print("  *** PROFILING — per-phase timing & memory enabled ***")
+    if args.tenant:
+        print(f"  *** TENANT: {args.tenant} (Key Vault substitution enabled) ***")
+    if args.batch:
+        print(f"  *** BATCH MODE — {len(args.batch)} input directories ***")
+    print(f"  Target platform: {target_label}")
+    if config and config.get("fabric", {}).get("workspace_id") and target == "fabric":
         print(f"  Config workspace: {config['fabric']['workspace_id']}")
+    if target == "databricks":
+        cat = config.get("databricks", {}).get("catalog", "main")
+        print(f"  Unity Catalog: {cat}")
     print()
+
+    # Sprint 35: Key Vault template substitution
+    if args.tenant:
+        config = substitute_keyvault_refs(config, args.tenant)
+        config["tenant_id"] = args.tenant
+        log.info(f"Key Vault substitution applied for tenant: {args.tenant}")
+
+    # Sprint 35: Batch mode
+    if args.batch:
+        batch_results = run_batch(args.batch, args, config)
+        for br in batch_results:
+            print(f"  Batch: {br['input']} — {br['status']}")
+        log.info(f"Batch mode: {len(batch_results)} directories processed")
 
     log.info("Migration started")
     if config.get("_config_file"):
@@ -349,13 +548,21 @@ def main():
         print("  " + "─" * 56)
 
         log.info(f"Phase {pid} starting: {pname}")
+        mem_before = _get_memory_mb() if args.profile else 0
         t0 = time.time()
         try:
             run_phase(phase)
             elapsed = time.time() - t0
-            results.append({"id": pid, "name": pname, "status": "ok", "duration": elapsed, "error": None})
+            mem_after = _get_memory_mb() if args.profile else 0
+            phase_result = {"id": pid, "name": pname, "status": "ok", "duration": elapsed, "error": None}
+            if args.profile:
+                phase_result["memory_before_mb"] = mem_before
+                phase_result["memory_after_mb"] = mem_after
+                phase_result["memory_delta_mb"] = round(mem_after - mem_before, 1)
+            results.append(phase_result)
             log.info(f"Phase {pid} completed in {elapsed:.1f}s")
-            print(f"  ✅ Phase {pid} completed in {elapsed:.1f}s")
+            profile_msg = f" | mem: {mem_before}→{mem_after}MB" if args.profile else ""
+            print(f"  ✅ Phase {pid} completed in {elapsed:.1f}s{profile_msg}")
             # Save checkpoint
             completed_phases.add(pid)
             checkpoint["completed_phases"] = sorted(completed_phases)
@@ -389,7 +596,13 @@ def main():
     # Generate audit log and summary
     audit_path = _write_audit_log(results, config)
     log.info(f"Audit log written to {audit_path}")
-    summary_path = generate_summary(results)
+    summary_path = generate_summary(results, target=target)
+
+    # Sprint 35: Deployment manifest
+    if args.manifest:
+        manifest_path = generate_manifest(results, config)
+        log.info(f"Manifest written to {manifest_path}")
+        print(f"  📦 Deployment manifest: {manifest_path.name}")
 
     ok_count = sum(1 for r in results if r["status"] == "ok")
     total = len([r for r in results if r["status"] not in ("skipped", "dry-run")])

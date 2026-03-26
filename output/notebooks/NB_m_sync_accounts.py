@@ -11,7 +11,7 @@
 # Sources: src_accounts
 # Targets: tgt_accounts
 # Flow: EXP
-# Generated: 2026-03-23
+# Generated: 2026-03-24
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
