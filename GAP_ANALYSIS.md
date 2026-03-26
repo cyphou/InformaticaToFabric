@@ -585,25 +585,55 @@ The migration tool now supports **Azure Databricks** as an alternative target pl
 
 | # | Gap | Priority | Impact | Planned Sprint |
 |---|-----|:--------:|--------|:--------------:|
-| 1 | **Databricks deployment script** (`deploy_to_databricks.py`) | **P1** | Cannot auto-deploy notebooks/jobs to Databricks workspace | Sprint 41 |
+| 1 | **Databricks deployment script** (`deploy_to_databricks.py`) | **P0** | Cannot auto-deploy notebooks/jobs to Databricks workspace — **#1 blocker** | Sprint 41 |
 | 2 | **Databricks Asset Bundles (DAB)** generation | **P1** | No CI/CD-compatible bundle for Databricks deployments | Sprint 42 |
-| 3 | **Unity Catalog permissions** script generator | **P2** | Roles/permissions only target Fabric workspace roles | Sprint 41 |
+| 3 | **Unity Catalog permissions** script generator | **P1** | Roles/permissions only target Fabric workspace roles; no GRANT scripts for UC | Sprint 41 |
 | 4 | **Databricks cluster policies** recommendation | **P2** | No auto-sizing recommendation based on mapping complexity | Sprint 44 |
 | 5 | **Databricks SQL Warehouse** DDL (vs. Spark SQL) | **P3** | Warehouse-targeted DDL not distinguished from Spark SQL | Sprint 43 |
 | 6 | **Delta Sharing** for cross-workspace data access | **P3** | DB links converted to JDBC TODO; Delta Sharing is preferred alternative | Sprint 43 |
 
-#### D. Cross-Platform Gaps (4)
+#### D. Fabric-Specific Gaps (3)
 
 | # | Gap | Priority | Impact | Planned Sprint |
 |---|-----|:--------:|--------|:--------------:|
-| 1 | **Synapse Analytics** as third target | **P2** | Customers using Synapse Dedicated Pools not supported | Sprint 46 |
-| 2 | **AWS Glue / EMR** as target | **P3** | Multi-cloud migration not supported | Sprint 48 |
-| 3 | **Target comparison report** | **P1** | No side-by-side comparison of Fabric vs Databricks outputs | Sprint 45 |
-| 4 | **Migration cost estimator** per target | **P2** | Cost projection is target-agnostic | Sprint 44 |
+| 1 | **Fabric Deployment Pipelines** (Dev→Test→Prod) | **P1** | No CI/CD promotion between Fabric environments | Sprint 42 |
+| 2 | **OneLake shortcuts / Mirroring** | **P1** | Cross-lakehouse and Oracle/MSSQL source mirroring not generated | Sprint 43 |
+| 3 | **Lakehouse vs Warehouse decision engine** | **P2** | No recommendation for routing SQL-heavy vs ETL workloads | Sprint 43 |
 
-> See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the full Phase 3 sprint details (Sprints 41–50).
+#### E. Cross-Platform Gaps (5)
 
-### 10.5 ~~Placeholder Transformations (6) → Sprint 26~~ ✅ RESOLVED
+| # | Gap | Priority | Impact | Planned Sprint |
+|---|-----|:--------:|--------|:--------------:|
+| 1 | **Target comparison report** | **P1** | No side-by-side comparison of Fabric vs Databricks outputs | Sprint 45 |
+| 2 | **Dual-target generation** (`--target all`) | **P1** | Cannot generate Fabric + Databricks artifacts in one run | Sprint 45 |
+| 3 | **Migration cost estimator** per target | **P2** | Cost projection is target-agnostic (no CU/DBU breakdown) | Sprint 44 |
+| 4 | **Synapse Analytics** as third target | **P2** | Customers using Synapse Dedicated Pools not supported | Sprint 46 |
+| 5 | **Delta Live Tables (DLT)** generation | **P2** | Databricks DLT notebooks not generated as alternative to raw PySpark | Sprint 47 |
+
+### 10.5 Dual-Target Readiness Matrix
+
+| Capability | Microsoft Fabric | Azure Databricks | Gap? |
+|-----------|:---:|:---:|:---:|
+| Notebook generation | ✅ `notebookutils` | ✅ `dbutils` / Unity Catalog | — |
+| Pipeline / Workflow JSON | ✅ Fabric Pipeline | ✅ Databricks Workflow (Jobs API) | — |
+| Schema DDL (Delta Lake) | ✅ Lakehouse DDL | ✅ Unity Catalog DDL | — |
+| Deployment script | ✅ `deploy_to_fabric.py` | ❌ **Missing** | Sprint 41 |
+| CI/CD automation | ❌ No Deployment Pipelines | ❌ No Asset Bundles (DAB) | Sprint 42 |
+| Env promotion (Dev→Prod) | ❌ Not implemented | ❌ Not implemented | Sprint 42 |
+| Permissions / roles | ✅ Workspace role scripts | ❌ No UC GRANT scripts | Sprint 41 |
+| Platform-native features | ❌ No shortcuts/mirroring | ❌ No Delta Sharing/DLT | Sprint 43/47 |
+| Cost estimator | ❌ No CU estimate | ❌ No DBU estimate | Sprint 44 |
+| Comparison report | — | — | ❌ Sprint 45 |
+| Secret management | ✅ `notebookutils.credentials` | ✅ `dbutils.secrets` | — |
+| Parameter widgets | ✅ `notebookutils.widgets` | ✅ `dbutils.widgets` | — |
+| Config (migration.yaml) | ✅ `workspace_id` | ✅ `workspace_url`, `catalog` | — |
+| Web UI | ✅ Target selector | ✅ Target selector | — |
+| Templates | ✅ Fabric templates | ✅ Databricks templates | — |
+| Tests | ✅ 696 tests | ✅ 50 Databricks tests | Expand to 80+ (Sprint 41) |
+
+> **Summary:** Fabric is at ~95% readiness, Databricks at ~80%. The **#1 priority** is `deploy_to_databricks.py` (Sprint 41), followed by CI/CD for both platforms (Sprint 42).
+
+### 10.6 ~~Placeholder Transformations (6) → Sprint 26~~ ✅ RESOLVED
 
 All 7 placeholder transformations now generate meaningful PySpark templates (Sprint 26):
 
@@ -617,7 +647,7 @@ All 7 placeholder transformations now generate meaningful PySpark templates (Spr
 | Transaction Control (TC) | Delta ACID pattern | 26 | ✅ |
 | Unconnected Lookup (ULKP) | Broadcast join pattern | 26 | ✅ |
 
-### 10.6 Sprint 26–30 Roadmap — ✅ ALL COMPLETE
+### 10.7 Sprint 26–30 Roadmap — ✅ ALL COMPLETE
 
 | Sprint | Focus | Key Deliverables | Status |
 |:------:|-------|-------------------|:------:|

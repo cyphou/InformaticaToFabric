@@ -771,7 +771,7 @@ gantt
 **Sprint 30 Exit Criteria:**
 - [x] Audit log captures every migration action
 - [x] `--dry-run` mode works end-to-end
-- [x] 697 tests, 696 passing (1 pre-existing e2e failure)
+- [x] 747 tests, 746 passing (1 pre-existing e2e failure) — includes 50 Databricks target tests
 - [x] No credentials exposed in logs or output files
 
 ---
@@ -1387,7 +1387,71 @@ pie title Phase 2 Sprint Effort Distribution
 
 # Phase 3 — Multi-Platform & Production Deployment (Sprints 41–50)
 
-> **Goal:** Complete the Databricks target integration, deliver deferred Fabric-native features, add cross-platform deployment automation, observability, and hardened CI/CD — making the tool production-ready for enterprise customers migrating to **either** Microsoft Fabric **or** Azure Databricks.
+> **Goal:** Complete the Databricks target integration, deliver deferred Fabric-native features, add cross-platform deployment automation, observability, and hardened CI/CD — making the tool production-ready for enterprise customers migrating to **either** Microsoft Fabric **or** Azure Databricks (or both).
+
+## Immediate Next Steps — Dual-Target Action Plan
+
+The table below shows exactly what each Phase 3 sprint delivers for **each target platform**:
+
+| Sprint | Microsoft Fabric | Azure Databricks | Cross-Platform |
+|:------:|-----------------|-------------------|---------------|
+| **41** | — (deploy already exists) | `deploy_to_databricks.py`, Unity Catalog permissions, secret scope setup, cluster config | Databricks test expansion (50 → 80+) |
+| **42** | Deployment Pipelines (Dev→Test→Prod), Git structure | Asset Bundles (DAB) generation, Repos structure | Env promotion (`--promote`), rollback, pre-deploy validation |
+| **43** | OneLake shortcuts, Mirroring for Oracle/MSSQL, Lakehouse vs Warehouse decision engine | Delta Sharing for cross-workspace, SQL Warehouse DDL | Unified shortcut/sharing config for DB link replacement |
+| **44** | Fabric CU cost estimator | Databricks DBU cost estimator, cluster policy recommender | Azure Monitor metrics, Teams/Slack alerting |
+| **45** | — | — | **Target comparison report**, `--target all` dual generation, migration advisor (Fabric vs Databricks) |
+| **46** | — | — | **Synapse Dedicated Pools** as 3rd target (DDL, Pipelines, `deploy_to_synapse.py`) |
+| **47** | — | DLT notebook generation (`@dlt.table`), UC lineage metadata, SQL dashboards, advanced Workflows | — |
+| **48** | E2E Fabric tests | E2E Databricks tests | Multi-target regression snapshots, benchmarks (10/50/100/500 mappings) |
+| **49** | Dashboard v2 (Fabric tab) | Dashboard v2 (Databricks tab) | Plugin system, REST API server, Web UI v2 |
+| **50** | Docs update | Docs update | PyPI packaging with `[fabric]`/`[databricks]`/`[synapse]` extras, ADRs, certification checklist |
+
+### Priority Order (What to Build First)
+
+```mermaid
+flowchart LR
+    S41["🔴 Sprint 41\nDatabricks Deploy\n(P0 — unblocks all)"]
+    S42["🟠 Sprint 42\nDevOps & CI/CD\n(P1 — both targets)"]
+    S43["🟡 Sprint 43\nPlatform-Native\n(P1 — both targets)"]
+    S44["🟡 Sprint 44\nObservability\n(P2 — both targets)"]
+    S45["🔵 Sprint 45\nCross-Platform\n(P2 — comparison)"]
+
+    S41 --> S42 --> S43 --> S44 --> S45
+
+    style S41 fill:#E74C3C,color:#fff
+    style S42 fill:#E67E22,color:#fff
+    style S43 fill:#F1C40F,color:#000
+    style S44 fill:#F1C40F,color:#000
+    style S45 fill:#3498DB,color:#fff
+```
+
+**Critical path:** Sprint 41 (`deploy_to_databricks.py`) is the **#1 blocker** — without it, Databricks artifacts cannot be auto-deployed. Everything else can proceed in parallel after 41.
+
+### Per-Target Gap Closure Summary
+
+**Microsoft Fabric** (95% complete):
+- ✅ Notebook generation with `notebookutils`
+- ✅ Pipeline JSON generation
+- ✅ Schema DDL (Delta Lake)
+- ✅ Deployment script (`deploy_to_fabric.py`)
+- ⏳ Deployment Pipelines / CI/CD (Sprint 42)
+- ⏳ Lakehouse vs Warehouse decision (Sprint 43)
+- ⏳ OneLake shortcuts / Mirroring (Sprint 43)
+- ⏳ CU cost estimator (Sprint 44)
+
+**Azure Databricks** (80% complete):
+- ✅ Notebook generation with `dbutils` + Unity Catalog 3-level namespace
+- ✅ Workflow JSON (Jobs API) generation
+- ✅ Schema DDL (Delta Lake on Unity Catalog)
+- ❌ **Deployment script** (`deploy_to_databricks.py`) — Sprint 41
+- ❌ **Unity Catalog permissions** scripts — Sprint 41
+- ⏳ Asset Bundles (DAB) for CI/CD (Sprint 42)
+- ⏳ SQL Warehouse DDL (Sprint 43)
+- ⏳ Delta Sharing (Sprint 43)
+- ⏳ DBU cost estimator (Sprint 44)
+- ⏳ DLT pipeline generation (Sprint 47)
+
+---
 
 ```mermaid
 gantt
@@ -1681,13 +1745,13 @@ pie title Phase 3 Sprint Effort Distribution
 
 | Sprint | Primary Agents | Outputs | Status |
 |--------|---------------|---------|--------|
-| **41** | Orchestrator, Assessment, Validation | `deploy_to_databricks.py`, UC permissions, cluster config | ⏳ Planned |
-| **42** | Orchestrator, Validation | Fabric Deployment Pipelines, Databricks Asset Bundles, env promotion | ⏳ Planned |
-| **43** | Assessment, SQL, Orchestrator | Lakehouse/Warehouse decision, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing | ⏳ Planned |
-| **44** | Orchestrator, Assessment | Azure Monitor metrics, per-target cost estimator, alerting | ⏳ Planned |
-| **45** | Orchestrator, Assessment | Comparison report, dual-target generation, migration advisor | ⏳ Planned |
-| **46** | SQL, Pipeline, Orchestrator | Synapse DDL, Synapse Pipelines, `deploy_to_synapse.py` | ⏳ Planned |
-| **47** | Notebook, Assessment, Pipeline | DLT notebooks, UC lineage, SQL dashboards, cluster policies | ⏳ Planned |
-| **48** | Validation, Orchestrator | E2E multi-target tests, benchmarks, regression snapshots | ⏳ Planned |
-| **49** | Orchestrator, Notebook, All | Dashboard v2, plugin system, REST API, web UI v2 | ⏳ Planned |
-| **50** | All (docs) | Phase 3 docs, ADRs, PyPI packaging, certification checklist | ⏳ Planned |
+| **41** | Orchestrator, Assessment, Validation | **Databricks:** `deploy_to_databricks.py`, UC permissions, cluster config | ⏳ Planned |
+| **42** | Orchestrator, Validation | **Fabric:** Deployment Pipelines • **Databricks:** Asset Bundles (DAB) • **Both:** env promotion | ⏳ Planned |
+| **43** | Assessment, SQL, Orchestrator | **Fabric:** OneLake shortcuts, Mirroring • **Databricks:** SQL Warehouse DDL, Delta Sharing | ⏳ Planned |
+| **44** | Orchestrator, Assessment | **Fabric:** CU estimator • **Databricks:** DBU estimator, cluster policies • **Both:** Azure Monitor | ⏳ Planned |
+| **45** | Orchestrator, Assessment | **Both:** comparison report, `--target all`, migration advisor (Fabric vs Databricks) | ⏳ Planned |
+| **46** | SQL, Pipeline, Orchestrator | **New target:** Synapse Dedicated Pools DDL, Pipelines, `deploy_to_synapse.py` | ⏳ Planned |
+| **47** | Notebook, Assessment, Pipeline | **Databricks:** DLT notebooks, UC lineage, SQL dashboards, advanced Workflows | ⏳ Planned |
+| **48** | Validation, Orchestrator | **Both:** E2E multi-target tests, benchmarks, regression snapshots | ⏳ Planned |
+| **49** | Orchestrator, Notebook, All | **Both:** Dashboard v2, plugin system, REST API, web UI v2 | ⏳ Planned |
+| **50** | All (docs) | **Both:** Phase 3 docs, ADRs, PyPI `[fabric]`/`[databricks]`/`[synapse]`, certification | ⏳ Planned |
