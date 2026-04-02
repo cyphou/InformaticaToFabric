@@ -672,9 +672,9 @@ class TestOrchestrator:
             self.mod.WORKSPACE = original_workspace
 
     def test_phases_list_complete(self):
-        assert len(self.mod.PHASES) == 6
+        assert len(self.mod.PHASES) == 8
         ids = [p["id"] for p in self.mod.PHASES]
-        assert ids == [0, 1, 2, 3, 4, 5]
+        assert ids == [0, 1, 2, 3, 4, 5, 6, 7]
 
 
 # ─────────────────────────────────────────────

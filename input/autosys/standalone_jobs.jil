@@ -1,0 +1,33 @@
+/* ============================================================
+   AutoSys JIL — Standalone CMD jobs (no BOX)
+   Cross-job dependencies between independent jobs
+   ============================================================ */
+
+/* --- Standalone: nightly customer sync --- */
+insert_job: CMD_CUSTOMER_SYNC
+job_type: CMD
+command: pmcmd startworkflow -sv INT_SVC -d DOMAIN_01 -u admin -p *** -f CRM -w WF_CUSTOMER_SYNC -wait
+machine: ETL_SERVER_01
+owner: etl_admin@server01
+date_conditions: 1
+days_of_week: all
+start_times: "23:00"
+start_mins: 0,30
+description: "Nightly customer sync — runs every 30 min from 23:00"
+alarm_if_fail: 1
+std_out_file: /opt/logs/autosys/CMD_CUSTOMER_SYNC.out
+std_err_file: /opt/logs/autosys/CMD_CUSTOMER_SYNC.err
+
+/* --- Standalone: depends on customer sync completing --- */
+insert_job: CMD_CUSTOMER_REPORT
+job_type: CMD
+condition: s(CMD_CUSTOMER_SYNC)
+command: /opt/scripts/generate_customer_report.sh
+machine: RPT_SERVER_01
+owner: report_user@rpt01
+description: "Generate customer report after sync"
+alarm_if_fail: 0
+
+/* --- Calendar definition --- */
+insert_calendar: BUSINESS_DAYS_US
+description: "US business days (Mon-Fri, excluding federal holidays)"

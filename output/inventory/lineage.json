@@ -1,17 +1,57 @@
 [
   {
+    "mapping": "m_cdc_order_pipeline",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "m_customer_360",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "m_customer_activity_log",
+    "complexity": "Simple",
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
     "mapping": "m_load_contacts",
     "complexity": "Medium",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 100,
+    "manual_effort_hours": 2,
     "field_lineage": [],
     "mermaid_diagram": ""
   },
   {
     "mapping": "m_sync_accounts",
     "complexity": "Simple",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "m_realtime_inventory_scd2",
+    "complexity": "Complex",
+    "conversion_score": 100,
+    "manual_effort_hours": 4,
+    "field_lineage": [],
+    "mermaid_diagram": ""
+  },
+  {
+    "mapping": "m_inventory_snapshot",
+    "complexity": "Simple",
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
     "field_lineage": [],
     "mermaid_diagram": ""
   },
@@ -6174,32 +6214,32 @@
   {
     "mapping": "DQ_VALIDATE_EMAILS",
     "complexity": "Complex",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 65,
+    "manual_effort_hours": 6,
     "field_lineage": [],
     "mermaid_diagram": ""
   },
   {
     "mapping": "DQ_STANDARDIZE_ADDRESSES",
     "complexity": "Complex",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 65,
+    "manual_effort_hours": 6,
     "field_lineage": [],
     "mermaid_diagram": ""
   },
   {
     "mapping": "SYNC_CUSTOMER_DATA",
     "complexity": "Simple",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
     "field_lineage": [],
     "mermaid_diagram": ""
   },
   {
     "mapping": "MI_BULK_LOAD_PRODUCTS",
     "complexity": "Simple",
-    "conversion_score": 0,
-    "manual_effort_hours": 0,
+    "conversion_score": 100,
+    "manual_effort_hours": 0.5,
     "field_lineage": [],
     "mermaid_diagram": ""
   }

@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_LAKEHOUSE_BRONZE
-# Source: S3_LANDING → Target: silver.lakehouse_bronze
+# Source: S3_LANDING → Target: main.silver.lakehouse_bronze
 # Mapping: MI_BULK_LOAD_PRODUCTS
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "MI_BULK_LOAD_PRODUCTS"
-target_table = "silver.lakehouse_bronze"
+target_table = "main.silver.lakehouse_bronze"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

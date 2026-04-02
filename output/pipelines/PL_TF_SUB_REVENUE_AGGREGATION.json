@@ -1,0 +1,42 @@
+{
+  "name": "PL_TF_SUB_REVENUE_AGGREGATION",
+  "description": "Migrated from Informatica workflow TF_SUB_REVENUE_AGGREGATION. ",
+  "tasks": [
+    {
+      "task_key": "NB_m_agg_daily_revenue",
+      "description": "Migrated from Informatica session mt_agg_daily_revenue.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_agg_daily_revenue",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
+    },
+    {
+      "task_key": "NB_m_agg_monthly_revenue",
+      "description": "Migrated from Informatica session mt_agg_monthly_revenue.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_agg_monthly_revenue",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "NB_m_agg_daily_revenue"
+        }
+      ]
+    }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "TF_SUB_REVENUE_AGGREGATION"
+  },
+  "format": "MULTI_TASK"
+}

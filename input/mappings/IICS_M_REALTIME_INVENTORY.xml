@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================ -->
+<!-- IICS Export — Mapping: m_realtime_inventory_scd2                 -->
+<!-- Pattern: Real-time inventory sync with SCD Type 2 + alerts      -->
+<!-- Sources: SAP S/4HANA (OData), IoT sensor feed (MQTT/Kafka)     -->
+<!-- Targets: Silver (dim_inventory), Gold (inventory_dashboard)     -->
+<!-- ================================================================ -->
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+  <weightedCSPackage>
+
+    <!-- ============================================================ -->
+    <!-- Mapping: Real-time Inventory with IoT enrichment             -->
+    <!-- Complexity: Complex (OData + Kafka, SCD2, alerts, unions)   -->
+    <!-- ============================================================ -->
+    <dTemplate name="m_realtime_inventory_scd2" objectType="com.infa.deployment.mapping"
+               description="Sync inventory from SAP + IoT sensors, apply SCD Type 2, generate low-stock alerts">
+
+      <field name="transformations">
+
+        <!-- Source 1: SAP S/4HANA — Material master via OData -->
+        <dTemplate name="src_sap_materials" objectType="com.infa.adapter.odata.reader"
+                   description="Read material master from SAP S/4HANA OData service">
+          <field name="connectionReference" value="CONN_SAP_S4HANA"/>
+          <field name="serviceUrl" value="/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV"/>
+          <field name="entitySet" value="A_MatlStkInAcctMod"/>
+          <field name="filterQuery" value="Plant eq '$$PLANT_CODE' and MatlStkChangeDate ge datetime'$$LAST_SYNC_TS'"/>
+          <field name="selectFields" value="Material,Plant,StorageLocation,MatlWrhsStkQtyInMatlBaseUnit,MaterialBaseUnit,LastChangeDateTime"/>
+          <field name="batchSize" value="500"/>
+        </dTemplate>
+
+        <!-- Source 2: SAP — Warehouse bin data -->
+        <dTemplate name="src_sap_warehouse_bins" objectType="com.infa.adapter.odata.reader"
+                   description="Read warehouse bin locations from SAP EWM">
+          <field name="connectionReference" value="CONN_SAP_S4HANA"/>
+          <field name="serviceUrl" value="/sap/opu/odata/sap/API_WAREHOUSE_BIN_SRV"/>
+          <field name="entitySet" value="A_WarehouseBin"/>
+        </dTemplate>
+
+        <!-- Source 3: IoT Sensor — temperature/humidity from warehouse sensors -->
+        <dTemplate name="src_iot_sensors" objectType="com.infa.adapter.kafka.reader"
+                   description="Read IoT sensor data from warehouse environment monitors">
+          <field name="connectionReference" value="CONN_IOT_KAFKA"/>
+          <field name="topic" value="warehouse-sensor-readings"/>
+          <field name="consumerGroup" value="cg_inventory_enrichment"/>
+          <field name="messageFormat" value="AVRO"/>
+          <field name="schemaRegistryUrl" value="https://schema-registry.corp.example.com:8081"/>
+        </dTemplate>
+
+        <!-- Joiner: Materials + Warehouse Bins -->
+        <dTemplate name="jnr_material_bins" objectType="com.infa.adapter.joiner"
+                   description="Join materials with bin locations">
+          <field name="joinType" value="LEFT_OUTER"/>
+          <field name="joinCondition" value="src_sap_materials.Material = src_sap_warehouse_bins.Material AND src_sap_materials.Plant = src_sap_warehouse_bins.Plant AND src_sap_materials.StorageLocation = src_sap_warehouse_bins.StorageLocation"/>
+          <field name="masterSource" value="src_sap_materials"/>
+          <field name="detailSource" value="src_sap_warehouse_bins"/>
+        </dTemplate>
+
+        <!-- Lookup: IoT sensor latest readings by warehouse zone -->
+        <dTemplate name="lkp_sensor_readings" objectType="com.infa.adapter.lookup"
+                   description="Get latest sensor readings for the warehouse zone">
+          <field name="lookupObject" value="src_iot_sensors"/>
+          <field name="condition" value="warehouse_zone = BinZone AND sensor_type = 'ENV'"/>
+          <field name="returnFields" value="temperature_celsius,humidity_percent,last_reading_ts"/>
+          <field name="lookupPolicy" value="USE_LAST_VALUE"/>
+        </dTemplate>
+
+        <!-- Expression: Derive inventory metrics -->
+        <dTemplate name="exp_inventory_metrics" objectType="com.infa.adapter.expression"
+                   description="Calculate inventory KPIs and storage conditions">
+          <field name="expression">
+            <dTemplate name="inventory_key" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="Material || '-' || Plant || '-' || StorageLocation"/>
+              <field name="datatype" value="string(100)"/>
+            </dTemplate>
+            <dTemplate name="stock_qty" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="TO_DECIMAL(MatlWrhsStkQtyInMatlBaseUnit)"/>
+              <field name="datatype" value="decimal(18,3)"/>
+            </dTemplate>
+            <dTemplate name="reorder_point" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(MaterialBaseUnit = 'EA', 100, IIF(MaterialBaseUnit = 'KG', 500, 50))"/>
+              <field name="datatype" value="decimal(18,3)"/>
+            </dTemplate>
+            <dTemplate name="is_below_reorder" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(stock_qty &lt; reorder_point, 1, 0)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="days_of_supply" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF($$AVG_DAILY_CONSUMPTION > 0, stock_qty / $$AVG_DAILY_CONSUMPTION, 9999)"/>
+              <field name="datatype" value="decimal(18,1)"/>
+            </dTemplate>
+            <dTemplate name="storage_condition_ok" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(temperature_celsius BETWEEN $$TEMP_MIN AND $$TEMP_MAX AND humidity_percent BETWEEN $$HUMIDITY_MIN AND $$HUMIDITY_MAX, 1, 0)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="alert_level" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(is_below_reorder = 1 AND storage_condition_ok = 0, 'CRITICAL', IIF(is_below_reorder = 1, 'WARNING', IIF(storage_condition_ok = 0, 'MONITOR', 'OK')))"/>
+              <field name="datatype" value="string(10)"/>
+            </dTemplate>
+            <dTemplate name="effective_from" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="SESSSTARTTIME"/>
+              <field name="datatype" value="timestamp"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Filter: Only process materials with actual stock movement -->
+        <dTemplate name="fil_active_materials" objectType="com.infa.adapter.filter"
+                   description="Exclude zero-stock inactive materials">
+          <field name="condition" value="stock_qty > 0 OR is_below_reorder = 1"/>
+        </dTemplate>
+
+        <!-- Union: Merge with forced reorder items from manual override file -->
+        <dTemplate name="uni_with_overrides" objectType="com.infa.adapter.union"
+                   description="Union with manual reorder overrides from CSV">
+        </dTemplate>
+
+        <!-- Sorter: Sort by plant + material for SCD2 lookup -->
+        <dTemplate name="srt_for_scd2" objectType="com.infa.adapter.sorter"
+                   description="Sort by inventory key for SCD2 comparison">
+          <field name="sortKeys" value="inventory_key ASC"/>
+          <field name="distinct" value="false"/>
+        </dTemplate>
+
+        <!-- Router: Alert routing -->
+        <dTemplate name="rtr_alerts" objectType="com.infa.adapter.router"
+                   description="Route alerts to different targets by severity">
+          <field name="groups">
+            <dTemplate name="grp_critical" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="alert_level = 'CRITICAL'"/>
+              <field name="description" value="Critical: low stock AND storage issue"/>
+            </dTemplate>
+            <dTemplate name="grp_warning" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="alert_level = 'WARNING'"/>
+              <field name="description" value="Warning: low stock only"/>
+            </dTemplate>
+            <dTemplate name="grp_normal" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="TRUE"/>
+              <field name="description" value="Normal operations"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Normalizer: Explode multi-bin materials into per-bin rows -->
+        <dTemplate name="nrm_per_bin" objectType="com.infa.adapter.normalizer"
+                   description="Normalize multi-bin allocations into per-bin inventory rows">
+          <field name="normalizeField" value="BinAllocations"/>
+          <field name="occurences" value="dynamic"/>
+        </dTemplate>
+
+        <!-- Target: Silver — dim_inventory (SCD2) -->
+        <dTemplate name="tgt_silver_inventory" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Write to Silver dim_inventory with SCD2 tracking">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="silver.dim_inventory"/>
+          <field name="writeMode" value="merge"/>
+          <field name="mergeKeys" value="inventory_key,effective_from"/>
+          <field name="partitionBy" value="Plant"/>
+        </dTemplate>
+
+        <!-- Target: Gold — real-time inventory dashboard -->
+        <dTemplate name="tgt_gold_inventory_dashboard" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Overwrite Gold inventory dashboard view">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="gold.inventory_dashboard"/>
+          <field name="writeMode" value="overwrite"/>
+        </dTemplate>
+
+        <!-- Target: Alert queue — critical/warning alerts -->
+        <dTemplate name="tgt_alert_queue" objectType="com.infa.adapter.kafka.writer"
+                   description="Publish inventory alerts to Kafka alert topic">
+          <field name="connectionReference" value="CONN_IOT_KAFKA"/>
+          <field name="topic" value="inventory-alerts"/>
+          <field name="keyField" value="inventory_key"/>
+          <field name="messageFormat" value="JSON"/>
+        </dTemplate>
+
+      </field>
+
+      <!-- Mapping Parameters -->
+      <dParameter name="$$PLANT_CODE" type="string" defaultValue="1000"/>
+      <dParameter name="$$LAST_SYNC_TS" type="timestamp" defaultValue="1900-01-01T00:00:00"/>
+      <dParameter name="$$AVG_DAILY_CONSUMPTION" type="decimal" defaultValue="10"/>
+      <dParameter name="$$TEMP_MIN" type="decimal" defaultValue="15"/>
+      <dParameter name="$$TEMP_MAX" type="decimal" defaultValue="25"/>
+      <dParameter name="$$HUMIDITY_MIN" type="decimal" defaultValue="30"/>
+      <dParameter name="$$HUMIDITY_MAX" type="decimal" defaultValue="60"/>
+    </dTemplate>
+
+    <!-- ============================================================ -->
+    <!-- Mapping: m_inventory_snapshot — daily warehouse snapshot     -->
+    <!-- Complexity: Simple (source + expression + target)           -->
+    <!-- ============================================================ -->
+    <dTemplate name="m_inventory_snapshot" objectType="com.infa.deployment.mapping"
+               description="Daily snapshot of inventory positions for historical analysis">
+
+      <field name="transformations">
+
+        <dTemplate name="src_silver_inventory" objectType="com.infa.adapter.lakehouse.reader"
+                   description="Read current Silver inventory positions">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="silver.dim_inventory"/>
+          <field name="filterCondition" value="is_current = 1"/>
+        </dTemplate>
+
+        <dTemplate name="exp_snapshot_date" objectType="com.infa.adapter.expression"
+                   description="Add snapshot date">
+          <field name="expression">
+            <dTemplate name="snapshot_date" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="TRUNC(SYSDATE)"/>
+              <field name="datatype" value="date"/>
+            </dTemplate>
+            <dTemplate name="snapshot_ts" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="SYSTIMESTAMP"/>
+              <field name="datatype" value="timestamp"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <dTemplate name="tgt_gold_inventory_history" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Append snapshot to Gold inventory history">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="gold.inventory_position_history"/>
+          <field name="writeMode" value="append"/>
+          <field name="partitionBy" value="snapshot_date"/>
+        </dTemplate>
+
+      </field>
+    </dTemplate>
+
+  </weightedCSPackage>
+</exportMetadata>

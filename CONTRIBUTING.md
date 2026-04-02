@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 780 tests, 98% coverage. Dual-target support: Microsoft Fabric + Azure Databricks.
+**Current status:** 1,111 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
 
 ## Test Files
 
@@ -46,7 +46,11 @@ py -m pytest tests/test_coverage.py::TestSqlConversion -v
 | `tests/test_sprint25.py` | Lineage, scoring, multi-DB | ~35 |
 | `tests/test_sprint26_30.py` | Templates, schema, waves, validation | ~112 |
 | `tests/test_sprint31_40.py` | Phase 2: PL/SQL, DQ, multi-tenant, PII | ~109 |
-| `tests/test_databricks_target.py` | Azure Databricks target (Unity Catalog, dbutils) | 50 |
+| `tests/test_databricks_target.py` | Azure Databricks target (Unity Catalog, dbutils) | 83 |
+| `tests/test_dbt_target.py` | DBT target router, model generation, E2E | 75 |
+| `tests/test_autosys.py` | AutoSys JIL parsing, DAG, cron, pipeline gen | 63 |
+| `tests/test_phase3_5.py` | Sprints 47–65: DLT, UC lineage, cluster policies, DBT advanced, AutoSys enhanced | 117 |
+| `tests/test_artifact_validation.py` | Artifact validation: pipeline JSON, DBT SQL, notebook structure | 76 |
 
 ## Code Style
 
@@ -71,14 +75,19 @@ Configuration is in `pyproject.toml`.
 ├── run_pipeline_migration.py  # Phase 3: Workflows → Pipeline JSON
 ├── run_schema_generator.py    # Phase 4: Delta Lake schema generation
 ├── run_validation.py          # Phase 5: Validation script generation
-├── run_migration.py           # Orchestrator (runs all phases)
+├── run_dbt_migration.py        # Phase 3: DBT model generation
+├── run_autosys_migration.py    # Phase 5: AutoSys JIL migration
+├── run_migration.py           # Orchestrator (runs all 8 phases)
 ├── generate_html_reports.py   # HTML report generation
 ├── dashboard.py               # Interactive dashboard
 ├── deploy_to_fabric.py        # Fabric deployment
-├── tests/                     # 780 tests (11 test files)
+├── deploy_to_databricks.py    # Databricks deployment
+├── tests/                     # 1,111 tests (15 test files)
 ├── input/                     # Informatica XML exports
+│   └── autosys/               # AutoSys JIL files (.jil)
 ├── output/                    # Generated artifacts
-├── templates/                 # Notebook/pipeline templates (Fabric + Databricks)
+│   └── dbt/                   # Generated DBT project
+├── templates/                 # Notebook/pipeline templates (Fabric + Databricks + DBT)
 └── docs/                      # Documentation
 ```
 
@@ -97,11 +106,13 @@ Configuration is in `pyproject.toml`.
 
 ## Target Platform Considerations
 
-The tool supports **two targets**: Microsoft Fabric and Azure Databricks.
+The tool supports **four targets**: Microsoft Fabric, Azure Databricks, DBT, and PySpark (with `--target auto` for auto-routing).
 
 - When adding notebook-related features, ensure both `notebookutils` (Fabric) and `dbutils` (Databricks) paths work
 - Pipeline generation must produce Fabric Pipeline JSON **or** Databricks Workflow JSON depending on `--target`
 - Databricks uses Unity Catalog 3-level namespace (`catalog.schema.table`) vs Fabric 2-level (`schema.table`)
+- DBT target generates Jinja SQL models under `output/dbt/` — test with `py -m pytest tests/test_dbt_target.py -v`
+- AutoSys JIL integration converts BOX/CMD/FW jobs to Pipeline/Workflow JSON — test with `py -m pytest tests/test_autosys.py -v`
 - Test Databricks paths with `py -m pytest tests/test_databricks_target.py -v`
 
 ## Pull Request Checklist

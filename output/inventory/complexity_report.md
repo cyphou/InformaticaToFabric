@@ -1,6 +1,6 @@
 # Informatica-to-Fabric Migration -- Complexity Report
 
-**Generated:** 2026-03-23
+**Generated:** 2026-04-02T12:27:47Z
 **Source Platform:** Informatica PowerCenter
 **Target Platform:** Microsoft Fabric
 
@@ -10,9 +10,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Mappings | 11 |
-| Total Workflows | 9 |
-| Total Sessions | 20 |
+| Total Mappings | 16 |
+| Total Workflows | 13 |
+| Total Sessions | 37 |
 | SQL Files Analyzed | 8 |
 
 ---
@@ -21,9 +21,9 @@
 
 | Complexity | Count | % | Migration Approach |
 |------------|-------|---|-------------------|
-| **Simple** | 4 | 36% | Auto-generate PySpark notebooks |
-| **Medium** | 1 | 9% | Semi-automated with manual review |
-| **Complex** | 6 | 55% | Manual assist required |
+| **Simple** | 6 | 38% | Auto-generate PySpark notebooks |
+| **Medium** | 1 | 6% | Semi-automated with manual review |
+| **Complex** | 9 | 56% | Manual assist required |
 | **Custom** | 0 | 0% | Redesign required |
 
 ---
@@ -32,8 +32,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Average Conversion Score | 45.5/100 |
-| Total Manual Effort (est.) | 17.0 hours |
+| Average Conversion Score | 95.6/100 |
+| Total Manual Effort (est.) | 45.5 hours |
 | Total Field Lineage Paths | 380 |
 
 ---
@@ -42,17 +42,22 @@
 
 | Mapping | Complexity | Score | Effort (h) | Sources | Targets | Transformations | SQL Override | Stored Proc |
 |---------|------------|-------|------------|---------|---------|-----------------|-------------|-------------|
-| m_load_contacts | **Medium** | 0/100 | 0 | src_sf_contacts | tgt_lh_contacts | EXP -> port -> FIL -> LKP -> AGG -> DM | No | No |
-| m_sync_accounts | **Simple** | 0/100 | 0 | src_accounts | tgt_accounts | EXP | No | No |
+| m_cdc_order_pipeline | **Complex** | 100/100 | 4 | src_ods_orders, src_ods_order_lines, src_pg_products | tgt_bronze_cdc_events, tgt_silver_orders, tgt_gold_daily_summary | JNR -> LKP -> EXP -> port -> RTR -> group -> UPD -> AGG -> RNK | No | No |
+| m_customer_360 | **Complex** | 100/100 | 4 | src_sf_contacts, src_sf_accounts, src_erp_customers, src_erp_transactions, src_snow_scores, src_api_firmographics | tgt_silver_customer, tgt_gold_customer_360 | JNR -> LKP -> EXP -> port -> FIL -> SRT -> RTR -> group -> UPD -> SEQ | No | No |
+| m_customer_activity_log | **Simple** | 100/100 | 0.5 | src_kafka_events | tgt_bronze_events | EXP -> port -> FIL | No | No |
+| m_load_contacts | **Medium** | 100/100 | 2 | src_sf_contacts | tgt_lh_contacts | EXP -> port -> FIL -> LKP -> AGG -> DM | No | No |
+| m_sync_accounts | **Simple** | 100/100 | 0.5 | src_accounts | tgt_accounts | EXP | No | No |
+| m_realtime_inventory_scd2 | **Complex** | 100/100 | 4 | src_sap_materials, src_sap_warehouse_bins, src_iot_sensors | tgt_silver_inventory, tgt_gold_inventory_dashboard, tgt_alert_queue | JNR -> LKP -> EXP -> port -> FIL -> UNI -> SRT -> RTR -> group -> NRM | No | No |
+| m_inventory_snapshot | **Simple** | 100/100 | 0.5 | src_silver_inventory | tgt_gold_inventory_history | EXP -> port | No | No |
 | M_COMPLEX_MULTI_SOURCE | **Complex** | 100/100 | 4.5 | Oracle.FINANCE.TRANSACTIONS, Oracle.FINANCE.ACCOUNTS | FACT_TXN_HIGH, FACT_TXN_LOW, FACT_TXN_TAGS | SQ -> JNR -> EXP -> SQLT -> LKP -> RTR -> RNK -> NRM | Yes | No |
 | M_LOAD_CUSTOMERS | **Simple** | 100/100 | 0.5 | Oracle.SALES.CUSTOMERS | DIM_CUSTOMER | SQ -> EXP -> FIL | No | No |
 | M_LOAD_EMPLOYEES | **Complex** | 100/100 | 4 | Oracle.HR.EMPLOYEES | DIM_EMPLOYEE | SQ -> EXP -> FIL -> SRT -> LKP -> SQLT | Yes | No |
 | M_LOAD_ORDERS | **Complex** | 100/100 | 4 | Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS | FACT_ORDERS, AGG_ORDERS_BY_CUSTOMER | SQ -> LKP -> EXP -> AGG | Yes | No |
 | M_UPSERT_INVENTORY | **Complex** | 100/100 | 4 | Oracle.SALES.STG_INVENTORY | DIM_INVENTORY | SQ -> EXP -> UPD | No | No |
-| DQ_VALIDATE_EMAILS | **Complex** | 0/100 | 0 |  |  | SQ -> DQ -> TGT | No | No |
-| DQ_STANDARDIZE_ADDRESSES | **Complex** | 0/100 | 0 |  |  | SQ -> DQ -> TGT | No | No |
-| SYNC_CUSTOMER_DATA | **Simple** | 0/100 | 0 | Oracle_CRM | Lakehouse_Silver | SQ -> TGT | No | No |
-| MI_BULK_LOAD_PRODUCTS | **Simple** | 0/100 | 0 | S3_LANDING | Lakehouse_Bronze | SQ -> TGT | No | No |
+| DQ_VALIDATE_EMAILS | **Complex** | 65/100 | 6 |  |  | SQ -> DQ -> TGT | No | No |
+| DQ_STANDARDIZE_ADDRESSES | **Complex** | 65/100 | 6 |  |  | SQ -> DQ -> TGT | No | No |
+| SYNC_CUSTOMER_DATA | **Simple** | 100/100 | 0.5 | Oracle_CRM | Lakehouse_Silver | SQ -> TGT | No | No |
+| MI_BULK_LOAD_PRODUCTS | **Simple** | 100/100 | 0.5 | S3_LANDING | Lakehouse_Bronze | SQ -> TGT | No | No |
 
 ---
 

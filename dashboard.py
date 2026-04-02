@@ -32,10 +32,12 @@ def _collect_status():
         "generated": datetime.now(timezone.utc).isoformat(),
         "phases": [],
         "inventory": None,
-        "artifacts": {"notebooks": [], "pipelines": [], "sql": [], "validation": []},
+        "artifacts": {"notebooks": [], "pipelines": [], "sql": [], "validation": [],
+                      "dbt_models": [], "autosys_pipelines": [], "dlt_notebooks": []},
         "checkpoint": None,
         "test_matrix": None,
         "deployment": None,
+        "cost_estimate": None,
     }
 
     # Phase results from migration_summary.md
@@ -69,8 +71,9 @@ def _collect_status():
             for m in mappings:
                 c = m.get("complexity", "Unknown")
                 status["inventory"]["complexity"][c] = status["inventory"]["complexity"].get(c, 0) + 1
-        except (json.JSONDecodeError, KeyError):
-            pass
+        except (json.JSONDecodeError, KeyError) as e:
+            status["inventory"] = {"error": f"Failed to parse inventory.json: {e}"}
+            print(f"  ⚠️  inventory.json is corrupted or invalid: {e}")
 
     # Artifacts
     nb_dir = OUTPUT_DIR / "notebooks"
@@ -93,13 +96,41 @@ def _collect_status():
         for f in sorted(val_dir.glob("VAL_*.py")):
             status["artifacts"]["validation"].append(f.name)
 
+    # DBT models (Sprint 49)
+    dbt_dir = OUTPUT_DIR / "dbt" / "models"
+    if dbt_dir.exists():
+        for f in sorted(dbt_dir.rglob("*.sql")):
+            status["artifacts"]["dbt_models"].append(f.name)
+
+    # AutoSys pipelines (Sprint 49)
+    autosys_dir = OUTPUT_DIR / "autosys"
+    if not autosys_dir.exists():
+        autosys_dir = OUTPUT_DIR  # fallback to output/ for PL_AUTOSYS_*.json
+    for f in sorted(autosys_dir.glob("PL_AUTOSYS_*.json")) if autosys_dir.exists() else []:
+        status["artifacts"]["autosys_pipelines"].append(f.name)
+
+    # DLT notebooks (Sprint 49)
+    dlt_dir = OUTPUT_DIR / "notebooks" / "dlt"
+    if dlt_dir.exists():
+        for f in sorted(dlt_dir.glob("DLT_*.py")):
+            status["artifacts"]["dlt_notebooks"].append(f.name)
+
+    # Cost estimate (Sprint 49)
+    cost_path = OUTPUT_DIR / "inventory" / "cost_estimate.json"
+    if cost_path.exists():
+        try:
+            status["cost_estimate"] = json.loads(cost_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
     # Checkpoint
     cp_path = OUTPUT_DIR / ".checkpoint.json"
     if cp_path.exists():
         try:
             status["checkpoint"] = json.loads(cp_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (json.JSONDecodeError, OSError) as e:
+            status["checkpoint"] = {"error": f"Failed to parse checkpoint: {e}"}
+            print(f"  ⚠️  checkpoint.json is corrupted: {e}")
 
     # Test matrix
     tm_path = OUTPUT_DIR / "validation" / "test_matrix.md"
@@ -111,8 +142,9 @@ def _collect_status():
     if dl_path.exists():
         try:
             status["deployment"] = json.loads(dl_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (json.JSONDecodeError, OSError) as e:
+            status["deployment"] = {"error": f"Failed to parse deployment log: {e}"}
+            print(f"  ⚠️  deployment_log.json is corrupted: {e}")
 
     return status
 
@@ -130,7 +162,10 @@ def _generate_html(status):
     pl_count = len(artifacts.get("pipelines", []))
     sql_count = len(artifacts.get("sql", []))
     val_count = len(artifacts.get("validation", []))
-    total_artifacts = nb_count + pl_count + sql_count + val_count
+    dbt_count = len(artifacts.get("dbt_models", []))
+    autosys_count = len(artifacts.get("autosys_pipelines", []))
+    dlt_count = len(artifacts.get("dlt_notebooks", []))
+    total_artifacts = nb_count + pl_count + sql_count + val_count + dbt_count + autosys_count + dlt_count
 
     # Complexity
     complexity = inv.get("complexity", {})
@@ -236,6 +271,9 @@ def _generate_html(status):
   <div class="kpi"><div class="number">{pl_count}</div><div class="label">Pipelines</div></div>
   <div class="kpi"><div class="number">{sql_count}</div><div class="label">SQL Files</div></div>
   <div class="kpi"><div class="number">{val_count}</div><div class="label">Validation</div></div>
+  <div class="kpi"><div class="number">{dbt_count}</div><div class="label">DBT Models</div></div>
+  <div class="kpi"><div class="number">{autosys_count}</div><div class="label">AutoSys Pipelines</div></div>
+  <div class="kpi"><div class="number">{dlt_count}</div><div class="label">DLT Notebooks</div></div>
 </div>
 
 <div class="content">

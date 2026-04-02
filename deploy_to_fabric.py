@@ -56,13 +56,34 @@ def _get_token():
         print("ERROR: azure-identity not installed. Run: pip install azure-identity")
         sys.exit(1)
     credential = DefaultAzureCredential()
-    token = credential.get_token(FABRIC_SCOPE)
-    return token.token
+    token_obj = credential.get_token(FABRIC_SCOPE)
+    return token_obj
 
 
-def _headers(token):
+def _get_valid_token(token_obj):
+    """Return a valid access token string, refreshing if expired."""
+    if token_obj is None:
+        return None
+    # Azure AccessToken has an expires_on field (Unix timestamp)
+    if hasattr(token_obj, "expires_on"):
+        now = datetime.now(timezone.utc).timestamp()
+        # Refresh if token expires within 5 minutes
+        if token_obj.expires_on - now < 300:
+            print("  🔄 Token expiring soon — refreshing...")
+            credential = DefaultAzureCredential()
+            token_obj = credential.get_token(FABRIC_SCOPE)
+            print("  ✅ Token refreshed")
+    return token_obj
+
+
+def _headers(token_obj):
+    """Build HTTP headers with a valid access token (refreshing if needed)."""
+    if token_obj is None:
+        return {"Content-Type": "application/json"}
+    refreshed = _get_valid_token(token_obj)
+    token_str = refreshed.token if hasattr(refreshed, "token") else str(refreshed)
     return {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {token_str}",
         "Content-Type": "application/json",
     }
 
@@ -249,6 +270,18 @@ def deploy_sql_scripts(workspace_id, token, dry_run=False):
         elif resp.status_code == 409:
             print(f"    ⚠️  {display_name} already exists — skipping")
             results.append({"artifact": display_name, "type": "Notebook (SQL)", "status": "exists"})
+        elif resp.status_code == 429:
+            retry_after = int(resp.headers.get("Retry-After", "30"))
+            print(f"    ⏳ Rate limited — waiting {retry_after}s...")
+            time.sleep(retry_after)
+            resp = requests.post(url, headers=_headers(token), json=payload, timeout=60)
+            if resp.status_code in (200, 201, 202):
+                item_id = resp.json().get("id", "unknown")
+                print(f"    ✅ {display_name} → {item_id} (after retry)")
+                results.append({"artifact": display_name, "type": "Notebook (SQL)", "status": "created", "id": item_id})
+            else:
+                print(f"    ❌ {display_name}: {resp.status_code} {resp.text[:100]}")
+                results.append({"artifact": display_name, "type": "Notebook (SQL)", "status": "error", "code": resp.status_code})
         else:
             print(f"    ❌ {display_name}: {resp.status_code} {resp.text[:100]}")
             results.append({"artifact": display_name, "type": "Notebook (SQL)", "status": "error", "code": resp.status_code})

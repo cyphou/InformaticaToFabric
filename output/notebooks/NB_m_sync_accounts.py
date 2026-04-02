@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_sync_accounts
@@ -10,7 +10,7 @@
 # Sources: src_accounts
 # Targets: tgt_accounts
 # Flow: EXP
-# Generated: 2026-03-26
+# Generated: 2026-04-02
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -24,7 +24,7 @@ from delta.tables import DeltaTable
 # CELL 2 — Source Read
 # --- Source: src_accounts ---
 # Oracle: SELECT * FROM src_accounts
-df_source = spark.table("bronze.src_accounts")
+df_source = spark.table("main.bronze.src_accounts")
 
 # COMMAND ----------
 
@@ -38,9 +38,9 @@ df = df_source.withColumn(
 # COMMAND ----------
 
 # CELL 4 — Target Write
-# --- Target: tgt_accounts → silver.tgt_accounts ---
+# --- Target: tgt_accounts → main.silver.tgt_accounts ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.tgt_accounts")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.tgt_accounts")
 
 # COMMAND ----------
 

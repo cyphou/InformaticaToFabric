@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_M_COMPLEX_MULTI_SOURCE
@@ -10,7 +10,7 @@
 # Sources: Oracle.FINANCE.TRANSACTIONS, Oracle.FINANCE.ACCOUNTS
 # Targets: FACT_TXN_HIGH, FACT_TXN_LOW, FACT_TXN_TAGS
 # Flow: SQ → JNR → EXP → SQLT → LKP → RTR → RNK → NRM
-# Generated: 2026-03-26
+# Generated: 2026-04-02
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -24,11 +24,11 @@ from delta.tables import DeltaTable
 # CELL 2 — Source Read
 # --- Source: Oracle.FINANCE.TRANSACTIONS ---
 # Oracle: SELECT * FROM FINANCE.TRANSACTIONS
-df_source = spark.table("bronze.transactions")
+df_source = spark.table("main.bronze.transactions")
 
 # --- Source: Oracle.FINANCE.ACCOUNTS ---
 # Oracle: SELECT * FROM FINANCE.ACCOUNTS
-df_source_2 = spark.table("bronze.accounts")
+df_source_2 = spark.table("main.bronze.accounts")
 
 # SQL Override detected — review converted SQL in output/sql/
 # See: SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql
@@ -63,7 +63,7 @@ df = df
 # CELL 6 — Transformation: LKP
 # --- Lookup: LKP_FRAUD_BLACKLIST ---
 # Using broadcast join for lookup table (< 100MB)
-df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table
+df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace with actual lookup table
 df = df.join(
     broadcast(df_lookup),
     on="LOOKUP_KEY",  # TODO: Replace with actual lookup condition
@@ -93,17 +93,17 @@ df = df.withColumn("NORMALIZED_COL", explode(split(col("ARRAY_COL"), ",")))  # T
 # COMMAND ----------
 
 # CELL 10 — Target Write
-# --- Target: FACT_TXN_HIGH → silver.fact_txn_high ---
+# --- Target: FACT_TXN_HIGH → main.silver.fact_txn_high ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.fact_txn_high")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.fact_txn_high")
 
-# --- Target: FACT_TXN_LOW → silver.fact_txn_low ---
+# --- Target: FACT_TXN_LOW → main.silver.fact_txn_low ---
 df_target_2 = df
-df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.fact_txn_low")
+df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.fact_txn_low")
 
-# --- Target: FACT_TXN_TAGS → silver.fact_txn_tags ---
+# --- Target: FACT_TXN_TAGS → main.silver.fact_txn_tags ---
 df_target_3 = df
-df_target_3.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.fact_txn_tags")
+df_target_3.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.fact_txn_tags")
 
 # COMMAND ----------
 

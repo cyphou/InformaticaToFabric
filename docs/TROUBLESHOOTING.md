@@ -162,6 +162,66 @@ python dashboard.py --open
 2. Add secrets: `databricks secrets put --scope my-scope --key my-secret`
 3. Or switch to Key Vault-backed scope for Azure-native integration
 
+### 15. AutoSys JIL Parsing Errors
+
+**Symptoms:** `Total AutoSys jobs: 0` or missing jobs in output
+
+**Possible causes:**
+- `.jil` files are not in the expected directory (`input/autosys/`)
+- JIL syntax uses unsupported extensions or non-standard keywords
+- File encoding is not UTF-8
+
+**Fix:**
+1. Verify files exist: `ls input/autosys/*.jil`
+2. Check that each job starts with `insert_job:` on its own line
+3. Ensure each job has a `job_type:` attribute (b = BOX, c = CMD, fw = FW, ft = FT)
+4. Re-export from AutoSys: `autorep -J ALL -q > all_jobs.jil`
+
+### 16. AutoSys Conditions Not Resolved
+
+**Symptoms:** Pipeline dependencies are missing or `dependsOn` is empty
+
+**Cause:** Condition expressions reference jobs that aren't in the parsed JIL files.
+
+**Fix:**
+1. Check `output/autosys/autosys_summary.json` for `unresolved_conditions`
+2. Ensure all referenced jobs are included in the JIL export
+3. For cross-BOX dependencies, export the parent BOX jobs as well
+
+### 17. AutoSys pmcmd Linkage Failed
+
+**Symptoms:** `"linked": false` in `autosys_summary.json` for jobs that call Informatica
+
+**Cause:** The workflow name in `pmcmd startworkflow -w WF_NAME` doesn't match inventory entries.
+
+**Fix:**
+1. Check the exact `command:` in the JIL — it must contain `pmcmd startworkflow -w <workflow_name>`
+2. Verify `output/inventory/inventory.json` contains the referenced workflow
+3. Run assessment first: `python run_assessment.py` then re-run AutoSys migration
+
+### 18. DBT Model Generation Errors
+
+**Symptoms:** Empty or malformed `.sql` files in `output/dbt/models/`
+
+**Possible causes:**
+- Mapping is too complex for SQL-only representation (requires PySpark)
+- Missing source table metadata in inventory
+
+**Fix:**
+1. Use `--target auto` instead of `--target dbt` — complex mappings will route to PySpark notebooks automatically
+2. Check `output/dbt/models/` for `-- TODO:` markers indicating manual review needed
+3. Verify source tables are present in `output/inventory/inventory.json`
+
+### 19. DBT Project Won't Compile
+
+**Error:** `dbt compile` fails with schema or reference errors
+
+**Fix:**
+1. Ensure `profiles.yml` has the correct Databricks connection details
+2. Check `dbt_project.yml` model paths match the generated structure
+3. Install the Databricks adapter: `pip install dbt-databricks`
+4. Verify catalog/schema: `dbt debug --target dev`
+
 ---
 
 ## Getting Help

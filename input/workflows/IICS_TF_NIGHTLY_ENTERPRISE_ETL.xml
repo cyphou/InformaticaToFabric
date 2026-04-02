@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================ -->
+<!-- IICS Export — Taskflow: TF_NIGHTLY_ENTERPRISE_ETL                -->
+<!-- Pattern: Complex multi-phase nightly ETL with subflows,          -->
+<!--          parallel gateways, error handling, and approvals        -->
+<!-- Touches: 12+ mapping tasks, 3 subflows, 2 parallel branches     -->
+<!-- ================================================================ -->
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+<weightedCSPackage xmlns="" name="IICS_TF_NIGHTLY_ENTERPRISE_ETL"
+                   description="Enterprise nightly ETL: ingest → transform → aggregate → publish">
+
+  <!-- ============================================================ -->
+  <!-- Main Taskflow: TF_NIGHTLY_ENTERPRISE_ETL                     -->
+  <!-- 4-phase pipeline with parallel branches and error handling   -->
+  <!-- ============================================================ -->
+  <dTemplate name="TF_NIGHTLY_ENTERPRISE_ETL" objectType="com.infa.deployment.taskflow">
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- Phase 1: Pre-flight checks                                  -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+
+    <!-- Command Task: Check source connectivity -->
+    <dTemplate name="cmd_preflight_checks" objectType="com.infa.deployment.commandtask">
+      <dAttribute name="command" value="python /opt/etl/scripts/preflight_check.py --sources oracle,salesforce,snowflake --timeout 30"/>
+      <dAttribute name="failOnError" value="true"/>
+      <dAttribute name="maxRuntime" value="300"/>
+    </dTemplate>
+
+    <!-- Command Task: Acquire distributed lock -->
+    <dTemplate name="cmd_acquire_lock" objectType="com.infa.deployment.commandtask">
+      <dAttribute name="command" value="python /opt/etl/scripts/distributed_lock.py --acquire --name NIGHTLY_ETL --ttl 7200"/>
+      <dAttribute name="failOnError" value="true"/>
+    </dTemplate>
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- Phase 2: Bronze Ingestion (Parallel)                        -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+
+    <!-- Parallel Gateway: Start parallel ingestion branches -->
+    <dTemplate name="gw_parallel_ingest_start" objectType="com.infa.deployment.parallelgateway">
+      <dAttribute name="description" value="Fork into CRM and ERP ingestion branches"/>
+    </dTemplate>
+
+    <!-- Branch A: CRM Ingestion -->
+    <dTemplate name="mt_ingest_contacts" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_load_contacts"/>
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+      <dAttribute name="restartability" value="safe"/>
+    </dTemplate>
+
+    <dTemplate name="mt_ingest_accounts" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_sync_accounts"/>
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+    </dTemplate>
+
+    <dTemplate name="mt_ingest_opportunities" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_load_opportunities"/>
+      <dAttribute name="connectionName" value="CONN_SALESFORCE_PROD"/>
+    </dTemplate>
+
+    <!-- Branch B: ERP Ingestion -->
+    <dTemplate name="mt_ingest_orders" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_cdc_order_pipeline"/>
+      <dAttribute name="connectionName" value="CONN_ORACLE_ODS"/>
+    </dTemplate>
+
+    <dTemplate name="mt_ingest_inventory" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_upsert_inventory"/>
+      <dAttribute name="connectionName" value="CONN_ORACLE_ERP"/>
+    </dTemplate>
+
+    <dTemplate name="mt_ingest_financials" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_load_gl_journals"/>
+      <dAttribute name="connectionName" value="CONN_ORACLE_ERP"/>
+    </dTemplate>
+
+    <!-- Parallel Gateway: Wait for both branches -->
+    <dTemplate name="gw_parallel_ingest_join" objectType="com.infa.deployment.parallelgateway">
+      <dAttribute name="description" value="Synchronize: wait for both CRM and ERP ingestion to complete"/>
+    </dTemplate>
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- Phase 3: Silver Transformation (Sequential)                 -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+
+    <!-- Subflow: Customer 360 build -->
+    <dTemplate name="sf_customer_360" objectType="com.infa.deployment.subflow">
+      <dAttribute name="taskflowName" value="TF_SUB_CUSTOMER_360"/>
+      <dAttribute name="propagateError" value="true"/>
+      <dAttribute name="parameterPassthrough" value="true"/>
+    </dTemplate>
+
+    <!-- Mapping Task: Order enrichment -->
+    <dTemplate name="mt_enrich_orders" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_enrich_order_details"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <!-- Exclusive Gateway: Data quality check -->
+    <dTemplate name="gw_dq_check" objectType="com.infa.deployment.exclusivegateway">
+      <dAttribute name="condition" value="$$DQ_PASS_RATE >= 0.95"/>
+      <dAttribute name="description" value="Check if data quality meets 95% threshold"/>
+    </dTemplate>
+
+    <!-- Human Task: Manual approval for low-quality data -->
+    <dTemplate name="ht_dq_approval" objectType="com.infa.deployment.humantask">
+      <dAttribute name="assignee" value="data-steward@example.com"/>
+      <dAttribute name="subject" value="Data Quality Below Threshold — Approve Continuation?"/>
+      <dAttribute name="description" value="DQ pass rate is $$DQ_PASS_RATE (below 95%). Review quality report and approve or reject pipeline continuation."/>
+      <dAttribute name="timeoutHours" value="4"/>
+      <dAttribute name="escalateTo" value="etl-manager@example.com"/>
+    </dTemplate>
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- Phase 4: Gold Aggregation & Publish                         -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+
+    <!-- Subflow: Revenue aggregation -->
+    <dTemplate name="sf_revenue_agg" objectType="com.infa.deployment.subflow">
+      <dAttribute name="taskflowName" value="TF_SUB_REVENUE_AGGREGATION"/>
+      <dAttribute name="propagateError" value="true"/>
+    </dTemplate>
+
+    <!-- Subflow: KPI computation -->
+    <dTemplate name="sf_compute_kpis" objectType="com.infa.deployment.subflow">
+      <dAttribute name="taskflowName" value="TF_SUB_KPI_COMPUTATION"/>
+      <dAttribute name="propagateError" value="true"/>
+    </dTemplate>
+
+    <!-- Command Task: Refresh Power BI dataset -->
+    <dTemplate name="cmd_refresh_pbi" objectType="com.infa.deployment.commandtask">
+      <dAttribute name="command" value="python /opt/etl/scripts/refresh_powerbi.py --dataset-id $$PBI_DATASET_ID --workspace-id $$PBI_WORKSPACE_ID"/>
+      <dAttribute name="failOnError" value="false"/>
+    </dTemplate>
+
+    <!-- Command Task: Release distributed lock -->
+    <dTemplate name="cmd_release_lock" objectType="com.infa.deployment.commandtask">
+      <dAttribute name="command" value="python /opt/etl/scripts/distributed_lock.py --release --name NIGHTLY_ETL"/>
+      <dAttribute name="failOnError" value="false"/>
+    </dTemplate>
+
+    <!-- Notification: Success -->
+    <dTemplate name="notify_success" objectType="com.infa.deployment.notificationtask">
+      <dAttribute name="recipients" value="etl-ops@example.com,data-team@example.com"/>
+      <dAttribute name="subject" value="[SUCCESS] Nightly Enterprise ETL — $$LOAD_DATE"/>
+      <dAttribute name="body" value="Nightly ETL completed successfully.\n\nPhases: Ingest → Transform → Aggregate → Publish\nDuration: $$DURATION\nRows Processed: $$TOTAL_ROWS\nDQ Pass Rate: $$DQ_PASS_RATE"/>
+    </dTemplate>
+
+    <!-- Notification: Failure -->
+    <dTemplate name="notify_failure" objectType="com.infa.deployment.notificationtask">
+      <dAttribute name="recipients" value="etl-ops@example.com,oncall-pager@example.com"/>
+      <dAttribute name="subject" value="[FAILURE] Nightly Enterprise ETL — $$LOAD_DATE"/>
+      <dAttribute name="body" value="Nightly ETL FAILED.\n\nFailed Task: $$FAILED_TASK\nError: $$ERROR_MESSAGE\n\nPlease investigate immediately."/>
+      <dAttribute name="priority" value="HIGH"/>
+    </dTemplate>
+
+    <!-- Timer Event: Delay before PBI refresh (let Delta optimize) -->
+    <dTemplate name="timer_pre_refresh" objectType="com.infa.deployment.timerevent">
+      <dAttribute name="duration" value="PT2M"/>
+      <dAttribute name="description" value="Wait 2 minutes for Delta table optimization before PBI refresh"/>
+    </dTemplate>
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- Links / Control Flow                                        -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+
+    <!-- Phase 1 → Phase 2 -->
+    <dLink from="Start" to="cmd_preflight_checks"/>
+    <dLink from="cmd_preflight_checks" to="cmd_acquire_lock" condition="$cmd_preflight_checks.status = SUCCEEDED"/>
+    <dLink from="cmd_acquire_lock" to="gw_parallel_ingest_start"/>
+
+    <!-- Phase 2: Parallel branches -->
+    <dLink from="gw_parallel_ingest_start" to="mt_ingest_contacts"/>
+    <dLink from="gw_parallel_ingest_start" to="mt_ingest_orders"/>
+    <dLink from="mt_ingest_contacts" to="mt_ingest_accounts"/>
+    <dLink from="mt_ingest_accounts" to="mt_ingest_opportunities"/>
+    <dLink from="mt_ingest_orders" to="mt_ingest_inventory"/>
+    <dLink from="mt_ingest_inventory" to="mt_ingest_financials"/>
+    <dLink from="mt_ingest_opportunities" to="gw_parallel_ingest_join"/>
+    <dLink from="mt_ingest_financials" to="gw_parallel_ingest_join"/>
+
+    <!-- Phase 3: Sequential transformation -->
+    <dLink from="gw_parallel_ingest_join" to="sf_customer_360"/>
+    <dLink from="sf_customer_360" to="mt_enrich_orders"/>
+    <dLink from="mt_enrich_orders" to="gw_dq_check"/>
+    <dLink from="gw_dq_check" to="sf_revenue_agg" condition="$$DQ_PASS_RATE >= 0.95"/>
+    <dLink from="gw_dq_check" to="ht_dq_approval" condition="$$DQ_PASS_RATE &lt; 0.95"/>
+    <dLink from="ht_dq_approval" to="sf_revenue_agg" condition="$ht_dq_approval.outcome = APPROVED"/>
+    <dLink from="ht_dq_approval" to="notify_failure" condition="$ht_dq_approval.outcome = REJECTED"/>
+
+    <!-- Phase 4: Aggregation and publish -->
+    <dLink from="sf_revenue_agg" to="sf_compute_kpis"/>
+    <dLink from="sf_compute_kpis" to="timer_pre_refresh"/>
+    <dLink from="timer_pre_refresh" to="cmd_refresh_pbi"/>
+    <dLink from="cmd_refresh_pbi" to="cmd_release_lock"/>
+    <dLink from="cmd_release_lock" to="notify_success"/>
+
+    <!-- Error handling: any failure → release lock + notify -->
+    <dLink from="cmd_preflight_checks" to="notify_failure" condition="$cmd_preflight_checks.status = FAILED"/>
+    <dLink from="mt_ingest_contacts" to="notify_failure" condition="$mt_ingest_contacts.status = FAILED"/>
+    <dLink from="mt_ingest_orders" to="notify_failure" condition="$mt_ingest_orders.status = FAILED"/>
+
+    <!-- Parameters -->
+    <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+    <dParameter name="$$ENV" type="string" defaultValue="PROD"/>
+    <dParameter name="$$DQ_PASS_RATE" type="decimal" defaultValue="1.0"/>
+    <dParameter name="$$PBI_DATASET_ID" type="string" defaultValue=""/>
+    <dParameter name="$$PBI_WORKSPACE_ID" type="string" defaultValue=""/>
+    <dParameter name="$$TOTAL_ROWS" type="integer" defaultValue="0"/>
+    <dParameter name="$$DURATION" type="string" defaultValue=""/>
+    <dParameter name="$$FAILED_TASK" type="string" defaultValue=""/>
+    <dParameter name="$$ERROR_MESSAGE" type="string" defaultValue=""/>
+  </dTemplate>
+
+  <!-- ============================================================ -->
+  <!-- Subflow: TF_SUB_CUSTOMER_360                                 -->
+  <!-- ============================================================ -->
+  <dTemplate name="TF_SUB_CUSTOMER_360" objectType="com.infa.deployment.taskflow">
+
+    <dTemplate name="mt_build_customer_360" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_customer_360"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <dTemplate name="mt_activity_log" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_customer_activity_log"/>
+      <dAttribute name="connectionName" value="CONN_KAFKA_CLUSTER"/>
+    </dTemplate>
+
+    <dLink from="Start" to="mt_build_customer_360"/>
+    <dLink from="mt_build_customer_360" to="mt_activity_log"/>
+
+    <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+  </dTemplate>
+
+  <!-- ============================================================ -->
+  <!-- Subflow: TF_SUB_REVENUE_AGGREGATION                          -->
+  <!-- ============================================================ -->
+  <dTemplate name="TF_SUB_REVENUE_AGGREGATION" objectType="com.infa.deployment.taskflow">
+
+    <dTemplate name="mt_agg_daily_revenue" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_agg_daily_revenue"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <dTemplate name="mt_agg_monthly_revenue" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_agg_monthly_revenue"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <dLink from="Start" to="mt_agg_daily_revenue"/>
+    <dLink from="mt_agg_daily_revenue" to="mt_agg_monthly_revenue"/>
+
+    <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+  </dTemplate>
+
+  <!-- ============================================================ -->
+  <!-- Subflow: TF_SUB_KPI_COMPUTATION                              -->
+  <!-- ============================================================ -->
+  <dTemplate name="TF_SUB_KPI_COMPUTATION" objectType="com.infa.deployment.taskflow">
+
+    <dTemplate name="mt_compute_sales_kpis" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_compute_sales_kpis"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <dTemplate name="mt_compute_customer_kpis" objectType="com.infa.deployment.mappingtask">
+      <dAttribute name="mappingName" value="m_compute_customer_kpis"/>
+      <dAttribute name="connectionName" value="CONN_FABRIC_LAKEHOUSE"/>
+    </dTemplate>
+
+    <dLink from="Start" to="mt_compute_sales_kpis"/>
+    <dLink from="Start" to="mt_compute_customer_kpis"/>
+
+    <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+  </dTemplate>
+
+  <!-- ============================================================ -->
+  <!-- Connection Objects                                            -->
+  <!-- ============================================================ -->
+
+  <dTemplate name="CONN_ORACLE_ODS" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Oracle"/>
+    <dAttribute name="host" value="oracle-ods.corp.example.com:1521/ODSDB"/>
+    <dAttribute name="schema" value="ODS"/>
+    <dAttribute name="authType" value="RuntimeVariable"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_ORACLE_ERP" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Oracle"/>
+    <dAttribute name="host" value="oracle-erp.corp.example.com:1521/ERPDB"/>
+    <dAttribute name="schema" value="ERP"/>
+    <dAttribute name="authType" value="Vault"/>
+    <dAttribute name="vaultPath" value="secret/data/oracle-erp"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_SNOWFLAKE_ANALYTICS" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Snowflake"/>
+    <dAttribute name="host" value="acme.snowflakecomputing.com"/>
+    <dAttribute name="schema" value="ANALYTICS"/>
+    <dAttribute name="warehouse" value="COMPUTE_WH"/>
+    <dAttribute name="role" value="ETL_ROLE"/>
+    <dAttribute name="authType" value="KeyPair"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_KAFKA_CLUSTER" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Kafka"/>
+    <dAttribute name="host" value="kafka-broker-1.corp.example.com:9092,kafka-broker-2.corp.example.com:9092"/>
+    <dAttribute name="securityProtocol" value="SASL_SSL"/>
+    <dAttribute name="saslMechanism" value="PLAIN"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_ENRICHMENT_API" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="REST_V2"/>
+    <dAttribute name="host" value="https://api.enrichment.example.com"/>
+    <dAttribute name="authType" value="OAuth2_ClientCredentials"/>
+    <dAttribute name="tokenUrl" value="https://auth.enrichment.example.com/oauth/token"/>
+  </dTemplate>
+
+  <dTemplate name="CONN_FABRIC_LAKEHOUSE" objectType="com.infa.deployment.connection">
+    <dAttribute name="type" value="Lakehouse"/>
+    <dAttribute name="workspace" value="ws_enterprise_analytics"/>
+    <dAttribute name="lakehouse" value="lh_medallion"/>
+    <dAttribute name="authType" value="ServicePrincipal"/>
+    <dAttribute name="tenantId" value="00000000-0000-0000-0000-000000000000"/>
+  </dTemplate>
+
+  <!-- ============================================================ -->
+  <!-- Schedule Definition                                           -->
+  <!-- ============================================================ -->
+  <dTemplate name="SCH_NIGHTLY_2AM" objectType="com.infa.deployment.schedule">
+    <dAttribute name="cronExpression" value="0 0 2 ? * MON-FRI *"/>
+    <dAttribute name="timezone" value="America/New_York"/>
+    <dAttribute name="description" value="Run Monday-Friday at 2:00 AM ET"/>
+    <dAttribute name="startDate" value="2026-01-01"/>
+    <dAttribute name="enabled" value="true"/>
+  </dTemplate>
+
+</weightedCSPackage>
+</exportMetadata>

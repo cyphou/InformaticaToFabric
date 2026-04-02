@@ -12,7 +12,7 @@
 
 This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 41 sprints complete (Phase 1 + Phase 2 + Sprint 41) — 780 tests, dual-target support (Microsoft Fabric + Azure Databricks), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog permissions generator, cluster config recommender, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
+**Current state:** 59 sprints complete (Phase 1 + Phase 2 + Sprints 41, 47–50, 51–60, 61–65) — 1,111 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
 
 ---
 
@@ -86,9 +86,9 @@ flowchart TB
 | Agent | Invoke With | Owns | Outputs |
 |-------|-------------|------|---------|
 | **🎯 @migration-orchestrator** | `@migration-orchestrator start migration` | Migration plan, wave scheduling, progress | `output/migration_summary.md` |
-| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), inventory, complexity, DAG, session config, scheduler | `output/inventory/` |
-| **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook generation (Fabric `notebookutils` or Databricks `dbutils`) | `output/notebooks/NB_*.py` |
-| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Fabric Pipeline JSON or Databricks Workflow JSON | `output/pipelines/PL_*.json` |
+| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), AutoSys JIL parsing, inventory, complexity, DAG, session config, scheduler | `output/inventory/`, `output/autosys/` |
+| **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook or DBT model generation (Fabric `notebookutils` or Databricks `dbutils` or `dbt`) | `output/notebooks/NB_*.py`, `output/dbt/` |
+| **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Fabric Pipeline JSON or Databricks Workflow JSON, AutoSys BOX/CMD → Pipeline JSON | `output/pipelines/PL_*.json`, `output/autosys/PL_AUTOSYS_*.json` |
 | **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle/SQL Server → Spark SQL / T-SQL (+ GTT, MV, DB link detection) | `output/sql/SQL_*.sql` |
 | **✅ @validation** | `@validation generate tests for Silver tables` | Test scripts, row counts, checksums, diffs | `output/validation/VAL_*.py` |
 
@@ -331,20 +331,24 @@ InformaticaToDBFabric/
 │   ├── workflows/                       #   Workflow XML
 │   ├── mappings/                        #   Mapping XML
 │   ├── sessions/                        #   Session XML
-│   └── sql/                             #   Oracle SQL files
+│   ├── sql/                             #   Oracle SQL files
+│   └── autosys/                         #   AutoSys JIL files (.jil)
 ├── output/                              # 📤 Generated artifacts
 │   ├── inventory/                       #   🔍 Assessment results
 │   ├── notebooks/                       #   📓 Fabric Notebooks
+│   ├── dbt/                             #   🏗️ DBT project (models, config)
 │   ├── pipelines/                       #   ⚡ Pipeline JSON
+│   ├── autosys/                         #   ⏰ AutoSys → Pipeline/Workflow JSON
 │   ├── sql/                             #   🗄️ Converted SQL
 │   └── validation/                      #   ✅ Test scripts
 ├── templates/                           # 📋 Reusable templates
 │   ├── notebook_template.py             #   Fabric notebook template
 │   ├── notebook_template_databricks.py  #   Databricks notebook template
+│   ├── dbt_template.sql                 #   DBT model template (Jinja + SQL)
 │   ├── pipeline_template.json           #   Fabric pipeline template
 │   ├── pipeline_template_databricks.json #  Databricks workflow template
 │   └── validation_template.py
-├── tests/                               # 🧪 780 tests
+├── tests/                               # 🧪 1,111 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests
@@ -354,10 +358,14 @@ InformaticaToDBFabric/
 │   ├── test_sprint25.py                 #   Lineage & scoring tests
 │   ├── test_sprint26_30.py              #   Templates, schema, waves, validation, production
 │   ├── test_sprint31_40.py              #   Phase 2 tests (object gaps, PL/SQL, multi-tenant, DQ)
-│   └── test_databricks_target.py        #   Azure Databricks target tests
+│   ├── test_databricks_target.py        #   Azure Databricks target tests
+│   ├── test_dbt_target.py              #   DBT target tests (Sprint 51)
+│   ├── test_autosys.py                 #   AutoSys JIL tests (Sprint 61)
+│   ├── test_phase3_5.py               #   Phase 3-5 tests (Sprints 47–65)
+│   └── test_artifact_validation.py   #   Artifact validation (pipeline/DBT/notebook)
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
-├── DEVELOPMENT_PLAN.md                  # 📝 50-sprint dev plan (Phase 1-3)
+├── DEVELOPMENT_PLAN.md                  # 📝 65-sprint dev plan (Phase 1-5)
 ├── GAP_ANALYSIS.md                      # 📊 Gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Migration strategy
 ├── README.md                            # 📖 Project overview
@@ -380,7 +388,12 @@ InformaticaToDBFabric/
 
 ```bash
 pip install -e .
-informatica-to-fabric run --config migration.yaml
+informatica-to-fabric --target fabric                    # Fabric (default)
+informatica-to-fabric --target databricks                # Databricks
+informatica-to-fabric --target dbt                       # DBT models on Databricks
+informatica-to-fabric --target auto                      # Auto-route: dbt + PySpark
+informatica-to-fabric --autosys-dir /path/to/jil/files   # Include AutoSys JIL
+informatica-to-fabric --config migration.yaml            # Custom config
 ```
 
 ### Individual Tasks
@@ -391,6 +404,8 @@ informatica-to-fabric run --config migration.yaml
 | Convert a mapping | `@notebook-migration convert mapping M_LOAD_CUSTOMERS` |
 | Convert SQL | `@sql-migration convert the Oracle SQL overrides` |
 | Generate a pipeline | `@pipeline-migration convert workflow WF_DAILY_LOAD` |
+| Generate DBT models | `@notebook-migration convert mapping M_LOAD_CUSTOMERS --target dbt` |
+| Migrate AutoSys JIL | `python run_autosys_migration.py input/autosys/` |
 | Generate tests | `@validation generate tests for the Silver lakehouse tables` |
 
 ### Deploy to Fabric

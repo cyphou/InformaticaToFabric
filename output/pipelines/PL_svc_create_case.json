@@ -1,23 +1,10 @@
 {
   "name": "PL_svc_create_case",
-  "properties": {
-    "description": "Migrated from Informatica workflow svc_create_case. ",
-    "activities": [],
-    "parameters": {
-      "load_date": {
-        "type": "string",
-        "defaultValue": "@utcnow('yyyy-MM-dd')"
-      }
-    },
-    "variables": {
-      "skip_reason": {
-        "type": "String",
-        "defaultValue": ""
-      }
-    },
-    "annotations": [
-      "MigratedFromInformatica",
-      "OriginalWorkflow:svc_create_case"
-    ]
-  }
+  "description": "Migrated from Informatica workflow svc_create_case. ",
+  "tasks": [],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "svc_create_case"
+  },
+  "format": "MULTI_TASK"
 }

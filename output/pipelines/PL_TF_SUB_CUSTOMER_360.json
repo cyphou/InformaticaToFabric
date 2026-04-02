@@ -1,0 +1,42 @@
+{
+  "name": "PL_TF_SUB_CUSTOMER_360",
+  "description": "Migrated from Informatica workflow TF_SUB_CUSTOMER_360. ",
+  "tasks": [
+    {
+      "task_key": "NB_m_customer_360",
+      "description": "Migrated from Informatica session mt_build_customer_360.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_customer_360",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
+    },
+    {
+      "task_key": "NB_m_customer_activity_log",
+      "description": "Migrated from Informatica session mt_activity_log.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_customer_activity_log",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "NB_m_customer_360"
+        }
+      ]
+    }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "TF_SUB_CUSTOMER_360"
+  },
+  "format": "MULTI_TASK"
+}

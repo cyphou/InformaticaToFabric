@@ -1,0 +1,73 @@
+{
+  "generated": "2026-04-02T12:27:47.621696+00:00",
+  "dbt_mode": "dbt",
+  "catalog": "main",
+  "total_dbt_mappings": 7,
+  "total_all_mappings": 16,
+  "dbt_percentage": 43.8,
+  "models": [
+    {
+      "mapping": "m_customer_activity_log",
+      "target": "dbt",
+      "models": [
+        "stg_m_customer_activity_log.sql",
+        "int_m_customer_activity_log.sql",
+        "mart_m_customer_activity_log.sql"
+      ]
+    },
+    {
+      "mapping": "m_load_contacts",
+      "target": "dbt",
+      "models": [
+        "stg_m_load_contacts.sql",
+        "int_m_load_contacts.sql",
+        "mart_m_load_contacts.sql"
+      ]
+    },
+    {
+      "mapping": "m_sync_accounts",
+      "target": "dbt",
+      "models": [
+        "stg_m_sync_accounts.sql",
+        "int_m_sync_accounts.sql",
+        "mart_m_sync_accounts.sql"
+      ]
+    },
+    {
+      "mapping": "m_inventory_snapshot",
+      "target": "dbt",
+      "models": [
+        "stg_m_inventory_snapshot.sql",
+        "int_m_inventory_snapshot.sql",
+        "mart_m_inventory_snapshot.sql"
+      ]
+    },
+    {
+      "mapping": "M_LOAD_CUSTOMERS",
+      "target": "dbt",
+      "models": [
+        "stg_m_load_customers.sql",
+        "int_m_load_customers.sql",
+        "mart_m_load_customers.sql"
+      ]
+    },
+    {
+      "mapping": "SYNC_CUSTOMER_DATA",
+      "target": "dbt",
+      "models": [
+        "stg_sync_customer_data.sql",
+        "int_sync_customer_data.sql",
+        "mart_sync_customer_data.sql"
+      ]
+    },
+    {
+      "mapping": "MI_BULK_LOAD_PRODUCTS",
+      "target": "dbt",
+      "models": [
+        "stg_mi_bulk_load_products.sql",
+        "int_mi_bulk_load_products.sql",
+        "mart_mi_bulk_load_products.sql"
+      ]
+    }
+  ]
+}

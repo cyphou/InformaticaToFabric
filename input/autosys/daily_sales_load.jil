@@ -1,0 +1,55 @@
+/* ============================================================
+   AutoSys JIL — Daily Sales Load (BOX with CMD jobs)
+   Calls Informatica PowerCenter via pmcmd
+   ============================================================ */
+
+/* --- BOX job: container for the daily sales pipeline --- */
+insert_job: BOX_DAILY_SALES_LOAD
+job_type: BOX
+owner: etl_admin@server01
+permission: gx,ge,wx,we
+date_conditions: 1
+days_of_week: mo,tu,we,th,fr
+start_times: "02:00"
+description: "Daily sales load from Oracle to DW"
+alarm_if_fail: 1
+send_notification: 1
+notification_msg: "BOX_DAILY_SALES_LOAD failed — check logs"
+machine: ETL_SERVER_01
+profile: /opt/informatica/server/bin/pmenv.sh
+
+/* --- CMD job: start the Informatica workflow --- */
+insert_job: CMD_RUN_WF_DAILY_SALES
+job_type: CMD
+box_name: BOX_DAILY_SALES_LOAD
+command: pmcmd startworkflow -sv INT_SVC -d DOMAIN_01 -u admin -p *** -f SALES -w WF_DAILY_SALES_LOAD -paramfile /opt/informatica/params/daily_sales.prm -wait
+machine: ETL_SERVER_01
+owner: etl_admin@server01
+description: "Run Informatica WF_DAILY_SALES_LOAD"
+std_out_file: /opt/logs/autosys/CMD_RUN_WF_DAILY_SALES.out
+std_err_file: /opt/logs/autosys/CMD_RUN_WF_DAILY_SALES.err
+alarm_if_fail: 1
+profile: /opt/informatica/server/bin/pmenv.sh
+
+/* --- CMD job: post-load validation --- */
+insert_job: CMD_VALIDATE_SALES
+job_type: CMD
+box_name: BOX_DAILY_SALES_LOAD
+condition: s(CMD_RUN_WF_DAILY_SALES)
+command: /opt/scripts/validate_sales_counts.sh
+machine: ETL_SERVER_01
+owner: etl_admin@server01
+description: "Validate row counts after sales load"
+std_out_file: /opt/logs/autosys/CMD_VALIDATE_SALES.out
+std_err_file: /opt/logs/autosys/CMD_VALIDATE_SALES.err
+alarm_if_fail: 1
+
+/* --- CMD job: send success notification --- */
+insert_job: CMD_NOTIFY_SALES_DONE
+job_type: CMD
+box_name: BOX_DAILY_SALES_LOAD
+condition: s(CMD_VALIDATE_SALES)
+command: /opt/scripts/send_email.sh "Daily sales load completed successfully"
+machine: ETL_SERVER_01
+owner: etl_admin@server01
+description: "Send success email"

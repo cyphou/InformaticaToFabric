@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================ -->
+<!-- IICS Export — Mapping: m_cdc_order_pipeline                      -->
+<!-- Pattern: CDC (Change Data Capture) with Router + Update Strategy -->
+<!-- Sources: Oracle ODS, PostgreSQL Reference                        -->
+<!-- Targets: Lakehouse Bronze (raw), Silver (curated), Gold (agg)    -->
+<!-- ================================================================ -->
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+  <weightedCSPackage>
+
+    <!-- ============================================================ -->
+    <!-- Mapping: CDC Order Pipeline — 3-layer medallion write        -->
+    <!-- Complexity: Complex (Router + UPD + multi-target + CDC)      -->
+    <!-- ============================================================ -->
+    <dTemplate name="m_cdc_order_pipeline" objectType="com.infa.deployment.mapping"
+               description="CDC pipeline: detect inserts/updates/deletes on orders, route to Bronze/Silver/Gold">
+
+      <field name="transformations">
+
+        <!-- Source: Oracle ODS — orders table (CDC-enabled) -->
+        <dTemplate name="src_ods_orders" objectType="com.infa.adapter.oracle.reader"
+                   description="Read CDC changes from Oracle ODS orders table">
+          <field name="connectionReference" value="CONN_ORACLE_ODS"/>
+          <field name="object" value="ODS.ORDERS"/>
+          <field name="cdcEnabled" value="true"/>
+          <field name="cdcColumn" value="CDC_OPERATION"/>
+          <field name="extractType" value="incremental"/>
+          <field name="filterCondition" value="LAST_MODIFIED_DATE >= $$LAST_EXTRACT_TS"/>
+        </dTemplate>
+
+        <!-- Source: Oracle ODS — order line items -->
+        <dTemplate name="src_ods_order_lines" objectType="com.infa.adapter.oracle.reader"
+                   description="Read order line items for enrichment">
+          <field name="connectionReference" value="CONN_ORACLE_ODS"/>
+          <field name="object" value="ODS.ORDER_LINE_ITEMS"/>
+          <field name="filterCondition" value="LAST_MODIFIED_DATE >= $$LAST_EXTRACT_TS"/>
+        </dTemplate>
+
+        <!-- Source: PostgreSQL — product reference -->
+        <dTemplate name="src_pg_products" objectType="com.infa.adapter.postgresql.reader"
+                   description="Read product dimension from PostgreSQL">
+          <field name="connectionReference" value="CONN_PG_REFERENCE"/>
+          <field name="object" value="reference.dim_product"/>
+        </dTemplate>
+
+        <!-- Joiner: Orders + Line Items (detail join) -->
+        <dTemplate name="jnr_order_details" objectType="com.infa.adapter.joiner"
+                   description="Join orders with line items on ORDER_ID">
+          <field name="joinType" value="INNER"/>
+          <field name="joinCondition" value="src_ods_orders.ORDER_ID = src_ods_order_lines.ORDER_ID"/>
+          <field name="masterSource" value="src_ods_orders"/>
+          <field name="detailSource" value="src_ods_order_lines"/>
+        </dTemplate>
+
+        <!-- Lookup: Product enrichment -->
+        <dTemplate name="lkp_product" objectType="com.infa.adapter.lookup"
+                   description="Enrich with product name, category, and unit price">
+          <field name="lookupObject" value="reference.dim_product"/>
+          <field name="condition" value="PRODUCT_ID = dim_product.product_id"/>
+          <field name="connectionReference" value="CONN_PG_REFERENCE"/>
+          <field name="returnFields" value="product_name,product_category,list_price"/>
+          <field name="lookupPolicy" value="USE_FIRST_VALUE"/>
+          <field name="cacheEnabled" value="true"/>
+          <field name="cacheSizeMB" value="256"/>
+        </dTemplate>
+
+        <!-- Expression: Compute derived columns -->
+        <dTemplate name="exp_order_calcs" objectType="com.infa.adapter.expression"
+                   description="Calculate line totals, discounts, and tax">
+          <field name="expression">
+            <dTemplate name="line_total" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="QUANTITY * UNIT_PRICE"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="discount_amount" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(QUANTITY >= 100, line_total * 0.10, IIF(QUANTITY >= 50, line_total * 0.05, 0))"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="net_amount" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="line_total - discount_amount"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="tax_amount" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="net_amount * IIF(SHIP_COUNTRY = 'US', 0.08, IIF(SHIP_COUNTRY IN ('GB','FR','DE'), 0.20, 0.10))"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="total_with_tax" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="net_amount + tax_amount"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="order_status_flag" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="DECODE(ORDER_STATUS, 'SHIPPED', 1, 'DELIVERED', 2, 'CANCELLED', -1, 'RETURNED', -2, 0)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="load_ts" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="SYSTIMESTAMP"/>
+              <field name="datatype" value="timestamp"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Router: Route by CDC operation type -->
+        <dTemplate name="rtr_cdc_operation" objectType="com.infa.adapter.router"
+                   description="Route records by CDC operation: INSERT, UPDATE, DELETE">
+          <field name="groups">
+            <dTemplate name="grp_inserts" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="CDC_OPERATION = 'I'"/>
+              <field name="description" value="New orders"/>
+            </dTemplate>
+            <dTemplate name="grp_updates" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="CDC_OPERATION = 'U'"/>
+              <field name="description" value="Modified orders"/>
+            </dTemplate>
+            <dTemplate name="grp_deletes" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="CDC_OPERATION = 'D'"/>
+              <field name="description" value="Cancelled/deleted orders"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Update Strategy: For Silver layer (MERGE semantics) -->
+        <dTemplate name="upd_silver_merge" objectType="com.infa.adapter.updatestrategy"
+                   description="Apply CDC operations as MERGE (upsert) on Silver">
+          <field name="updateStrategy" value="DD_INSERT WHEN CDC_OPERATION = 'I' ELSE DD_UPDATE WHEN CDC_OPERATION = 'U' ELSE DD_DELETE"/>
+          <field name="forwardRejectedRows" value="true"/>
+        </dTemplate>
+
+        <!-- Aggregator: Gold layer — daily order summary -->
+        <dTemplate name="agg_daily_summary" objectType="com.infa.adapter.aggregator"
+                   description="Aggregate orders by date and product category for Gold">
+          <field name="groupBy" value="ORDER_DATE,product_category,SHIP_COUNTRY"/>
+          <field name="aggregates">
+            <dTemplate name="total_orders" objectType="com.infa.adapter.aggregator.port">
+              <field name="expression" value="COUNT(ORDER_ID)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="total_quantity" objectType="com.infa.adapter.aggregator.port">
+              <field name="expression" value="SUM(QUANTITY)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="total_revenue" objectType="com.infa.adapter.aggregator.port">
+              <field name="expression" value="SUM(total_with_tax)"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="avg_order_value" objectType="com.infa.adapter.aggregator.port">
+              <field name="expression" value="AVG(total_with_tax)"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="total_discount" objectType="com.infa.adapter.aggregator.port">
+              <field name="expression" value="SUM(discount_amount)"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Rank: Top 10 products by revenue per day -->
+        <dTemplate name="rnk_top_products" objectType="com.infa.adapter.rank"
+                   description="Rank products by daily revenue">
+          <field name="rankBy" value="total_revenue DESC"/>
+          <field name="groupBy" value="ORDER_DATE"/>
+          <field name="topBottom" value="TOP"/>
+          <field name="numberOfRanks" value="10"/>
+        </dTemplate>
+
+        <!-- Target: Bronze — raw CDC events (append-only) -->
+        <dTemplate name="tgt_bronze_cdc_events" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Write raw CDC events to Bronze layer (append)">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="bronze.raw_order_cdc_events"/>
+          <field name="writeMode" value="append"/>
+          <field name="partitionBy" value="ORDER_DATE"/>
+        </dTemplate>
+
+        <!-- Target: Silver — curated orders (merge/upsert) -->
+        <dTemplate name="tgt_silver_orders" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Merge into Silver curated orders table">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="silver.fact_orders"/>
+          <field name="writeMode" value="merge"/>
+          <field name="mergeKeys" value="ORDER_ID,LINE_ITEM_ID"/>
+          <field name="partitionBy" value="ORDER_DATE"/>
+        </dTemplate>
+
+        <!-- Target: Gold — daily aggregated summary -->
+        <dTemplate name="tgt_gold_daily_summary" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Overwrite daily Gold summary partition">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="gold.daily_order_summary"/>
+          <field name="writeMode" value="overwrite_partition"/>
+          <field name="partitionBy" value="ORDER_DATE"/>
+        </dTemplate>
+
+      </field>
+
+      <!-- Mapping Parameters -->
+      <dParameter name="$$LAST_EXTRACT_TS" type="timestamp" defaultValue="1900-01-01 00:00:00"/>
+      <dParameter name="$$TARGET_SCHEMA" type="string" defaultValue="silver"/>
+      <dParameter name="$$CDC_MODE" type="string" defaultValue="incremental"/>
+    </dTemplate>
+
+  </weightedCSPackage>
+</exportMetadata>

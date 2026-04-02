@@ -1,0 +1,60 @@
+{
+  "name": "AUTOSYS_BOX_FINANCE_ETL",
+  "tasks": [
+    {
+      "task_key": "CMD_RUN_WF_GL_LOAD",
+      "description": "AutoSys → Informatica WF_COMPLEX_FINANCE_ETL",
+      "depends_on": [],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/NB_WF_COMPLEX_FINANCE_ETL",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_RUN_WF_AP_LOAD",
+      "description": "AutoSys → Informatica WF_AP_LOAD",
+      "depends_on": [],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/NB_WF_AP_LOAD",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_CONSOLIDATE_FINANCE",
+      "description": "AutoSys CMD: Consolidate GL + AP data. TODO: Convert command.",
+      "depends_on": [
+        {
+          "task_key": "CMD_RUN_WF_GL_LOAD"
+        },
+        {
+          "task_key": "CMD_RUN_WF_AP_LOAD"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/SCRIPT_CMD_CONSOLIDATE_FINANCE",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_FINANCE_ERROR_HANDLER",
+      "description": "AutoSys CMD: Alert on finance pipeline failure. TODO: Convert command.",
+      "depends_on": [
+        {
+          "task_key": "CMD_CONSOLIDATE_FINANCE"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/SCRIPT_CMD_FINANCE_ERROR_HANDLER",
+        "source": "WORKSPACE"
+      }
+    }
+  ],
+  "tags": {
+    "source": "autosys",
+    "migrated": "true"
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 00 06 ? * 1,2,3,4,5 *",
+    "timezone_id": "UTC"
+  }
+}

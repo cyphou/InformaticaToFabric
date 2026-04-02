@@ -1,0 +1,51 @@
+{
+  "generated": "2026-04-02 12:27 UTC",
+  "target": "databricks",
+  "total_jil_jobs": 12,
+  "job_types": {
+    "BOX": 2,
+    "CMD": 9,
+    "FW": 1,
+    "FT": 0
+  },
+  "calendars": 1,
+  "pipelines_generated": 4,
+  "informatica_linkage": {
+    "pmcmd_jobs": 4,
+    "linked_to_inventory": 2,
+    "unlinked": [
+      "CMD_RUN_WF_AP_LOAD",
+      "CMD_CUSTOMER_SYNC"
+    ]
+  },
+  "pipelines": [
+    {
+      "name": "BOX_DAILY_SALES_LOAD",
+      "type": "BOX",
+      "jobs": 3,
+      "file": "PL_AUTOSYS_BOX_DAILY_SALES_LOAD.json",
+      "has_schedule": true
+    },
+    {
+      "name": "BOX_FINANCE_ETL",
+      "type": "BOX",
+      "jobs": 4,
+      "file": "PL_AUTOSYS_BOX_FINANCE_ETL.json",
+      "has_schedule": true
+    },
+    {
+      "name": "FW_FINANCE_FILE",
+      "type": "CHAIN",
+      "jobs": 1,
+      "file": "PL_AUTOSYS_FW_FINANCE_FILE.json",
+      "has_schedule": false
+    },
+    {
+      "name": "CMD_CUSTOMER_SYNC",
+      "type": "CHAIN",
+      "jobs": 2,
+      "file": "PL_AUTOSYS_CMD_CUSTOMER_SYNC.json",
+      "has_schedule": true
+    }
+  ]
+}

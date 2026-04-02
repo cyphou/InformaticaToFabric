@@ -391,6 +391,457 @@ def recommend_cluster_config(inventory_path=None):
 
 
 # ─────────────────────────────────────────────
+#  Sprint 47 — Unity Catalog Lineage Metadata
+# ─────────────────────────────────────────────
+
+def generate_uc_lineage(inventory_path=None, catalog="main"):
+    """Generate Unity Catalog lineage metadata JSON for migrated tables."""
+    inv_path = inventory_path or (OUTPUT_DIR / "inventory" / "inventory.json")
+    if not inv_path.exists():
+        return {"error": "inventory.json not found"}
+
+    with open(inv_path, encoding="utf-8") as f:
+        inventory = json.load(f)
+
+    lineage_entries = []
+    for mapping in inventory.get("mappings", []):
+        entry = {
+            "mapping_name": mapping["name"],
+            "source_tables": [],
+            "target_tables": [],
+            "transformations": mapping.get("transformations", []),
+            "notebook": f"NB_{mapping['name']}",
+        }
+        for src in mapping.get("sources", []):
+            parts = src.split(".")
+            table_name = parts[-1].lower()
+            schema_name = parts[-2].lower() if len(parts) >= 2 else "bronze"
+            entry["source_tables"].append({
+                "catalog": catalog,
+                "schema": schema_name,
+                "table": table_name,
+                "full_name": f"{catalog}.{schema_name}.{table_name}",
+            })
+        for tgt in mapping.get("targets", []):
+            table_name = tgt.split(".")[-1].lower()
+            has_agg = "AGG" in mapping.get("transformations", [])
+            tier = "gold" if has_agg else "silver"
+            entry["target_tables"].append({
+                "catalog": catalog,
+                "schema": tier,
+                "table": table_name,
+                "full_name": f"{catalog}.{tier}.{table_name}",
+            })
+        lineage_entries.append(entry)
+
+    lineage = {
+        "catalog": catalog,
+        "generated": datetime.now(timezone.utc).isoformat(),
+        "total_mappings": len(lineage_entries),
+        "lineage": lineage_entries,
+    }
+
+    out_dir = OUTPUT_DIR / "inventory"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "uc_lineage.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(lineage, f, indent=2, ensure_ascii=False)
+
+    print(f"  📊 UC lineage → {out_path.name} ({len(lineage_entries)} mappings)")
+    return lineage
+
+
+# ─────────────────────────────────────────────
+#  Sprint 47 — DLT Notebook Generation
+# ─────────────────────────────────────────────
+
+def generate_dlt_notebook(mapping, catalog="main"):
+    """Generate a Delta Live Tables notebook for a mapping."""
+    name = mapping["name"]
+    sources = mapping.get("sources", [])
+    targets = mapping.get("targets", [])
+    transforms = mapping.get("transformations", [])
+
+    source_table = sources[0] if sources else "unknown_source"
+    parts = source_table.split(".")
+    table_name = parts[-1].lower()
+    schema_name = parts[-2].lower() if len(parts) >= 2 else "bronze"
+
+    target_table = targets[0].split(".")[-1].lower() if targets else table_name
+    has_agg = "AGG" in transforms
+    tier = "gold" if has_agg else "silver"
+
+    lines = [
+        f"# Databricks notebook source",
+        f"# DLT Pipeline — {name}",
+        f"# Generated from Informatica mapping: {name}",
+        f"# Transforms: {' → '.join(transforms)}",
+        f"",
+        f"import dlt",
+        f"from pyspark.sql.functions import *",
+        f"",
+        f"# --- Source Table ---",
+        f'@dlt.table(',
+        f'    name="raw_{table_name}",',
+        f'    comment="Raw ingestion from {source_table}",',
+        f'    table_properties={{"quality": "bronze"}}',
+        f')',
+        f'def raw_{table_name}():',
+        f'    return spark.table("{catalog}.{schema_name}.{table_name}")',
+        f'',
+    ]
+
+    # Add quality expectations
+    lines.extend([
+        f"# --- Quality-checked table ---",
+        f'@dlt.table(',
+        f'    name="clean_{table_name}",',
+        f'    comment="Quality-checked {table_name}",',
+        f'    table_properties={{"quality": "silver"}}',
+        f')',
+        f'@dlt.expect_or_drop("valid_record", "id IS NOT NULL")',
+        f'def clean_{table_name}():',
+        f'    return dlt.read("raw_{table_name}")',
+        f'',
+    ])
+
+    # Add target/mart table
+    lines.extend([
+        f"# --- Target: {target_table} ---",
+        f'@dlt.table(',
+        f'    name="{target_table}",',
+        f'    comment="Final mart table for {name}",',
+        f'    table_properties={{"quality": "{tier}"}}',
+        f')',
+        f'def {target_table}():',
+        f'    df = dlt.read("clean_{table_name}")',
+    ])
+
+    # Add transforms
+    if "FIL" in transforms:
+        lines.append(f'    # Filter transform')
+        lines.append(f'    # df = df.filter(col("status") == "ACTIVE")')
+    if "EXP" in transforms:
+        lines.append(f'    # Expression transform')
+        lines.append(f'    # df = df.withColumn("load_date", current_timestamp())')
+    if "AGG" in transforms:
+        lines.append(f'    # Aggregation (implement GROUP BY)')
+        lines.append(f'    # df = df.groupBy("key").agg(count("*").alias("cnt"))')
+
+    lines.append(f'    return df')
+
+    return "\n".join(lines)
+
+
+def generate_dlt_notebooks(inventory_path=None, catalog="main"):
+    """Generate DLT notebooks for all mappings."""
+    inv_path = inventory_path or (OUTPUT_DIR / "inventory" / "inventory.json")
+    if not inv_path.exists():
+        return []
+
+    with open(inv_path, encoding="utf-8") as f:
+        inventory = json.load(f)
+
+    out_dir = OUTPUT_DIR / "notebooks" / "dlt"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    generated = []
+    for mapping in inventory.get("mappings", []):
+        nb_content = generate_dlt_notebook(mapping, catalog)
+        nb_path = out_dir / f"DLT_{mapping['name']}.py"
+        nb_path.write_text(nb_content, encoding="utf-8")
+        generated.append(nb_path.name)
+
+    print(f"  📓 DLT notebooks → {len(generated)} files in {out_dir.name}/")
+    return generated
+
+
+# ─────────────────────────────────────────────
+#  Sprint 47 — Cluster Policy Recommender
+# ─────────────────────────────────────────────
+
+def recommend_cluster_policies(inventory_path=None):
+    """Recommend cluster policies based on workload patterns."""
+    inv_path = inventory_path or (OUTPUT_DIR / "inventory" / "inventory.json")
+    if not inv_path.exists():
+        return {"error": "inventory.json not found"}
+
+    with open(inv_path, encoding="utf-8") as f:
+        inventory = json.load(f)
+
+    mappings = inventory.get("mappings", [])
+    policies = []
+
+    # Classify workloads
+    etl_heavy = [m for m in mappings if any(t in m.get("transformations", [])
+                 for t in ["AGG", "JNR", "LKP", "UPD"])]
+    ml_workloads = [m for m in mappings if any(t in m.get("transformations", [])
+                    for t in ["JTX", "CT", "HTTP"])]
+    sql_heavy = [m for m in mappings if m.get("complexity") in ("Simple", "Medium")
+                 and not any(t in m.get("transformations", []) for t in ["JTX", "CT"])]
+
+    if etl_heavy:
+        policies.append({
+            "name": "etl-migration-policy",
+            "type": "job",
+            "description": f"ETL workload policy for {len(etl_heavy)} mappings with joins/aggregations",
+            "settings": {
+                "node_type_id": "Standard_DS4_v2",
+                "driver_node_type_id": "Standard_DS4_v2",
+                "autoscale": {"min_workers": 2, "max_workers": 8},
+                "runtime_engine": "PHOTON",
+                "spark_version": "14.3.x-photon-scala2.12",
+            },
+            "applicable_mappings": [m["name"] for m in etl_heavy],
+        })
+
+    if ml_workloads:
+        policies.append({
+            "name": "ml-migration-policy",
+            "type": "interactive",
+            "description": f"ML/custom workload policy for {len(ml_workloads)} complex mappings",
+            "settings": {
+                "node_type_id": "Standard_NC6s_v3",
+                "driver_node_type_id": "Standard_DS5_v2",
+                "num_workers": 4,
+                "runtime_engine": "STANDARD",
+                "spark_version": "14.3.x-gpu-ml-scala2.12",
+            },
+            "applicable_mappings": [m["name"] for m in ml_workloads],
+        })
+
+    if sql_heavy:
+        policies.append({
+            "name": "sql-warehouse-policy",
+            "type": "sql_warehouse",
+            "description": f"SQL Warehouse for {len(sql_heavy)} simple/medium SQL-heavy mappings",
+            "settings": {
+                "warehouse_type": "PRO",
+                "cluster_size": "Small" if len(sql_heavy) < 20 else "Medium",
+                "auto_stop_mins": 15,
+                "enable_photon": True,
+                "channel": "CHANNEL_NAME_CURRENT",
+            },
+            "applicable_mappings": [m["name"] for m in sql_heavy],
+        })
+
+    result = {
+        "generated": datetime.now(timezone.utc).isoformat(),
+        "total_mappings": len(mappings),
+        "policies": policies,
+    }
+
+    out_dir = OUTPUT_DIR / "inventory"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "cluster_policies.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+
+    print(f"  📊 Cluster policies → {len(policies)} policies recommended")
+    return result
+
+
+# ─────────────────────────────────────────────
+#  Sprint 47 — SQL Dashboard Queries
+# ─────────────────────────────────────────────
+
+def generate_sql_dashboard_queries(inventory_path=None, catalog="main"):
+    """Generate Databricks SQL dashboard queries from validation templates."""
+    inv_path = inventory_path or (OUTPUT_DIR / "inventory" / "inventory.json")
+    if not inv_path.exists():
+        return []
+
+    with open(inv_path, encoding="utf-8") as f:
+        inventory = json.load(f)
+
+    queries = []
+    for mapping in inventory.get("mappings", []):
+        for tgt in mapping.get("targets", []):
+            table_name = tgt.split(".")[-1].lower()
+            has_agg = "AGG" in mapping.get("transformations", [])
+            tier = "gold" if has_agg else "silver"
+            full_name = f"{catalog}.{tier}.{table_name}"
+
+            queries.append({
+                "name": f"row_count_{table_name}",
+                "description": f"Row count for {full_name}",
+                "query": f"SELECT COUNT(*) AS row_count FROM {full_name}",
+                "visualization": "counter",
+            })
+            queries.append({
+                "name": f"null_check_{table_name}",
+                "description": f"NULL percentage per column in {full_name}",
+                "query": (
+                    f"SELECT\n"
+                    f"  COUNT(*) AS total_rows,\n"
+                    f"  COUNT(*) - COUNT(id) AS null_id_count\n"
+                    f"FROM {full_name}"
+                ),
+                "visualization": "table",
+            })
+
+    out_dir = OUTPUT_DIR / "databricks" / "dashboards"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "validation_queries.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump({"queries": queries, "generated": datetime.now(timezone.utc).isoformat()},
+                  f, indent=2, ensure_ascii=False)
+
+    print(f"  📊 SQL dashboard queries → {len(queries)} queries generated")
+    return queries
+
+
+# ─────────────────────────────────────────────
+#  Sprint 47 — Advanced Workflow Features
+# ─────────────────────────────────────────────
+
+def generate_advanced_workflow(workflow, mappings_by_name=None, catalog="main"):
+    """Generate advanced Databricks Workflow with job clusters, repair config, conditions."""
+    mappings_by_name = mappings_by_name or {}
+    name = workflow.get("name", "UNKNOWN")
+    sessions = workflow.get("sessions", [])
+
+    # Build job clusters
+    job_clusters = [{
+        "job_cluster_key": "migration_cluster",
+        "new_cluster": {
+            "spark_version": "14.3.x-photon-scala2.12",
+            "node_type_id": "Standard_DS4_v2",
+            "autoscale": {"min_workers": 2, "max_workers": 8},
+            "runtime_engine": "PHOTON",
+            "spark_conf": {
+                "spark.databricks.delta.optimizeWrite.enabled": "true",
+                "spark.databricks.delta.autoCompact.enabled": "true",
+            },
+        },
+    }]
+
+    tasks = []
+    prev_task = None
+
+    for session in sessions:
+        mapping_name = session.get("mapping", session.get("name", ""))
+        task_key = f"task_{mapping_name}".replace("-", "_").replace(" ", "_")
+
+        task = {
+            "task_key": task_key,
+            "job_cluster_key": "migration_cluster",
+            "notebook_task": {
+                "notebook_path": f"/Shared/migration/NB_{mapping_name}",
+                "base_parameters": {
+                    "load_date": "{{job.trigger_time.iso_date}}",
+                    "catalog": catalog,
+                },
+            },
+            "timeout_seconds": 3600,
+            "max_retries": 1,
+            "retry_on_timeout": False,
+        }
+
+        if prev_task:
+            task["depends_on"] = [{"task_key": prev_task}]
+
+        tasks.append(task)
+        prev_task = task_key
+
+    # Schedule
+    schedule_cron = workflow.get("schedule_cron", {})
+    cron_expr = schedule_cron.get("cron", "") if schedule_cron else ""
+
+    job_def = {
+        "name": f"WF_{name}",
+        "job_clusters": job_clusters,
+        "tasks": tasks,
+        "max_concurrent_runs": 1,
+        "run_as": {"user_name": "migration-service@company.com"},
+        "queue": {"enabled": True},
+        "health": {
+            "rules": [{
+                "metric": "RUN_DURATION_SECONDS",
+                "op": "GREATER_THAN",
+                "value": 7200,
+            }],
+        },
+    }
+
+    if cron_expr:
+        job_def["schedule"] = {
+            "quartz_cron_expression": cron_expr,
+            "timezone_id": "UTC",
+            "pause_status": "UNPAUSED",
+        }
+
+    return job_def
+
+
+# ─────────────────────────────────────────────
+#  Sprint 48 — Deployment Cost Estimator
+# ─────────────────────────────────────────────
+
+def estimate_dbu_cost(inventory_path=None):
+    """Estimate Databricks DBU cost for the migration workload."""
+    inv_path = inventory_path or (OUTPUT_DIR / "inventory" / "inventory.json")
+    if not inv_path.exists():
+        return {"error": "inventory.json not found"}
+
+    with open(inv_path, encoding="utf-8") as f:
+        inventory = json.load(f)
+
+    mappings = inventory.get("mappings", [])
+    estimates = []
+    total_dbu = 0.0
+
+    for m in mappings:
+        complexity = m.get("complexity", "Simple")
+        transforms = m.get("transformations", [])
+
+        # Base DBU per run
+        if complexity == "Simple":
+            base_dbu = 0.5
+        elif complexity == "Medium":
+            base_dbu = 1.5
+        elif complexity == "Complex":
+            base_dbu = 4.0
+        else:
+            base_dbu = 6.0
+
+        # Adjustment factors
+        if "AGG" in transforms or "JNR" in transforms:
+            base_dbu *= 1.3
+        if "LKP" in transforms:
+            base_dbu *= 1.2
+        if "UPD" in transforms:
+            base_dbu *= 1.1
+
+        estimates.append({
+            "mapping": m["name"],
+            "complexity": complexity,
+            "estimated_dbu_per_run": round(base_dbu, 2),
+            "estimated_monthly_dbu": round(base_dbu * 30, 2),
+        })
+        total_dbu += base_dbu
+
+    result = {
+        "generated": datetime.now(timezone.utc).isoformat(),
+        "total_mappings": len(mappings),
+        "estimated_daily_dbu": round(total_dbu, 2),
+        "estimated_monthly_dbu": round(total_dbu * 30, 2),
+        "dbu_rate_usd": 0.55,
+        "estimated_monthly_cost_usd": round(total_dbu * 30 * 0.55, 2),
+        "per_mapping": estimates,
+    }
+
+    out_dir = OUTPUT_DIR / "inventory"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "cost_estimate.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+
+    print(f"  💰 Cost estimate → ${result['estimated_monthly_cost_usd']}/month ({result['estimated_monthly_dbu']} DBU)")
+    return result
+
+
+# ─────────────────────────────────────────────
 #  Main
 # ─────────────────────────────────────────────
 

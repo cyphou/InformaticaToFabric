@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_LH_CONTACTS
-# Source: src_sf_contacts → Target: silver.tgt_lh_contacts
+# Source: src_sf_contacts → Target: main.silver.tgt_lh_contacts
 # Mapping: m_load_contacts
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_load_contacts"
-target_table = "silver.tgt_lh_contacts"
+target_table = "main.silver.tgt_lh_contacts"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

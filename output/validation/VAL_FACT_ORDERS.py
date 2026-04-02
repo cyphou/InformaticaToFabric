@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_FACT_ORDERS
-# Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: silver.fact_orders
+# Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: main.silver.fact_orders
 # Mapping: M_LOAD_ORDERS
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "M_LOAD_ORDERS"
-target_table = "silver.fact_orders"
+target_table = "main.silver.fact_orders"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

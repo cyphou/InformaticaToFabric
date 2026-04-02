@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_DIM_EMPLOYEE
-# Source: Oracle.HR.EMPLOYEES → Target: silver.dim_employee
+# Source: Oracle.HR.EMPLOYEES → Target: main.silver.dim_employee
 # Mapping: M_LOAD_EMPLOYEES
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "M_LOAD_EMPLOYEES"
-target_table = "silver.dim_employee"
+target_table = "main.silver.dim_employee"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

@@ -175,6 +175,218 @@
       ]
     },
     {
+      "workflow": "TF_NIGHTLY_ENTERPRISE_ETL",
+      "nodes": [
+        "Start",
+        "cmd_acquire_lock",
+        "cmd_preflight_checks",
+        "cmd_refresh_pbi",
+        "cmd_release_lock",
+        "gw_dq_check",
+        "mt_enrich_orders",
+        "mt_ingest_accounts",
+        "mt_ingest_contacts",
+        "mt_ingest_financials",
+        "mt_ingest_inventory",
+        "mt_ingest_opportunities",
+        "mt_ingest_orders",
+        "notify_failure",
+        "notify_success"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "cmd_preflight_checks",
+          "condition": ""
+        },
+        {
+          "from": "cmd_preflight_checks",
+          "to": "cmd_acquire_lock",
+          "condition": "$cmd_preflight_checks.status = SUCCEEDED"
+        },
+        {
+          "from": "cmd_acquire_lock",
+          "to": "gw_parallel_ingest_start",
+          "condition": ""
+        },
+        {
+          "from": "gw_parallel_ingest_start",
+          "to": "mt_ingest_contacts",
+          "condition": ""
+        },
+        {
+          "from": "gw_parallel_ingest_start",
+          "to": "mt_ingest_orders",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_contacts",
+          "to": "mt_ingest_accounts",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_accounts",
+          "to": "mt_ingest_opportunities",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_orders",
+          "to": "mt_ingest_inventory",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_inventory",
+          "to": "mt_ingest_financials",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_opportunities",
+          "to": "gw_parallel_ingest_join",
+          "condition": ""
+        },
+        {
+          "from": "mt_ingest_financials",
+          "to": "gw_parallel_ingest_join",
+          "condition": ""
+        },
+        {
+          "from": "gw_parallel_ingest_join",
+          "to": "sf_customer_360",
+          "condition": ""
+        },
+        {
+          "from": "sf_customer_360",
+          "to": "mt_enrich_orders",
+          "condition": ""
+        },
+        {
+          "from": "mt_enrich_orders",
+          "to": "gw_dq_check",
+          "condition": ""
+        },
+        {
+          "from": "gw_dq_check",
+          "to": "sf_revenue_agg",
+          "condition": "$$DQ_PASS_RATE >= 0.95"
+        },
+        {
+          "from": "gw_dq_check",
+          "to": "ht_dq_approval",
+          "condition": "$$DQ_PASS_RATE < 0.95"
+        },
+        {
+          "from": "ht_dq_approval",
+          "to": "sf_revenue_agg",
+          "condition": "$ht_dq_approval.outcome = APPROVED"
+        },
+        {
+          "from": "ht_dq_approval",
+          "to": "notify_failure",
+          "condition": "$ht_dq_approval.outcome = REJECTED"
+        },
+        {
+          "from": "sf_revenue_agg",
+          "to": "sf_compute_kpis",
+          "condition": ""
+        },
+        {
+          "from": "sf_compute_kpis",
+          "to": "timer_pre_refresh",
+          "condition": ""
+        },
+        {
+          "from": "timer_pre_refresh",
+          "to": "cmd_refresh_pbi",
+          "condition": ""
+        },
+        {
+          "from": "cmd_refresh_pbi",
+          "to": "cmd_release_lock",
+          "condition": ""
+        },
+        {
+          "from": "cmd_release_lock",
+          "to": "notify_success",
+          "condition": ""
+        },
+        {
+          "from": "cmd_preflight_checks",
+          "to": "notify_failure",
+          "condition": "$cmd_preflight_checks.status = FAILED"
+        },
+        {
+          "from": "mt_ingest_contacts",
+          "to": "notify_failure",
+          "condition": "$mt_ingest_contacts.status = FAILED"
+        },
+        {
+          "from": "mt_ingest_orders",
+          "to": "notify_failure",
+          "condition": "$mt_ingest_orders.status = FAILED"
+        }
+      ]
+    },
+    {
+      "workflow": "TF_SUB_CUSTOMER_360",
+      "nodes": [
+        "Start",
+        "mt_activity_log",
+        "mt_build_customer_360"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_build_customer_360",
+          "condition": ""
+        },
+        {
+          "from": "mt_build_customer_360",
+          "to": "mt_activity_log",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "TF_SUB_REVENUE_AGGREGATION",
+      "nodes": [
+        "Start",
+        "mt_agg_daily_revenue",
+        "mt_agg_monthly_revenue"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_agg_daily_revenue",
+          "condition": ""
+        },
+        {
+          "from": "mt_agg_daily_revenue",
+          "to": "mt_agg_monthly_revenue",
+          "condition": ""
+        }
+      ]
+    },
+    {
+      "workflow": "TF_SUB_KPI_COMPUTATION",
+      "nodes": [
+        "Start",
+        "mt_compute_customer_kpis",
+        "mt_compute_sales_kpis"
+      ],
+      "edges": [
+        {
+          "from": "Start",
+          "to": "mt_compute_sales_kpis",
+          "condition": ""
+        },
+        {
+          "from": "Start",
+          "to": "mt_compute_customer_kpis",
+          "condition": ""
+        }
+      ]
+    },
+    {
       "workflow": "WF_COMPLEX_FINANCE_ETL",
       "nodes": [
         "ASG_INIT_VARS",

@@ -1,8 +1,106 @@
 {
-  "generated": "2026-03-23",
+  "generated": "2026-04-02T12:27:47Z",
   "source_platform": "Informatica PowerCenter",
   "target_platform": "Microsoft Fabric",
   "mappings": [
+    {
+      "name": "m_cdc_order_pipeline",
+      "sources": [
+        "src_ods_orders",
+        "src_ods_order_lines",
+        "src_pg_products"
+      ],
+      "targets": [
+        "tgt_bronze_cdc_events",
+        "tgt_silver_orders",
+        "tgt_gold_daily_summary"
+      ],
+      "transformations": [
+        "JNR",
+        "LKP",
+        "EXP",
+        "port",
+        "RTR",
+        "group",
+        "UPD",
+        "AGG",
+        "RNK"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [],
+      "conversion_score": 100,
+      "manual_effort_hours": 4,
+      "lineage_summary": "",
+      "field_lineage": []
+    },
+    {
+      "name": "m_customer_360",
+      "sources": [
+        "src_sf_contacts",
+        "src_sf_accounts",
+        "src_erp_customers",
+        "src_erp_transactions",
+        "src_snow_scores",
+        "src_api_firmographics"
+      ],
+      "targets": [
+        "tgt_silver_customer",
+        "tgt_gold_customer_360"
+      ],
+      "transformations": [
+        "JNR",
+        "LKP",
+        "EXP",
+        "port",
+        "FIL",
+        "SRT",
+        "RTR",
+        "group",
+        "UPD",
+        "SEQ"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [],
+      "conversion_score": 100,
+      "manual_effort_hours": 4,
+      "lineage_summary": "",
+      "field_lineage": []
+    },
+    {
+      "name": "m_customer_activity_log",
+      "sources": [
+        "src_kafka_events"
+      ],
+      "targets": [
+        "tgt_bronze_events"
+      ],
+      "transformations": [
+        "EXP",
+        "port",
+        "FIL"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Simple",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [],
+      "conversion_score": 100,
+      "manual_effort_hours": 0.5,
+      "lineage_summary": "",
+      "field_lineage": []
+    },
     {
       "name": "m_load_contacts",
       "sources": [
@@ -26,8 +124,8 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 100,
+      "manual_effort_hours": 2,
       "lineage_summary": "",
       "field_lineage": []
     },
@@ -49,8 +147,68 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 100,
+      "manual_effort_hours": 0.5,
+      "lineage_summary": "",
+      "field_lineage": []
+    },
+    {
+      "name": "m_realtime_inventory_scd2",
+      "sources": [
+        "src_sap_materials",
+        "src_sap_warehouse_bins",
+        "src_iot_sensors"
+      ],
+      "targets": [
+        "tgt_silver_inventory",
+        "tgt_gold_inventory_dashboard",
+        "tgt_alert_queue"
+      ],
+      "transformations": [
+        "JNR",
+        "LKP",
+        "EXP",
+        "port",
+        "FIL",
+        "UNI",
+        "SRT",
+        "RTR",
+        "group",
+        "NRM"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Complex",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [],
+      "conversion_score": 100,
+      "manual_effort_hours": 4,
+      "lineage_summary": "",
+      "field_lineage": []
+    },
+    {
+      "name": "m_inventory_snapshot",
+      "sources": [
+        "src_silver_inventory"
+      ],
+      "targets": [
+        "tgt_gold_inventory_history"
+      ],
+      "transformations": [
+        "EXP",
+        "port"
+      ],
+      "has_sql_override": false,
+      "has_stored_proc": false,
+      "complexity": "Simple",
+      "sql_overrides": [],
+      "lookup_conditions": [],
+      "parameters": [],
+      "target_load_order": [],
+      "conversion_score": 100,
+      "manual_effort_hours": 0.5,
       "lineage_summary": "",
       "field_lineage": []
     },
@@ -6402,8 +6560,8 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 65,
+      "manual_effort_hours": 6,
       "lineage_summary": "",
       "field_lineage": []
     },
@@ -6423,8 +6581,8 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 65,
+      "manual_effort_hours": 6,
       "lineage_summary": "",
       "field_lineage": []
     },
@@ -6447,8 +6605,8 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 100,
+      "manual_effort_hours": 0.5,
       "lineage_summary": "",
       "field_lineage": []
     },
@@ -6471,8 +6629,8 @@
       "lookup_conditions": [],
       "parameters": [],
       "target_load_order": [],
-      "conversion_score": 0,
-      "manual_effort_hours": 0,
+      "conversion_score": 100,
+      "manual_effort_hours": 0.5,
       "lineage_summary": "",
       "field_lineage": []
     }
@@ -6676,6 +6834,203 @@
       "email_tasks": [
         "notify_complete"
       ],
+      "pre_post_sql": [],
+      "schedule": "",
+      "schedule_cron": {
+        "cron": "",
+        "note": "No schedule defined"
+      }
+    },
+    {
+      "name": "TF_NIGHTLY_ENTERPRISE_ETL",
+      "sessions": [
+        "cmd_preflight_checks",
+        "cmd_acquire_lock",
+        "mt_ingest_contacts",
+        "mt_ingest_accounts",
+        "mt_ingest_opportunities",
+        "mt_ingest_orders",
+        "mt_ingest_inventory",
+        "mt_ingest_financials",
+        "mt_enrich_orders",
+        "cmd_refresh_pbi",
+        "cmd_release_lock"
+      ],
+      "session_to_mapping": {
+        "mt_ingest_contacts": "m_load_contacts",
+        "mt_ingest_accounts": "m_sync_accounts",
+        "mt_ingest_opportunities": "m_load_opportunities",
+        "mt_ingest_orders": "m_cdc_order_pipeline",
+        "mt_ingest_inventory": "m_upsert_inventory",
+        "mt_ingest_financials": "m_load_gl_journals",
+        "mt_enrich_orders": "m_enrich_order_details"
+      },
+      "dependencies": {
+        "cmd_preflight_checks": [
+          "Start"
+        ],
+        "cmd_acquire_lock": [
+          "cmd_preflight_checks"
+        ],
+        "gw_parallel_ingest_start": [
+          "cmd_acquire_lock"
+        ],
+        "mt_ingest_contacts": [
+          "gw_parallel_ingest_start"
+        ],
+        "mt_ingest_orders": [
+          "gw_parallel_ingest_start"
+        ],
+        "mt_ingest_accounts": [
+          "mt_ingest_contacts"
+        ],
+        "mt_ingest_opportunities": [
+          "mt_ingest_accounts"
+        ],
+        "mt_ingest_inventory": [
+          "mt_ingest_orders"
+        ],
+        "mt_ingest_financials": [
+          "mt_ingest_inventory"
+        ],
+        "gw_parallel_ingest_join": [
+          "mt_ingest_opportunities",
+          "mt_ingest_financials"
+        ],
+        "sf_customer_360": [
+          "gw_parallel_ingest_join"
+        ],
+        "mt_enrich_orders": [
+          "sf_customer_360"
+        ],
+        "gw_dq_check": [
+          "mt_enrich_orders"
+        ],
+        "sf_revenue_agg": [
+          "gw_dq_check",
+          "ht_dq_approval"
+        ],
+        "ht_dq_approval": [
+          "gw_dq_check"
+        ],
+        "notify_failure": [
+          "ht_dq_approval",
+          "cmd_preflight_checks",
+          "mt_ingest_contacts",
+          "mt_ingest_orders"
+        ],
+        "sf_compute_kpis": [
+          "sf_revenue_agg"
+        ],
+        "timer_pre_refresh": [
+          "sf_compute_kpis"
+        ],
+        "cmd_refresh_pbi": [
+          "timer_pre_refresh"
+        ],
+        "cmd_release_lock": [
+          "cmd_refresh_pbi"
+        ],
+        "notify_success": [
+          "cmd_release_lock"
+        ]
+      },
+      "has_timer": true,
+      "has_decision": true,
+      "decision_tasks": [
+        "gw_dq_check"
+      ],
+      "email_tasks": [
+        "notify_success",
+        "notify_failure"
+      ],
+      "pre_post_sql": [],
+      "schedule": "",
+      "schedule_cron": {
+        "cron": "",
+        "note": "No schedule defined"
+      }
+    },
+    {
+      "name": "TF_SUB_CUSTOMER_360",
+      "sessions": [
+        "mt_build_customer_360",
+        "mt_activity_log"
+      ],
+      "session_to_mapping": {
+        "mt_build_customer_360": "m_customer_360",
+        "mt_activity_log": "m_customer_activity_log"
+      },
+      "dependencies": {
+        "mt_build_customer_360": [
+          "Start"
+        ],
+        "mt_activity_log": [
+          "mt_build_customer_360"
+        ]
+      },
+      "has_timer": false,
+      "has_decision": false,
+      "decision_tasks": [],
+      "email_tasks": [],
+      "pre_post_sql": [],
+      "schedule": "",
+      "schedule_cron": {
+        "cron": "",
+        "note": "No schedule defined"
+      }
+    },
+    {
+      "name": "TF_SUB_REVENUE_AGGREGATION",
+      "sessions": [
+        "mt_agg_daily_revenue",
+        "mt_agg_monthly_revenue"
+      ],
+      "session_to_mapping": {
+        "mt_agg_daily_revenue": "m_agg_daily_revenue",
+        "mt_agg_monthly_revenue": "m_agg_monthly_revenue"
+      },
+      "dependencies": {
+        "mt_agg_daily_revenue": [
+          "Start"
+        ],
+        "mt_agg_monthly_revenue": [
+          "mt_agg_daily_revenue"
+        ]
+      },
+      "has_timer": false,
+      "has_decision": false,
+      "decision_tasks": [],
+      "email_tasks": [],
+      "pre_post_sql": [],
+      "schedule": "",
+      "schedule_cron": {
+        "cron": "",
+        "note": "No schedule defined"
+      }
+    },
+    {
+      "name": "TF_SUB_KPI_COMPUTATION",
+      "sessions": [
+        "mt_compute_sales_kpis",
+        "mt_compute_customer_kpis"
+      ],
+      "session_to_mapping": {
+        "mt_compute_sales_kpis": "m_compute_sales_kpis",
+        "mt_compute_customer_kpis": "m_compute_customer_kpis"
+      },
+      "dependencies": {
+        "mt_compute_sales_kpis": [
+          "Start"
+        ],
+        "mt_compute_customer_kpis": [
+          "Start"
+        ]
+      },
+      "has_timer": false,
+      "has_decision": false,
+      "decision_tasks": [],
+      "email_tasks": [],
       "pre_post_sql": [],
       "schedule": "",
       "schedule_cron": {
@@ -6893,6 +7248,41 @@
       "type": "Oracle",
       "host": "oracle-crm.example.com:1521/ORCL",
       "schema": "CRM",
+      "format": "iics"
+    },
+    {
+      "name": "CONN_ORACLE_ODS",
+      "type": "Oracle",
+      "host": "oracle-ods.corp.example.com:1521/ODSDB",
+      "schema": "ODS",
+      "format": "iics"
+    },
+    {
+      "name": "CONN_ORACLE_ERP",
+      "type": "Oracle",
+      "host": "oracle-erp.corp.example.com:1521/ERPDB",
+      "schema": "ERP",
+      "format": "iics"
+    },
+    {
+      "name": "CONN_SNOWFLAKE_ANALYTICS",
+      "type": "Snowflake",
+      "host": "acme.snowflakecomputing.com",
+      "schema": "ANALYTICS",
+      "format": "iics"
+    },
+    {
+      "name": "CONN_ENRICHMENT_API",
+      "type": "REST_V2",
+      "host": "https://api.enrichment.example.com",
+      "schema": "",
+      "format": "iics"
+    },
+    {
+      "name": "CONN_FABRIC_LAKEHOUSE",
+      "type": "Lakehouse",
+      "host": "",
+      "schema": "",
       "format": "iics"
     }
   ],
@@ -8189,24 +8579,24 @@
     }
   ],
   "summary": {
-    "total_mappings": 11,
-    "total_workflows": 9,
-    "total_sessions": 20,
+    "total_mappings": 16,
+    "total_workflows": 13,
+    "total_sessions": 37,
     "total_sql_files": 8,
     "complexity_breakdown": {
-      "Simple": 4,
+      "Simple": 6,
       "Medium": 1,
-      "Complex": 6,
+      "Complex": 9,
       "Custom": 0
     },
-    "avg_conversion_score": 45.5,
-    "total_manual_effort_hours": 17.0,
+    "avg_conversion_score": 95.6,
+    "total_manual_effort_hours": 45.5,
     "total_field_lineage_paths": 380,
     "total_parameter_files": 1,
     "total_mapplets": 3,
     "total_session_configs": 10,
     "total_pii_findings": 35,
-    "total_dq_rules": 5
+    "total_dq_rules": 8
   },
   "parameter_files": [
     {
@@ -8543,9 +8933,24 @@
   ],
   "dq_rules": [
     {
+      "mapping": "m_customer_360",
+      "type": "filter",
+      "description": "FIL transformation in m_customer_360"
+    },
+    {
+      "mapping": "m_customer_activity_log",
+      "type": "filter",
+      "description": "FIL transformation in m_customer_activity_log"
+    },
+    {
       "mapping": "m_load_contacts",
       "type": "filter",
       "description": "FIL transformation in m_load_contacts"
+    },
+    {
+      "mapping": "m_realtime_inventory_scd2",
+      "type": "filter",
+      "description": "FIL transformation in m_realtime_inventory_scd2"
     },
     {
       "mapping": "M_LOAD_CUSTOMERS",

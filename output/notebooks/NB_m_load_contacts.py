@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_load_contacts
@@ -10,7 +10,7 @@
 # Sources: src_sf_contacts
 # Targets: tgt_lh_contacts
 # Flow: EXP → port → FIL → LKP → AGG → DM
-# Generated: 2026-03-26
+# Generated: 2026-04-02
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -24,7 +24,7 @@ from delta.tables import DeltaTable
 # CELL 2 — Source Read
 # --- Source: src_sf_contacts ---
 # Oracle: SELECT * FROM src_sf_contacts
-df_source = spark.table("bronze.src_sf_contacts")
+df_source = spark.table("main.bronze.src_sf_contacts")
 
 # COMMAND ----------
 
@@ -53,7 +53,7 @@ df = df.filter(
 
 # CELL 6 — Transformation: LKP
 # --- Lookup transformation ---
-df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace
+df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace
 df = df.join(broadcast(df_lookup), on="KEY", how="left")
 # COMMAND ----------
 
@@ -77,9 +77,9 @@ df = df.withColumn("MASKED_COL", md5(col("SENSITIVE_COL").cast("string")))  # TO
 # COMMAND ----------
 
 # CELL 9 — Target Write
-# --- Target: tgt_lh_contacts → silver.tgt_lh_contacts ---
+# --- Target: tgt_lh_contacts → main.silver.tgt_lh_contacts ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.tgt_lh_contacts")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.tgt_lh_contacts")
 
 # COMMAND ----------
 

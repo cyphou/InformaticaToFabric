@@ -1,5 +1,5 @@
 -- Unity Catalog Permissions for catalog: main
--- Generated: 2026-03-26 17:37:02 UTC
+-- Generated: 2026-04-02 12:27:12 UTC
 
 -- Catalog-level grants
 GRANT USE CATALOG ON CATALOG main TO `data-engineers`;
@@ -25,8 +25,14 @@ GRANT SELECT ON TABLE main.gold.fact_txn_low TO `data-analysts`;
 GRANT MODIFY ON TABLE main.gold.fact_txn_low TO `data-engineers`;
 GRANT SELECT ON TABLE main.gold.fact_txn_tags TO `data-analysts`;
 GRANT MODIFY ON TABLE main.gold.fact_txn_tags TO `data-engineers`;
+GRANT SELECT ON TABLE main.gold.tgt_bronze_cdc_events TO `data-analysts`;
+GRANT MODIFY ON TABLE main.gold.tgt_bronze_cdc_events TO `data-engineers`;
+GRANT SELECT ON TABLE main.gold.tgt_gold_daily_summary TO `data-analysts`;
+GRANT MODIFY ON TABLE main.gold.tgt_gold_daily_summary TO `data-engineers`;
 GRANT SELECT ON TABLE main.gold.tgt_lh_contacts TO `data-analysts`;
 GRANT MODIFY ON TABLE main.gold.tgt_lh_contacts TO `data-engineers`;
+GRANT SELECT ON TABLE main.gold.tgt_silver_orders TO `data-analysts`;
+GRANT MODIFY ON TABLE main.gold.tgt_silver_orders TO `data-engineers`;
 GRANT SELECT ON TABLE main.silver.dim_customer TO `data-analysts`;
 GRANT MODIFY ON TABLE main.silver.dim_customer TO `data-engineers`;
 GRANT SELECT ON TABLE main.silver.dim_employee TO `data-analysts`;
@@ -39,6 +45,20 @@ GRANT SELECT ON TABLE main.silver.lakehouse_silver TO `data-analysts`;
 GRANT MODIFY ON TABLE main.silver.lakehouse_silver TO `data-engineers`;
 GRANT SELECT ON TABLE main.silver.tgt_accounts TO `data-analysts`;
 GRANT MODIFY ON TABLE main.silver.tgt_accounts TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_alert_queue TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_alert_queue TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_bronze_events TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_bronze_events TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_gold_customer_360 TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_gold_customer_360 TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_gold_inventory_dashboard TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_gold_inventory_dashboard TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_gold_inventory_history TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_gold_inventory_history TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_silver_customer TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_silver_customer TO `data-engineers`;
+GRANT SELECT ON TABLE main.silver.tgt_silver_inventory TO `data-analysts`;
+GRANT MODIFY ON TABLE main.silver.tgt_silver_inventory TO `data-engineers`;
 
 -- Function grants for UDFs
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA main.silver TO `data-engineers`;

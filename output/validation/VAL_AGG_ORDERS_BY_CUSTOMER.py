@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_AGG_ORDERS_BY_CUSTOMER
-# Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: gold.agg_orders_by_customer
+# Source: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS → Target: main.gold.agg_orders_by_customer
 # Mapping: M_LOAD_ORDERS
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "M_LOAD_ORDERS"
-target_table = "gold.agg_orders_by_customer"
+target_table = "main.gold.agg_orders_by_customer"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

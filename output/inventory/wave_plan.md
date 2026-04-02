@@ -1,13 +1,13 @@
 # Migration Wave Plan
 
-**Total Waves:** 3
-**Total Mappings:** 12
-**Total Effort:** 24.0 hours
-**Critical Path:** M_COMPLEX_MULTI_SOURCE (4.5h)
+**Total Waves:** 5
+**Total Mappings:** 21
+**Total Effort:** 50.5 hours
+**Critical Path:** m_cdc_order_pipeline → m_upsert_inventory → m_load_gl_journals (6h)
 
 ---
 
-## Wave 1 (10 mappings, 19.0h)
+## Wave 1 (13 mappings, 40.5h)
 
 | Mapping | Dependencies |
 |---------|-------------|
@@ -19,16 +19,35 @@
 | M_LOAD_EMPLOYEES | — |
 | M_UPSERT_INVENTORY | — |
 | SYNC_CUSTOMER_DATA | — |
+| m_cdc_order_pipeline | — |
+| m_customer_360 | — |
+| m_inventory_snapshot | — |
 | m_load_contacts | — |
-| m_sync_accounts | — |
+| m_realtime_inventory_scd2 | — |
 
-## Wave 2 (1 mappings, 4h)
+## Wave 2 (4 mappings, 6.0h)
 
 | Mapping | Dependencies |
 |---------|-------------|
 | M_LOAD_ORDERS | M_LOAD_CUSTOMERS |
+| m_customer_activity_log | m_customer_360 |
+| m_sync_accounts | m_load_contacts |
+| m_upsert_inventory | m_cdc_order_pipeline |
 
-## Wave 3 (1 mappings, 1h)
+## Wave 3 (2 mappings, 2h)
+
+| Mapping | Dependencies |
+|---------|-------------|
+| m_load_gl_journals | m_upsert_inventory |
+| m_load_opportunities | m_sync_accounts |
+
+## Wave 4 (1 mappings, 1h)
+
+| Mapping | Dependencies |
+|---------|-------------|
+| m_agg_monthly_revenue | m_agg_daily_revenue |
+
+## Wave 5 (1 mappings, 1h)
 
 | Mapping | Dependencies |
 |---------|-------------|
@@ -52,10 +71,21 @@ gantt
     M_LOAD_EMPLOYEES : 0, 1
     M_UPSERT_INVENTORY : 0, 1
     SYNC_CUSTOMER_DATA : 0, 1
+    m_cdc_order_pipeline : 0, 1
+    m_customer_360 : 0, 1
+    m_inventory_snapshot : 0, 1
     m_load_contacts : 0, 1
-    m_sync_accounts : 0, 1
+    m_realtime_inventory_scd2 : 0, 1
     section Wave 2
     M_LOAD_ORDERS : 1, 2
+    m_customer_activity_log : 1, 2
+    m_sync_accounts : 1, 2
+    m_upsert_inventory : 1, 2
     section Wave 3
-    M_VARIANCE_REPORT : 2, 3
+    m_load_gl_journals : 2, 3
+    m_load_opportunities : 2, 3
+    section Wave 4
+    m_agg_monthly_revenue : 3, 4
+    section Wave 5
+    M_VARIANCE_REPORT : 4, 5
 ```

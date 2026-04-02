@@ -1,10 +1,10 @@
 {
   "profile": "medium",
-  "total_mappings": 11,
+  "total_mappings": 16,
   "complexity_breakdown": {
-    "Medium": 1,
-    "Simple": 4,
-    "Complex": 6
+    "Complex": 9,
+    "Simple": 6,
+    "Medium": 1
   },
   "recommendation": {
     "driver_node_type": "Standard_DS4_v2",
@@ -18,7 +18,7 @@
     "runtime_engine": "PHOTON"
   },
   "rationale": {
-    "profile": "medium profile selected for 11 mappings with 6 complex/custom",
+    "profile": "medium profile selected for 16 mappings with 9 complex/custom",
     "photon": "Photon enabled — aggregations/joins detected",
     "autoscale": "2-8 workers for ETL-heavy workload"
   }

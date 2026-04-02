@@ -1,0 +1,44 @@
+# dbt CI/CD Pipeline — auto-generated
+name: dbt CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['output/dbt/**']
+  pull_request:
+    branches: [main]
+    paths: ['output/dbt/**']
+
+env:
+  DBT_DATABRICKS_HOST: ${{ secrets.DBT_DATABRICKS_HOST }}
+  DBT_DATABRICKS_HTTP_PATH: ${{ secrets.DBT_DATABRICKS_HTTP_PATH }}
+  DBT_DATABRICKS_TOKEN: ${{ secrets.DBT_DATABRICKS_TOKEN }}
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: output/dbt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dbt
+        run: pip install dbt-databricks>=1.7
+
+      - name: dbt deps
+        run: dbt deps
+
+      - name: dbt build
+        run: dbt build --profiles-dir .
+
+      - name: dbt test
+        run: dbt test --profiles-dir .
+
+      - name: dbt docs generate
+        run: dbt docs generate --profiles-dir .

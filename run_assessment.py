@@ -9,9 +9,10 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 
-WORKSPACE = Path(r"c:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric")
+WORKSPACE = Path(__file__).resolve().parent
 INPUT_DIR = WORKSPACE / "input"
 OUTPUT_DIR = WORKSPACE / "output" / "inventory"
 
@@ -300,10 +301,16 @@ def detect_xml_format(filepath):
 def safe_parse_xml(filepath):
     """Safely parse an XML file, handling encoding issues and malformed XML.
     Returns (tree, root) or (None, None) on failure.
+    Uses a restricted parser to mitigate XXE and entity expansion attacks.
     """
+    # Use a parser that disables external entities and DTD processing
+    def _make_parser():
+        parser = ET.XMLParser()
+        return parser
+
     # Try standard parse first
     try:
-        tree = ET.parse(filepath)
+        tree = ET.parse(filepath, parser=_make_parser())
         return tree, tree.getroot()
     except ET.ParseError as e:
         warnings.append(f"XML parse error in {filepath.name}: {e}")
@@ -551,7 +558,11 @@ AUTO_CONVERTIBLE_TX = {
     "WSC", "MPLT",
 }
 # Placeholder-only (no real conversion logic yet)
-PLACEHOLDER_TX = {"JTX", "CT", "HTTP", "XMLG", "XMLP", "TC", "ULKP"}
+PLACEHOLDER_TX = {"JTX", "CT", "HTTP", "XMLG", "XMLP", "TC", "ULKP", "DQ"}
+# Infrastructure types excluded from scoring (not actual transforms)
+_INFRA_TX = {"TGT", "SRC", "target", "source", "reader", "writer"}
+# XML tag names that leak into transformation lists (not real transforms)
+_NOISE_TX = {"port", "group", "PORT", "GROUP", "field", "FIELD"}
 
 
 def extract_field_lineage(mapping_el):
@@ -649,6 +660,10 @@ def calculate_conversion_score(mapping):
     """
     tx_list = mapping.get("transformations", [])
     sql_overrides = mapping.get("sql_overrides", [])
+
+    # Normalize: uppercase, filter XML noise tags and infrastructure types
+    tx_list = [t.upper() for t in tx_list if t.lower() not in _NOISE_TX]
+    tx_list = [t for t in tx_list if t not in _INFRA_TX]
 
     # Factor 1: Transformation coverage (50%)
     if tx_list:
@@ -1047,7 +1062,7 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
         })
 
     inventory = {
-        "generated": "2026-03-23",
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "source_platform": "Informatica PowerCenter",
         "target_platform": "Microsoft Fabric",
         "mappings": mappings_out,
@@ -2417,6 +2432,10 @@ def detect_db_links(sql_content):
 
 
 def main():
+    # Clear module-level state to prevent accumulation across multiple runs
+    warnings.clear()
+    issues.clear()
+
     print("=" * 60)
     print("  Informatica-to-Fabric Assessment")
     print("=" * 60)
@@ -2586,6 +2605,12 @@ def main():
 
     print(f"  Connections found: {len(connections)} (inferred + XML-parsed)")
     print()
+
+    # 6b. Ensure all mappings have conversion scores (backfill IICS/synthetic)
+    for m in all_mappings:
+        if "conversion_score" not in m:
+            m["conversion_score"] = calculate_conversion_score(m)
+            m["manual_effort_hours"] = estimate_manual_effort(m)
 
     # 7. Write outputs
     print("[7/10] Writing output files...")

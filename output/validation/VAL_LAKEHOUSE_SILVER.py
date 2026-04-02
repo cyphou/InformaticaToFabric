@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 # =============================================================================
 # Validation Notebook: VAL_LAKEHOUSE_SILVER
-# Source: Oracle_CRM → Target: silver.lakehouse_silver
+# Source: Oracle_CRM → Target: main.silver.lakehouse_silver
 # Mapping: SYNC_CUSTOMER_DATA
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "SYNC_CUSTOMER_DATA"
-target_table = "silver.lakehouse_silver"
+target_table = "main.silver.lakehouse_silver"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

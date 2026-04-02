@@ -1,223 +1,99 @@
 {
   "name": "PL_AI_PROCESS_ORDER_EVENTS",
-  "properties": {
-    "description": "Migrated from Informatica workflow AI_PROCESS_ORDER_EVENTS. ",
-    "activities": [
-      {
-        "name": "NB_svc_lookup_customer",
-        "description": "Migrated from Informatica session svc_lookup_customer.",
-        "type": "TridentNotebook",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_svc_lookup_customer",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
+  "description": "Migrated from Informatica workflow AI_PROCESS_ORDER_EVENTS. ",
+  "tasks": [
+    {
+      "task_key": "NB_svc_lookup_customer",
+      "description": "Migrated from Informatica session svc_lookup_customer.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_svc_lookup_customer",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
         }
       },
-      {
-        "name": "NB_svc_create_case",
-        "description": "Migrated from Informatica session svc_create_case.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "gw_event_router",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_svc_create_case",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "NB_svc_publish_event",
-        "description": "Migrated from Informatica session svc_publish_event.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "gw_event_router",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_svc_publish_event",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "NB_m_order_event_to_lakehouse",
-        "description": "Migrated from Informatica session mt_persist_event.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "svc_create_case",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          },
-          {
-            "activity": "svc_publish_event",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_m_order_event_to_lakehouse",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "NB_gw_event_router",
-        "description": "Migrated from Informatica session gw_event_router.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "svc_lookup_customer",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_gw_event_router",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      }
-    ],
-    "parameters": {
-      "load_date": {
-        "type": "string",
-        "defaultValue": "@utcnow('yyyy-MM-dd')"
-      }
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
     },
-    "variables": {
-      "skip_reason": {
-        "type": "String",
-        "defaultValue": ""
-      }
+    {
+      "task_key": "NB_svc_create_case",
+      "description": "Migrated from Informatica session svc_create_case.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_svc_create_case",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "gw_event_router"
+        }
+      ]
     },
-    "annotations": [
-      "MigratedFromInformatica",
-      "OriginalWorkflow:AI_PROCESS_ORDER_EVENTS"
-    ]
-  }
+    {
+      "task_key": "NB_svc_publish_event",
+      "description": "Migrated from Informatica session svc_publish_event.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_svc_publish_event",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "gw_event_router"
+        }
+      ]
+    },
+    {
+      "task_key": "NB_m_order_event_to_lakehouse",
+      "description": "Migrated from Informatica session mt_persist_event.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_order_event_to_lakehouse",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "svc_create_case"
+        },
+        {
+          "task_key": "svc_publish_event"
+        }
+      ]
+    },
+    {
+      "task_key": "NB_gw_event_router",
+      "description": "Migrated from Informatica session gw_event_router.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_gw_event_router",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "svc_lookup_customer"
+        }
+      ]
+    }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "AI_PROCESS_ORDER_EVENTS"
+  },
+  "format": "MULTI_TASK"
 }

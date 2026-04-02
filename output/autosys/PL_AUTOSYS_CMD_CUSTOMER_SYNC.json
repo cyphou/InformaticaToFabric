@@ -1,0 +1,35 @@
+{
+  "name": "AUTOSYS_CMD_CUSTOMER_SYNC",
+  "tasks": [
+    {
+      "task_key": "CMD_CUSTOMER_SYNC",
+      "description": "AutoSys → Informatica WF_CUSTOMER_SYNC",
+      "depends_on": [],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/NB_WF_CUSTOMER_SYNC",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_CUSTOMER_REPORT",
+      "description": "AutoSys CMD: Generate customer report after sync. TODO: Convert command.",
+      "depends_on": [
+        {
+          "task_key": "CMD_CUSTOMER_SYNC"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/SCRIPT_CMD_CUSTOMER_REPORT",
+        "source": "WORKSPACE"
+      }
+    }
+  ],
+  "tags": {
+    "source": "autosys",
+    "migrated": "true"
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 0,30 23 * * ? *",
+    "timezone_id": "UTC"
+  }
+}

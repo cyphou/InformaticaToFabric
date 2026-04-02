@@ -1,21 +1,23 @@
 # Migration Summary — Target: Fabric
 
-**Generated:** 2026-03-26 17:37 UTC
+**Generated:** 2026-04-02 12:27 UTC
 **Target Platform:** Fabric
 
 ## Phase Results
 
 | Phase | Name | Status | Duration |
 |-------|------|--------|----------|
-| 0 | Assessment | ⏭️ Skipped | — |
-| 1 | SQL Migration | ❌ None | — |
-| 2 | Notebook Migration | ❌ None | — |
-| 3 | Pipeline Migration | ❌ None | — |
-| 4 | Schema Generation | ❌ None | — |
-| 5 | Validation | ❌ None | — |
+| 0 | Assessment | ✅ OK | 0.4s |
+| 1 | SQL Migration | ✅ OK | 0.1s |
+| 2 | Notebook Migration | ✅ OK | 0.1s |
+| 3 | DBT Migration | ✅ OK | 0.0s |
+| 4 | Pipeline Migration | ✅ OK | 0.0s |
+| 5 | AutoSys Migration | ✅ OK | 0.0s |
+| 6 | Schema Generation | ✅ OK | 0.0s |
+| 7 | Validation | ✅ OK | 0.0s |
 
-**Phases completed:** 0/6
-**Total duration:** 0.0s
+**Phases completed:** 8/8
+**Total duration:** 0.7s
 
 ## Output Directories
 

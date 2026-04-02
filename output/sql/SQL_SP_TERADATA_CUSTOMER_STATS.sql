@@ -2,7 +2,7 @@
 -- Converted from: C:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric\input\sql\SP_TERADATA_CUSTOMER_STATS.sql
 -- DB Type: TERADATA
 -- Conversion: Teradata → Spark SQL
--- Date: 2026-03-26
+-- Date: 2026-04-02
 -- Agent: sql-migration (automated)
 -- ============================================================================
 -- Review all TODO comments before deploying to Fabric.

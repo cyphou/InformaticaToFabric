@@ -40,9 +40,11 @@ PHASES = [
     {"id": 0, "name": "Assessment",  "module": "run_assessment"},
     {"id": 1, "name": "SQL Migration", "module": "run_sql_migration"},
     {"id": 2, "name": "Notebook Migration", "module": "run_notebook_migration"},
-    {"id": 3, "name": "Pipeline Migration", "module": "run_pipeline_migration"},
-    {"id": 4, "name": "Schema Generation", "module": "run_schema_generator"},
-    {"id": 5, "name": "Validation", "module": "run_validation"},
+    {"id": 3, "name": "DBT Migration", "module": "run_dbt_migration"},
+    {"id": 4, "name": "Pipeline Migration", "module": "run_pipeline_migration"},
+    {"id": 5, "name": "AutoSys Migration", "module": "run_autosys_migration"},
+    {"id": 6, "name": "Schema Generation", "module": "run_schema_generator"},
+    {"id": 7, "name": "Validation", "module": "run_validation"},
 ]
 
 # Credential patterns to sanitize in audit logs
@@ -129,8 +131,16 @@ def _parse_args():
     parser.add_argument("--profile", action="store_true",
                         help="Enable per-phase memory and timing profiling")
     # Target platform
-    parser.add_argument("--target", choices=["fabric", "databricks"], default=None,
-                        help="Target platform: fabric (default) or databricks")
+    parser.add_argument("--target", choices=["fabric", "databricks", "dbt", "pyspark", "auto", "all"], default=None,
+                        help="Target platform: fabric | databricks | dbt | pyspark | auto | all (default: fabric)")
+    # Sprint 45: Cross-platform comparison
+    parser.add_argument("--compare", action="store_true",
+                        help="Generate cross-platform comparison report after migration")
+    parser.add_argument("--advisor", action="store_true",
+                        help="Generate migration target advisor report")
+    # AutoSys JIL support
+    parser.add_argument("--autosys-dir", type=str, default=None, metavar="DIR",
+                        help="Path to directory containing AutoSys JIL files (default: input/autosys/)")
     parsed = parser.parse_args()
     return parsed
 
@@ -324,8 +334,15 @@ def run_batch(batch_dirs, args, config):
         if not input_path.exists():
             batch_results.append({"input": input_dir, "status": "error", "error": "Directory not found"})
             continue
-        # Override INPUT_DIR for child modules by setting config
+        # Override INPUT_DIR for child modules
         config["_batch_input_dir"] = str(input_path)
+        os.environ["INFORMATICA_INPUT_DIR"] = str(input_path)
+        # Redirect child module input directories
+        for mod_name in ["run_assessment", "run_sql_migration", "run_notebook_migration",
+                         "run_pipeline_migration", "run_validation", "run_schema_generator"]:
+            mod = sys.modules.get(mod_name)
+            if mod and hasattr(mod, "INPUT_DIR"):
+                mod.INPUT_DIR = input_path
         batch_results.append({"input": input_dir, "status": "ok"})
     return batch_results
 
@@ -365,7 +382,11 @@ def _get_memory_mb():
     """Return current process memory usage in MB (best-effort)."""
     try:
         import resource  # Unix only
+        import platform as _platform
         usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        # macOS reports ru_maxrss in bytes; Linux reports in KB
+        if _platform.system() == "Darwin":
+            return round(usage / (1024 * 1024), 1)
         return round(usage / 1024, 1)  # KB → MB on Linux
     except ImportError:
         pass
@@ -453,9 +474,25 @@ def main():
 
     # Resolve target platform: CLI flag > config file > default
     target = args.target or config.get("target", "fabric")
-    os.environ["INFORMATICA_MIGRATION_TARGET"] = target
-    config["target"] = target
-    if target == "databricks":
+    # Sprint 45: --target all runs dual-target (databricks + dbt)
+    if target == "all":
+        os.environ["INFORMATICA_MIGRATION_TARGET"] = "databricks"
+        os.environ["INFORMATICA_DBT_MODE"] = ""
+        config["target"] = "databricks"
+        config["dual_target"] = True
+        catalog = config.get("databricks", {}).get("catalog", "main")
+        os.environ["INFORMATICA_DATABRICKS_CATALOG"] = catalog
+    # Normalize: dbt/pyspark/auto are sub-modes of databricks
+    elif target in ("dbt", "pyspark", "auto"):
+        os.environ["INFORMATICA_MIGRATION_TARGET"] = "databricks"
+        os.environ["INFORMATICA_DBT_MODE"] = target  # dbt | pyspark | auto
+        config["target"] = "databricks"
+        config["dbt_mode"] = target
+    else:
+        os.environ["INFORMATICA_MIGRATION_TARGET"] = target
+        os.environ["INFORMATICA_DBT_MODE"] = ""
+        config["target"] = target
+    if target in ("databricks", "dbt", "pyspark", "auto", "all"):
         catalog = config.get("databricks", {}).get("catalog", "main")
         os.environ["INFORMATICA_DATABRICKS_CATALOG"] = catalog
 
@@ -473,7 +510,15 @@ def main():
 
     print()
     print("╔" + "═" * 58 + "╗")
-    target_label = "Databricks (Unity Catalog)" if target == "databricks" else "Fabric"
+    dbt_mode = config.get("dbt_mode", "")
+    if target == "all":
+        target_label = "Databricks + DBT (Dual-Target)"
+    elif dbt_mode:
+        target_label = f"Databricks — {dbt_mode.upper()} mode"
+    elif target in ("databricks", "dbt", "pyspark", "auto"):
+        target_label = "Databricks (Unity Catalog)"
+    else:
+        target_label = "Fabric"
     print("║" + f"  Informatica → {target_label} Migration  ".center(58) + "║")
     print("║" + "  End-to-End Orchestrator          ".center(58) + "║")
     print("╚" + "═" * 58 + "╝")
@@ -489,6 +534,9 @@ def main():
         print(f"  *** TENANT: {args.tenant} (Key Vault substitution enabled) ***")
     if args.batch:
         print(f"  *** BATCH MODE — {len(args.batch)} input directories ***")
+    if args.autosys_dir:
+        print(f"  *** AutoSys JIL directory: {args.autosys_dir} ***")
+        os.environ["INFORMATICA_AUTOSYS_DIR"] = args.autosys_dir
     print(f"  Target platform: {target_label}")
     if config and config.get("fabric", {}).get("workspace_id") and target == "fabric":
         print(f"  Config workspace: {config['fabric']['workspace_id']}")
@@ -592,6 +640,40 @@ def main():
             print(f"  ❌ Phase {pid} failed: {error_msg}")
             print("     Continuing to next phase...")
         print()
+
+    # Sprint 45: Dual-target — run DBT phase too if --target all
+    if config.get("dual_target"):
+        print("  ▶  Dual-target: re-running notebook/pipeline phases with DBT mode")
+        os.environ["INFORMATICA_DBT_MODE"] = "dbt"
+        for phase in PHASES:
+            if phase["module"] in ("run_notebook_migration", "run_dbt_migration"):
+                try:
+                    run_phase(phase)
+                    print(f"  ✅ Dual-target {phase['name']} (DBT) complete")
+                except (SystemExit, Exception) as exc:
+                    print(f"  ⚠️  Dual-target {phase['name']} (DBT): {exc}")
+        os.environ["INFORMATICA_DBT_MODE"] = ""
+        print()
+
+    # Sprint 45: Comparison report & advisor
+    if getattr(args, 'compare', False) or getattr(args, 'advisor', False) or config.get("dual_target"):
+        try:
+            import run_target_comparison as rtc
+            inv_path = WORKSPACE / "output" / "inventory" / "inventory.json"
+            if inv_path.exists():
+                with open(inv_path, encoding="utf-8") as f:
+                    inv = json.load(f)
+                if getattr(args, 'advisor', False) or config.get("dual_target"):
+                    adv = rtc.generate_advisor_report(inv)
+                    print(f"  📊 Target advisor: {adv['summary']['dbt_recommended']} DBT / "
+                          f"{adv['summary']['pyspark_recommended']} PySpark")
+                if getattr(args, 'compare', False) or config.get("dual_target"):
+                    comp = rtc.generate_comparison_report(inv)
+                    print(f"  📊 Comparison report: {comp['report_path']}")
+                manifest = rtc.generate_unified_manifest(inv)
+                print(f"  📦 Unified manifest: {manifest['total_artifacts']} artifacts")
+        except Exception as exc:
+            log.warning(f"Sprint 45 reports: {exc}")
 
     # Generate audit log and summary
     audit_path = _write_audit_log(results, config)

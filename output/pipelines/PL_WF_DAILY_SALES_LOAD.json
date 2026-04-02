@@ -1,209 +1,65 @@
 {
   "name": "PL_WF_DAILY_SALES_LOAD",
-  "properties": {
-    "description": "Migrated from Informatica workflow WF_DAILY_SALES_LOAD. Original schedule: SCHED_DAILY_0200.",
-    "activities": [
-      {
-        "name": "NB_M_LOAD_CUSTOMERS",
-        "description": "Migrated from Informatica session S_M_LOAD_CUSTOMERS.",
-        "type": "TridentNotebook",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_M_LOAD_CUSTOMERS",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
+  "description": "Migrated from Informatica workflow WF_DAILY_SALES_LOAD. Original schedule: SCHED_DAILY_0200.",
+  "tasks": [
+    {
+      "task_key": "NB_M_LOAD_CUSTOMERS",
+      "description": "Migrated from Informatica session S_M_LOAD_CUSTOMERS.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_M_LOAD_CUSTOMERS",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
         }
       },
-      {
-        "name": "NB_M_LOAD_ORDERS",
-        "description": "Migrated from Informatica session S_M_LOAD_ORDERS.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "NB_M_LOAD_CUSTOMERS",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_M_LOAD_ORDERS",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "DEC_CHECK_ORDERS",
-        "description": "Migrated from Informatica Decision task DEC_CHECK_ORDERS.",
-        "type": "IfCondition",
-        "dependsOn": [
-          {
-            "activity": "NB_M_LOAD_ORDERS",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "typeProperties": {
-          "expression": {
-            "value": "@greater(int(activity('NB_M_LOAD_ORDERS').output.status.Output.result.exitValue), 0)",
-            "type": "Expression"
-          },
-          "ifTrueActivities": [
-            {
-              "name": "NB_M_UPSERT_INVENTORY",
-              "description": "Migrated from Informatica session S_M_UPSERT_INVENTORY.",
-              "type": "TridentNotebook",
-              "dependsOn": [],
-              "policy": {
-                "timeout": "0.02:00:00",
-                "retry": 2,
-                "retryIntervalInSeconds": 60,
-                "secureOutput": false,
-                "secureInput": false
-              },
-              "typeProperties": {
-                "notebookId": "",
-                "notebook": {
-                  "referenceName": "NB_M_UPSERT_INVENTORY",
-                  "type": "NotebookReference"
-                },
-                "parameters": {
-                  "load_date": {
-                    "value": {
-                      "value": "@pipeline().parameters.load_date",
-                      "type": "Expression"
-                    },
-                    "type": "string"
-                  }
-                },
-                "sparkPool": {
-                  "referenceName": "default",
-                  "type": "BigDataPoolReference"
-                }
-              }
-            }
-          ],
-          "ifFalseActivities": [
-            {
-              "name": "Set_Skip_DEC_CHECK_ORDERS",
-              "type": "SetVariable",
-              "dependsOn": [],
-              "typeProperties": {
-                "variableName": "skip_reason",
-                "value": "DEC_CHECK_ORDERS evaluated FALSE — downstream skipped."
-              }
-            }
-          ]
-        }
-      },
-      {
-        "name": "EMAIL_FAILURE",
-        "description": "Migrated from Informatica EMAIL_FAILURE. Triggered on Failed.",
-        "type": "WebActivity",
-        "dependsOn": [
-          {
-            "activity": "NB_M_LOAD_CUSTOMERS",
-            "dependencyConditions": [
-              "Failed"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.00:10:00",
-          "retry": 1,
-          "retryIntervalInSeconds": 30
-        },
-        "typeProperties": {
-          "url": {
-            "value": "@pipeline().parameters.alert_webhook_url",
-            "type": "Expression"
-          },
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
-            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"NB_M_LOAD_CUSTOMERS\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
-            "type": "Expression"
-          }
-        }
-      }
-    ],
-    "parameters": {
-      "load_date": {
-        "type": "string",
-        "defaultValue": "@utcnow('yyyy-MM-dd')"
-      },
-      "alert_webhook_url": {
-        "type": "string",
-        "defaultValue": "https://your-logic-app-webhook-url"
-      }
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
     },
-    "variables": {
-      "skip_reason": {
-        "type": "String",
-        "defaultValue": ""
-      }
-    },
-    "annotations": [
-      "MigratedFromInformatica",
-      "OriginalWorkflow:WF_DAILY_SALES_LOAD",
-      "OriginalSchedule:SCHED_DAILY_0200"
-    ],
-    "trigger": {
-      "type": "ScheduleTrigger",
-      "description": "Daily at 2 AM UTC",
-      "typeProperties": {
-        "recurrence": {
-          "cron": "0 0 2 * * *",
-          "timeZone": "UTC"
+    {
+      "task_key": "NB_M_LOAD_ORDERS",
+      "description": "Migrated from Informatica session S_M_LOAD_ORDERS.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_M_LOAD_ORDERS",
+        "base_parameters": {
+          "load_date": ""
         }
-      }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "NB_M_LOAD_CUSTOMERS"
+        }
+      ]
+    },
+    {
+      "task_key": "NB_M_UPSERT_INVENTORY",
+      "description": "Migrated from Informatica session S_M_UPSERT_INVENTORY.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_M_UPSERT_INVENTORY",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "DEC_CHECK_ORDERS"
+        }
+      ]
     }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "WF_DAILY_SALES_LOAD"
+  },
+  "format": "MULTI_TASK",
+  "schedule": {
+    "quartz_cron_expression": "0 0 2 * * *",
+    "timezone_id": "UTC",
+    "pause_status": "PAUSED"
   }
 }

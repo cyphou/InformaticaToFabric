@@ -7,14 +7,15 @@
 <h1 align="center">Informatica to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, Data Pipelines / Databricks Workflows, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/40%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="40 sprints complete"/>
-  <img src="https://img.shields.io/badge/780%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="780 tests"/>
+  <img src="https://img.shields.io/badge/41%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="41 sprints complete"/>
+  <img src="https://img.shields.io/badge/1111%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1111 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
-  <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks"/>
+  <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT"/>
+  <img src="https://img.shields.io/badge/AutoSys-JIL%20support-9B59B6?style=flat-square&logo=clockify&logoColor=white" alt="AutoSys JIL"/>
   <img src="https://img.shields.io/badge/PySpark-notebooks-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/Delta%20Lake-schema%20gen-00ADD8?style=flat-square&logo=databricks&logoColor=white" alt="Delta Lake"/>
   <img src="https://img.shields.io/badge/6%20databases-Oracle%20%C2%B7%20SQL%20Server%20%C2%B7%20Teradata%20%C2%B7%20DB2%20%C2%B7%20MySQL%20%C2%B7%20PostgreSQL-blue?style=flat-square&logo=amazondynamodb&logoColor=white" alt="6 databases"/>
@@ -47,9 +48,10 @@
 ### Agent-driven (Copilot Chat)
 ```
 1. Place Informatica XML exports in input/
-2. Invoke: @migration-orchestrator start migration
-3. Review generated artifacts in output/
-4. Deploy to Microsoft Fabric
+2. Place AutoSys JIL files in input/autosys/ (optional)
+3. Invoke: @migration-orchestrator start migration
+4. Review generated artifacts in output/
+5. Deploy to Microsoft Fabric or Azure Databricks
 ```
 
 ### Script-driven (Command Line)
@@ -57,12 +59,24 @@
 # Install the package
 pip install -e ".[dev]"
 
-# Run the full pipeline (assessment → SQL → notebooks → pipelines → validation)
+# Run the full pipeline (assessment → SQL → notebooks → DBT → pipelines → AutoSys → schema → validation)
 informatica-to-fabric
 # or: python run_migration.py
 
 # Target Azure Databricks instead of Fabric
 informatica-to-fabric --target databricks
+
+# Target DBT models on Databricks (SQL-expressible mappings → dbt, complex → PySpark)
+informatica-to-fabric --target dbt
+
+# Auto-route: simple/medium → dbt, complex → PySpark notebooks
+informatica-to-fabric --target auto
+
+# PySpark-only on Databricks (no dbt)
+informatica-to-fabric --target pyspark
+
+# Include AutoSys JIL files from a custom directory
+informatica-to-fabric --autosys-dir /path/to/jil/files
 
 # Skip assessment if already done
 informatica-to-fabric --skip 0
@@ -114,6 +128,22 @@ Sessions, Command Tasks, Timers, Decisions, Event Wait/Raise, Assignments, Email
 <tr>
 <td>
 
+### ⚙️ AutoSys JIL → Pipelines / Workflows
+CA AutoSys **JIL (Job Information Language)** files are parsed and converted:
+BOX → Pipeline container, CMD (pmcmd) → Notebook activity, FW → File sensor/trigger, **Conditions** (s/f/n/d) → dependsOn with Succeeded/Failed/Completed, **Calendars** → cron schedules, **alarm_if_fail** → webhook notifications, **Cross-box dependencies** → Execute Pipeline references. AutoSys jobs calling `pmcmd startworkflow` are automatically **linked to Informatica workflows** in the inventory.
+
+</td>
+<td>
+
+### 🏗️ DBT Models (Databricks target)
+Simple/Medium mappings can be migrated to **dbt models** instead of PySpark:
+3-layer model generation (staging/intermediate/marts), Oracle→Databricks SQL conversion, `dbt_project.yml` + `profiles.yml` + `sources.yml` + `schema.yml` scaffolding, **auto-routing** (`--target auto`) routes SQL-expressible mappings to dbt and complex mappings to PySpark notebooks.
+
+</td>
+</tr>
+<tr>
+<td>
+
 ### 🗄️ SQL → Spark SQL / T-SQL
 All Oracle, **SQL Server, Teradata, DB2, MySQL, and PostgreSQL** SQL is converted to Fabric-compatible SQL:
 SQL overrides, stored procedures, pre/post-session SQL, Oracle functions (NVL, DECODE, SYSDATE, ROWNUM, CONNECT BY, (+) joins), **Oracle analytics** (LEAD, LAG, DENSE_RANK, NTILE, ROW_NUMBER, FIRST_VALUE, LAST_VALUE), **SQL Server** (GETDATE, ISNULL, CROSS APPLY, STRING_AGG, TOP, etc.), **Teradata** (QUALIFY, SAMPLE, COLLECT STATISTICS, VOLATILE TABLE, ZEROIFNULL), **DB2** (FETCH FIRST, VALUE, RRN, WITH UR), **MySQL** (IFNULL, NOW(), GROUP_CONCAT, backtick identifiers), **PostgreSQL** (:: casts, ILIKE, SERIAL, ARRAY_AGG, ON CONFLICT), **PL/SQL Package splitting**
@@ -146,13 +176,15 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 | **Connection objects** (XML + IICS) | ✅ Parsed | ✅ DB/FTP/generic/IICS | Production-ready |
 | **Session configs** | ✅ Extracted → Spark config | ✅ DTM/cache/commit mapping | New in Sprint 20 |
 | **Scheduler/Cron** | ✅ Schedule → cron expression | ✅ Pipeline triggers | New in Sprint 20 |
+| **AutoSys JIL** (.jil files) | ✅ Full JIL parsing (BOX, CMD, FW, FT) | ✅ Conditions → dependsOn, calendars → cron | New in Sprint 61 |
 
 ### 🎯 Target Platforms
 
-| Target Platform | Notebooks | Pipelines | Schema DDL | Secrets | Deploy |
-|---|---|---|---|---|---|
-| **Microsoft Fabric** | `notebookutils` / 2-level namespace | Fabric Data Pipeline JSON | Delta Lake on Lakehouse | `notebookutils.credentials.getSecret()` | `deploy_to_fabric.py` |
-| **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `dbutils.secrets.get()` | `deploy_to_databricks.py` |
+| Target Platform | Notebooks | Pipelines | Schema DDL | DBT Models | AutoSys | Secrets | Deploy |
+|---|---|---|---|---|---|---|---|
+| **Microsoft Fabric** | `notebookutils` / 2-level namespace | Fabric Data Pipeline JSON | Delta Lake on Lakehouse | — | JIL → Pipeline JSON | `notebookutils.credentials.getSecret()` | `deploy_to_fabric.py` |
+| **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `--target dbt` | JIL → Workflow JSON | `dbutils.secrets.get()` | `deploy_to_databricks.py` |
+| **DBT on Databricks** | — (SQL-only mappings) | Databricks Workflow with `dbt_task` | Via dbt schema.yml | `stg_` / `int_` / `mart_` models | JIL → Workflow JSON | dbt profiles.yml | `deploy_dbt_project.py` |
 
 ---
 
@@ -184,13 +216,17 @@ flowchart LR
 
 **Phase 2 — Generate Notebooks:** Each mapping → PySpark notebook (Fabric or Databricks target)
 
-**Phase 3 — Generate Pipelines:** Each workflow → Data Pipeline JSON or Databricks Workflow JSON
+**Phase 3 — Generate DBT Models:** Simple/Medium mappings → dbt staging/intermediate/marts SQL models (Databricks target only, `--target dbt|auto`)
 
-**Phase 4 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold (Lakehouse or Unity Catalog)
+**Phase 4 — Generate Pipelines:** Each workflow → Data Pipeline JSON or Databricks Workflow JSON
 
-**Phase 5 — Validate:** 5-level validation — row counts, checksums, data quality rules, key sampling & aggregate comparison
+**Phase 5 — AutoSys JIL Migration:** Parse AutoSys JIL files → Pipeline/Workflow JSON, link pmcmd jobs to Informatica workflows
 
-**Phase 6 — Deploy:** Push artifacts to Microsoft Fabric workspace or Azure Databricks workspace
+**Phase 6 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold (Lakehouse or Unity Catalog)
+
+**Phase 7 — Validate:** 5-level validation — row counts, checksums, data quality rules, key sampling & aggregate comparison
+
+**Phase 8 — Deploy:** Push artifacts to Microsoft Fabric workspace or Azure Databricks workspace
 
 ### 🏗️ Fabric Target Architecture
 
@@ -416,6 +452,31 @@ sequenceDiagram
 
 </details>
 
+### AutoSys JIL → Pipeline / Databricks Workflow Mapping
+
+<details>
+<summary><b>📋 AutoSys element mapping</b> (click to expand)</summary>
+
+| AutoSys JIL Element | Fabric Data Pipeline / Databricks Workflow |
+|---|---|
+| BOX job | Pipeline container / Workflow |
+| CMD job (`pmcmd startworkflow`) | Notebook Activity (linked to migrated notebook) |
+| CMD job (generic command) | Script Activity / Notebook with TODO |
+| FW (File Watcher) | GetMetadata Activity / File arrival trigger |
+| FT (File Trigger) | Event-based trigger |
+| `condition: s(job)` | `dependsOn: Succeeded` |
+| `condition: f(job)` | `dependsOn: Failed` |
+| `condition: n(job)` | `dependsOn: Skipped` |
+| `condition: d(job)` | `dependsOn: Completed` |
+| `days_of_week` + `start_times` | ScheduleTrigger / Quartz cron |
+| `run_calendar` | Annotation with recommended cron |
+| `alarm_if_fail` | Web Activity (webhook notification) |
+| `machine` / `profile` | Cluster config annotation |
+| Cross-box `condition` | Execute Pipeline / Run Job reference |
+| `insert_calendar` | Calendar metadata (preserved as annotation) |
+
+</details>
+
 ---
 
 ## 📊 Complexity Classification
@@ -458,11 +519,14 @@ InformaticaToDBFabric/
 │   ├── workflows/                       #   Workflow XML exports (PowerCenter + IICS)
 │   ├── mappings/                        #   Mapping XML exports + .prm param files
 │   ├── sessions/                        #   Session config XML exports
-│   └── sql/                             #   Oracle/SQL Server/Teradata/DB2/MySQL/PostgreSQL SQL
+│   ├── sql/                             #   Oracle/SQL Server/Teradata/DB2/MySQL/PostgreSQL SQL
+│   └── autosys/                         #   AutoSys JIL files (.jil)
 ├── output/                              # 📤 Generated Fabric artifacts
 │   ├── inventory/                       #   Assessment results (JSON/Markdown)
 │   ├── notebooks/                       #   Generated Fabric Notebooks (.py)
 │   ├── pipelines/                       #   Generated Pipeline JSON
+│   ├── dbt/                             #   Generated dbt project (models, config, schema)
+│   ├── autosys/                         #   AutoSys → Pipeline/Workflow JSON + summary
 │   ├── schema/                          #   Delta Lake DDL (Bronze/Silver/Gold) + setup notebook
 │   ├── sql/                             #   Converted SQL files
 │   └── validation/                      #   Validation scripts + test matrix + HTML report
@@ -473,10 +537,12 @@ InformaticaToDBFabric/
 ├── run_assessment.py                    # 🔍 Assessment script (Phase 0)
 ├── run_sql_migration.py                 # 🗄️ SQL conversion script (Phase 1)
 ├── run_notebook_migration.py            # 📓 Notebook generation script (Phase 2)
-├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 3)
-├── run_schema_generator.py               # 🏗️ Delta Lake DDL & setup notebook (Phase 4)
-├── run_validation.py                    # ✅ Validation generation script (Phase 5)
-├── run_migration.py                     # 🎯 End-to-end orchestrator (6 phases)
+├── run_dbt_migration.py                 # 🏗️ DBT model generation script (Phase 3)
+├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 4)
+├── run_autosys_migration.py             # ⏰ AutoSys JIL migration script (Phase 5)
+├── run_schema_generator.py               # 🏛️ Delta Lake DDL & setup notebook (Phase 6)
+├── run_validation.py                    # ✅ Validation generation script (Phase 7)
+├── run_migration.py                     # 🎯 End-to-end orchestrator (8 phases)
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
 ├── deploy_to_databricks.py              # 🚀 Databricks REST API deployment script
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
@@ -485,7 +551,7 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 697 tests
+├── tests/                               # 🧪 1,111 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -493,14 +559,20 @@ InformaticaToDBFabric/
 │   ├── test_e2e.py                      # Sprint 18: End-to-end integration tests
 │   ├── test_iics.py                     # Sprint 19: IICS format tests
 │   ├── test_gaps.py                     # Sprint 20: Gap remediation tests
-│   └── test_sprint26_30.py              # Sprint 26–30: Templates, schema, waves, validation, audit
+│   ├── test_sprint22_24.py              # Sprint 22–24: Session config, DB support
+│   ├── test_sprint25.py                 # Sprint 25: Lineage & scoring
+│   ├── test_sprint26_30.py              # Sprint 26–30: Templates, schema, waves, validation, audit
+│   ├── test_sprint31_40.py              # Sprint 31–40: PL/SQL, DQ, multi-tenant, PII
+│   ├── test_databricks_target.py        # Sprint 40–41: Databricks target
+│   ├── test_dbt_target.py               # Sprint 51: DBT target
+│   └── test_autosys.py                  # Sprint 61: AutoSys JIL
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
 │   ├── TROUBLESHOOTING.md               # Common issues & solutions
 │   └── ADR/                             # Architecture Decision Records
 ├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (30/30 complete)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (41/65 complete)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -598,7 +670,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 780 tests
+# Run all 1,111 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -606,6 +678,12 @@ python -m pytest tests/test_migration.py::TestSQLConversion -v
 
 # Run with coverage
 python -m pytest tests/ --cov=. --cov-report=term-missing
+
+# Validate generated artifacts (pipeline JSON, DBT SQL, notebooks)
+python run_artifact_validation.py            # All artifacts
+python run_artifact_validation.py --pipelines  # Pipelines only
+python run_artifact_validation.py --dbt        # DBT models only
+python run_artifact_validation.py --notebooks  # Notebooks only
 ```
 
 | Test File | Tests | Covers |
@@ -616,10 +694,17 @@ python -m pytest tests/ --cov=. --cov-report=term-missing
 | `test_e2e.py` | 19 | Sprint 18: End-to-end integration (all 5 phases against real fixtures) |
 | `test_iics.py` | 23 | Sprint 19: IICS taskflow/sync/mass-ingestion/connection parsers |
 | `test_gaps.py` | 52 | Sprint 20: Session config, scheduler cron, GTT/MV/DB links, SQL rules, pipeline triggers |
+| `test_sprint22_24.py` | ~57 | Sprint 22–24: Session config mapping, additional DB support, coverage push |
+| `test_sprint25.py` | ~35 | Sprint 25: Lineage tracking, conversion scoring, multi-DB SQL |
 | `test_sprint26_30.py` | 110 | Sprint 26–30: Transformation templates, schema generation, wave planner, L4/L5 validation, audit log, credential sanitization |
+| `test_sprint31_40.py` | ~109 | Sprint 31–40: Phase 2 — PL/SQL, DQ rules, multi-tenant, PII detection, enterprise runbook |
 | `test_databricks_target.py` | 83 | Sprint 40–41: Databricks notebooks, workflows, schema DDL, deployment, UC permissions, cluster config |
+| `test_dbt_target.py` | 75 | Sprint 51: DBT target router, SQL conversion, model generation, project scaffolding, E2E |
+| `test_autosys.py` | 63 | Sprint 61: AutoSys JIL parsing, conditions, dependency DAG, cron conversion, pipeline generation, Informatica linkage |
+| `test_phase3_5.py` | 117 | Sprints 47–65: UC lineage, DLT notebooks, cluster policies, SQL dashboards, advanced workflows, DBU cost, dashboard v2, DBT models/macros/snapshots/incremental/CI/mixed workflows, AutoSys conditions/alarms/calendars/variables/coverage |
+| `test_artifact_validation.py` | 76 | Artifact validation: pipeline JSON schema, DBT SQL syntax, notebook structure, circular deps, batch validation, credential detection |
 
-**Overall:** 780 tests, 779 passing (1 pre-existing e2e), ~32s on Python 3.14
+**Overall:** 1,111 tests, all passing, ~18s on Python 3.14
 
 ### Configuration
 

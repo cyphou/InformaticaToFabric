@@ -1,55 +1,69 @@
 {
-  "migration_run": "2026-03-26T17:37:12.657485+00:00",
+  "migration_run": "2026-04-02T12:27:47.645716+00:00",
   "config_file": "migration.yaml",
   "phases": [
     {
       "phase_id": 0,
       "phase_name": "Assessment",
-      "status": "skipped",
-      "duration_seconds": 0,
+      "status": "ok",
+      "duration_seconds": 0.41,
       "error": null
     },
     {
       "phase_id": 1,
       "phase_name": "SQL Migration",
-      "status": "dry-run",
-      "duration_seconds": 0,
+      "status": "ok",
+      "duration_seconds": 0.06,
       "error": null
     },
     {
       "phase_id": 2,
       "phase_name": "Notebook Migration",
-      "status": "dry-run",
-      "duration_seconds": 0,
+      "status": "ok",
+      "duration_seconds": 0.05,
       "error": null
     },
     {
       "phase_id": 3,
-      "phase_name": "Pipeline Migration",
-      "status": "dry-run",
-      "duration_seconds": 0,
+      "phase_name": "DBT Migration",
+      "status": "ok",
+      "duration_seconds": 0.05,
       "error": null
     },
     {
       "phase_id": 4,
-      "phase_name": "Schema Generation",
-      "status": "dry-run",
-      "duration_seconds": 0,
+      "phase_name": "Pipeline Migration",
+      "status": "ok",
+      "duration_seconds": 0.02,
       "error": null
     },
     {
       "phase_id": 5,
+      "phase_name": "AutoSys Migration",
+      "status": "ok",
+      "duration_seconds": 0.02,
+      "error": null
+    },
+    {
+      "phase_id": 6,
+      "phase_name": "Schema Generation",
+      "status": "ok",
+      "duration_seconds": 0.02,
+      "error": null
+    },
+    {
+      "phase_id": 7,
       "phase_name": "Validation",
-      "status": "dry-run",
-      "duration_seconds": 0,
+      "status": "ok",
+      "duration_seconds": 0.03,
       "error": null
     }
   ],
   "summary": {
-    "total_phases": 6,
-    "succeeded": 0,
+    "total_phases": 8,
+    "succeeded": 8,
     "failed": 0,
-    "skipped": 1,
-    "total_duration_seconds": 0
+    "skipped": 0,
+    "total_duration_seconds": 0.67
   }
 }

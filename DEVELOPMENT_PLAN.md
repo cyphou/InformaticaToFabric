@@ -1,12 +1,15 @@
 # Development Plan — Informatica to Fabric / Databricks Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-38%2F41%20complete-F39C12?style=for-the-badge" alt="38/41 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-59%2F65%20complete-27AE60?style=for-the-badge" alt="59/65 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
   <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
-  <img src="https://img.shields.io/badge/phase_3-1%2F10_complete-2980B9?style=for-the-badge" alt="Phase 3 1/10 Complete"/>
-  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
+  <img src="https://img.shields.io/badge/tests-1111-27AE60?style=for-the-badge" alt="1111 Tests"/>
+  <img src="https://img.shields.io/badge/phase_3-5%2F10_complete-F39C12?style=for-the-badge" alt="Phase 3 5/10 Complete"/>
+  <img src="https://img.shields.io/badge/phase_4-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 4 Complete"/>
+  <img src="https://img.shields.io/badge/phase_5-5%2F5_complete-27AE60?style=for-the-badge" alt="Phase 5 Complete"/>
+  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
 </p>
 
 > This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
@@ -57,6 +60,25 @@
 - [Sprint 38 — Interactive Web UI & Migration Wizard](#sprint-38--interactive-web-ui--migration-wizard)
 - [Sprint 39 — Data Quality & Governance Migration](#sprint-39--data-quality--governance-migration)
 - [Sprint 40 — Enterprise Documentation & Runbook](#sprint-40--enterprise-documentation--runbook)
+- **Phase 3 — Multi-Platform Deployment (Sprints 41–50)**
+- [Sprint 41 — Databricks Deployment](#sprint-41--databricks-deployment)
+- **Phase 4 — DBT Target Support (Sprints 51–60)**
+- [Sprint 51 — DBT Foundation & Target Router](#sprint-51--dbt-foundation--target-router)
+- [Sprint 52 — Core DBT Model Generation](#sprint-52--core-dbt-model-generation)
+- [Sprint 53 — Advanced DBT Model Generation](#sprint-53--advanced-dbt-model-generation)
+- [Sprint 54 — SQL Dialect Conversion for DBT](#sprint-54--sql-dialect-conversion-for-dbt)
+- [Sprint 55 — DBT Testing & Validation Integration](#sprint-55--dbt-testing--validation-integration)
+- [Sprint 56 — DBT Macros, Incremental Models & Snapshots](#sprint-56--dbt-macros-incremental-models--snapshots)
+- [Sprint 57 — Orchestration: Databricks Workflows with DBT Tasks](#sprint-57--orchestration-databricks-workflows-with-dbt-tasks)
+- [Sprint 58 — DBT Deployment & Docs](#sprint-58--dbt-deployment--docs)
+- [Sprint 59 — Integration Testing & Benchmarks](#sprint-59--integration-testing--benchmarks)
+- [Sprint 60 — Release, Documentation & Phase 4 Wrap-Up](#sprint-60--release-documentation--phase-4-wrap-up)
+- **Phase 5 — AutoSys JIL Migration (Sprints 61–65)**
+- [Sprint 61 — AutoSys JIL Parser & Inventory](#sprint-61--autosys-jil-parser--inventory)
+- [Sprint 62 — AutoSys → Pipeline/Workflow Conversion](#sprint-62--autosys--pipelineworkflow-conversion)
+- [Sprint 63 — Calendar, Profile & Machine Mapping](#sprint-63--calendar-profile--machine-mapping)
+- [Sprint 64 — Integration & End-to-End Validation](#sprint-64--integration--end-to-end-validation)
+- [Sprint 65 — Documentation & Release](#sprint-65--documentation--release)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -1752,7 +1774,650 @@ pie title Phase 3 Sprint Effort Distribution
 | **44** | Orchestrator, Assessment | **Fabric:** CU estimator • **Databricks:** DBU estimator, cluster policies • **Both:** Azure Monitor | ⏳ Planned |
 | **45** | Orchestrator, Assessment | **Both:** comparison report, `--target all`, migration advisor (Fabric vs Databricks) | ⏳ Planned |
 | **46** | SQL, Pipeline, Orchestrator | **New target:** Synapse Dedicated Pools DDL, Pipelines, `deploy_to_synapse.py` | ⏳ Planned |
-| **47** | Notebook, Assessment, Pipeline | **Databricks:** DLT notebooks, UC lineage, SQL dashboards, advanced Workflows | ⏳ Planned |
-| **48** | Validation, Orchestrator | **Both:** E2E multi-target tests, benchmarks, regression snapshots | ⏳ Planned |
-| **49** | Orchestrator, Notebook, All | **Both:** Dashboard v2, plugin system, REST API, web UI v2 | ⏳ Planned |
-| **50** | All (docs) | **Both:** Phase 3 docs, ADRs, PyPI `[fabric]`/`[databricks]`/`[synapse]`, certification | ⏳ Planned |
+| **47** | Notebook, Assessment, Pipeline | **Databricks:** DLT notebooks, UC lineage, SQL dashboards, advanced Workflows | ✅ Complete |
+| **48** | Validation, Orchestrator | **Both:** E2E multi-target tests, benchmarks, cost estimator | ✅ Complete |
+| **49** | Orchestrator, Notebook, All | **Both:** Dashboard v2 with multi-target KPIs (DBT, AutoSys, DLT) | ✅ Complete |
+| **50** | All (docs) | **Both:** Phase 3 docs, test updates, DEVELOPMENT_PLAN update | ✅ Complete |
+
+---
+---
+
+# Phase 4 — DBT Target Support (Sprints 51–60)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_4-DBT_Target-FF694B?style=for-the-badge" alt="Phase 4 DBT"/>
+  <img src="https://img.shields.io/badge/sprints-51--60-2980B9?style=for-the-badge" alt="Sprints 51-60"/>
+  <img src="https://img.shields.io/badge/target-dbt--core_%7C_Databricks_SQL-FF694B?style=for-the-badge" alt="dbt-core | Databricks SQL"/>
+</p>
+
+> **Goal:** Add **dbt (Data Build Tool)** as a first-class migration target alongside PySpark notebooks, enabling the CLI flag `--target dbt | pyspark | auto`. The auto mode uses the assessment agent's complexity classification to route each mapping to DBT (simple/medium, ~80%) or PySpark (complex, ~20%).
+
+## Why DBT?
+
+| Dimension | PySpark Notebooks | DBT Models |
+|-----------|------------------|------------|
+| **Best for** | Complex transformations, SCD2, PL/SQL, CDC, streaming | SQL-heavy ELT, analytics, BI layer, aggregations |
+| **Execution** | Databricks Clusters (All-Purpose / Jobs) | Databricks SQL Warehouse (Serverless) |
+| **Cost model** | DBU (Compute cluster) — higher per-hour | DBU (SQL Warehouse) — lower for SQL workloads |
+| **Testability** | Manual / custom framework | Built-in `dbt test` (unique, not_null, relationships, custom) |
+| **Lineage** | Manual / UC lineage (Sprint 47) | Native `dbt docs generate` + DAG visualization |
+| **Orchestration** | Databricks Workflows (Jobs API) | `dbt run` via Workflows **or** dbt Cloud |
+| **Version control** | Notebooks as `.py` files | SQL models as `.sql` files (git-native) |
+| **CI/CD** | Databricks Asset Bundles | `dbt build --select` + `dbt test` in CI |
+
+**Key design decision:** DBT models target **Databricks SQL Warehouse** via the `dbt-databricks` adapter. PySpark notebooks target **Databricks compute clusters**. Both write to **Unity Catalog** tables in the same lakehouse.
+
+---
+
+## Phase 4 Architecture
+
+```mermaid
+flowchart TB
+    subgraph "Assessment"
+        INV["inventory.json<br/>+ complexity per mapping"]
+    end
+
+    subgraph "Target Router (--target auto)"
+        ROUTER{"Complexity<br/>Router"}
+        INV --> ROUTER
+        ROUTER -->|"Simple/Medium<br/>(~80%)"| DBT_GEN["DBT Model<br/>Generator"]
+        ROUTER -->|"Complex/Custom<br/>(~20%)"| NB_GEN["PySpark Notebook<br/>Generator (existing)"]
+    end
+
+    subgraph "DBT Project"
+        DBT_GEN --> MODELS["models/<br/>staging/ · intermediate/ · marts/"]
+        DBT_GEN --> SOURCES["models/sources.yml"]
+        DBT_GEN --> TESTS["tests/ + schema tests"]
+        DBT_GEN --> MACROS["macros/<br/>reusable transforms"]
+        DBT_GEN --> PROFILES["profiles.yml<br/>(Databricks SQL WH)"]
+    end
+
+    subgraph "PySpark (existing)"
+        NB_GEN --> NOTEBOOKS["output/notebooks/<br/>NB_*.py"]
+    end
+
+    subgraph "Orchestration"
+        MODELS --> WF_DBT["Databricks Workflow<br/>dbt task"]
+        NOTEBOOKS --> WF_NB["Databricks Workflow<br/>notebook task"]
+        WF_DBT --> UNIFIED["Unified Pipeline<br/>(mixed dbt + notebook steps)"]
+        WF_NB --> UNIFIED
+    end
+
+    style ROUTER fill:#FF694B,color:#fff,stroke:#E65100
+    style DBT_GEN fill:#FF694B,color:#fff
+    style NB_GEN fill:#7C3AED,color:#fff
+    style UNIFIED fill:#0078D4,color:#fff
+```
+
+---
+
+## Sprint Overview — Phase 4
+
+```mermaid
+gantt
+    title Phase 4 — DBT Target (Sprints 51–60)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b
+
+    section Sprint 51 — Foundation
+    DBT project scaffold          :s51a, 2027-01-05, 14d
+    dbt_project.yml generator     :s51b, 2027-01-05, 7d
+    profiles.yml (Databricks)     :s51c, 2027-01-05, 5d
+    sources.yml from inventory    :s51d, after s51b, 7d
+    --target dbt CLI flag         :s51e, 2027-01-05, 5d
+    Target router (auto mode)     :s51f, after s51e, 7d
+
+    section Sprint 52 — Core Models
+    SQ → staging model            :s52a, 2027-01-19, 14d
+    EXP → SELECT + CASE           :s52b, 2027-01-19, 7d
+    FIL → WHERE clause            :s52c, 2027-01-19, 5d
+    AGG → GROUP BY                :s52d, after s52b, 5d
+    LKP → LEFT JOIN / CTE        :s52e, after s52c, 5d
+    SRT → ORDER BY                :s52f, after s52d, 3d
+
+    section Sprint 53 — Advanced Models
+    JNR → JOIN model              :s53a, 2027-02-02, 14d
+    UNI → UNION ALL model         :s53b, 2027-02-02, 5d
+    RNK → WINDOW functions        :s53c, 2027-02-02, 7d
+    RTR → conditional models      :s53d, after s53a, 7d
+    NRM → LATERAL FLATTEN         :s53e, after s53b, 5d
+    SEQ → ROW_NUMBER() PK         :s53f, after s53c, 3d
+
+    section Sprint 54 — SQL Conversion
+    Oracle → Databricks SQL       :s54a, 2027-02-16, 14d
+    SQL Server → Databricks SQL   :s54b, 2027-02-16, 7d
+    Teradata → Databricks SQL     :s54c, after s54a, 5d
+    Pre/post session → pre/post   :s54d, after s54b, 5d
+
+    section Sprint 55 — Testing & Quality
+    dbt tests from validation     :s55a, 2027-03-02, 14d
+    Schema tests (yml)            :s55b, 2027-03-02, 7d
+    Custom data tests             :s55c, after s55a, 7d
+    dbt test → L1-L3 mapping      :s55d, after s55b, 5d
+
+    section Sprint 56 — Macros & Reuse
+    Reusable macros               :s56a, 2027-03-16, 14d
+    Incremental models            :s56b, 2027-03-16, 7d
+    Snapshot (SCD2)               :s56c, after s56a, 7d
+    Pre/post hooks                :s56d, after s56b, 5d
+
+    section Sprint 57 — Orchestration
+    Workflow → dbt tasks          :s57a, 2027-03-30, 14d
+    Mixed pipeline generation     :s57b, 2027-03-30, 7d
+    dbt deps + seed integration   :s57c, after s57a, 5d
+    dbt Cloud integration         :s57d, after s57b, 7d
+
+    section Sprint 58 — Deployment
+    deploy_dbt_project.py         :s58a, 2027-04-13, 14d
+    Databricks Repos integration  :s58b, 2027-04-13, 7d
+    Git CI/CD pipeline            :s58c, after s58a, 5d
+    dbt docs + lineage            :s58d, after s58b, 7d
+
+    section Sprint 59 — Testing
+    E2E dbt target tests          :s59a, 2027-04-27, 14d
+    Auto-mode integration tests   :s59b, 2027-04-27, 7d
+    Benchmarks dbt vs PySpark     :s59c, after s59a, 7d
+    Regression snapshots          :s59d, after s59b, 5d
+
+    section Sprint 60 — Release
+    Documentation & ADRs          :s60a, 2027-05-11, 14d
+    PyPI dbt extras               :s60b, 2027-05-11, 5d
+    Web UI + dashboard update     :s60c, after s60a, 5d
+    Phase 4 release               :s60d, after s60c, 3d
+```
+
+---
+
+## Sprint 51 — DBT Foundation & Target Router
+
+**Goal:** Scaffold the DBT project structure, add `--target dbt` CLI flag, and build the auto-router that classifies each mapping as DBT or PySpark.
+
+### 🏗️ DBT Project Scaffold
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 51.1 | Generate `dbt_project.yml` from migration config | Notebook | `run_dbt_migration.py`, `output/dbt/dbt_project.yml` | Valid dbt project config with project name, version, profile, model paths |
+| 51.2 | Generate `profiles.yml` for Databricks SQL Warehouse | Notebook | `output/dbt/profiles.yml` | Connects to Databricks SQL WH via `dbt-databricks` adapter, uses Unity Catalog |
+| 51.3 | Generate `sources.yml` from `inventory.json` | Assessment | `output/dbt/models/sources.yml` | All source tables from inventory listed with correct schema + database (UC 3-level) |
+| 51.4 | Add `--target dbt` to CLI + config | Orchestrator | `run_migration.py`, `migration.yaml` | `--target dbt\|pyspark\|auto\|fabric\|databricks` accepted; `dbt` routes to new generator |
+| 51.5 | Target router: `auto` mode | Assessment | `run_migration.py`, `run_dbt_migration.py` | Simple/Medium → DBT, Complex/Custom → PySpark; router reads `complexity` from inventory |
+| 51.6 | DBT project directory structure | Notebook | `output/dbt/` | `models/staging/`, `models/intermediate/`, `models/marts/`, `macros/`, `tests/`, `seeds/` |
+| 51.7 | Create `dbt_template.sql` base model template | Notebook | `templates/dbt_template.sql` | Jinja + SQL template with `{{ config() }}`, `{{ source() }}`, `{{ ref() }}` |
+| 51.8 | Environment resolver for DBT | Orchestrator | `run_dbt_migration.py` | Resolves UC catalog, SQL WH endpoint, auth token from env/config |
+
+**Sprint 51 Exit Criteria:**
+- [ ] `informatica-to-fabric run --target dbt` generates valid `dbt_project.yml` + `profiles.yml`
+- [ ] Auto-router correctly splits 6 sample mappings (3 simple → DBT, 3 complex → PySpark)
+- [ ] `sources.yml` lists all tables from `inventory.json`
+- [ ] 1,010+ tests passing
+
+---
+
+## Sprint 52 — Core DBT Model Generation
+
+**Goal:** Convert the 6 most common Informatica transformation types to DBT SQL models.
+
+### 📐 Transformation → DBT SQL Models
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 52.1 | **SQ (Source Qualifier) → staging model** | Notebook | `output/dbt/models/staging/stg_*.sql` | `SELECT * FROM {{ source('bronze', 'table') }}` with column selection + optional WHERE |
+| 52.2 | **EXP (Expression) → SELECT with CASE/functions** | Notebook | `output/dbt/models/intermediate/int_*.sql` | `CASE WHEN`, `COALESCE`, `CAST`, `CONCAT`, `UPPER/LOWER`, date functions |
+| 52.3 | **FIL (Filter) → WHERE clause** | Notebook | model SQL | Filter condition appended as `WHERE` in downstream model |
+| 52.4 | **AGG (Aggregator) → GROUP BY** | Notebook | model SQL | `SELECT group_cols, SUM(), COUNT(), AVG(), MAX(), MIN() ... GROUP BY` |
+| 52.5 | **LKP (Lookup) → LEFT JOIN or CTE** | Notebook | model SQL | `LEFT JOIN {{ ref('dim_lookup') }} ON key = key` with optional `WHERE lookup.key IS NOT NULL` |
+| 52.6 | **SRT (Sorter) → ORDER BY** | Notebook | model SQL | `ORDER BY` in final SELECT or `{{ config(sort='col') }}` on Delta |
+| 52.7 | **Multi-transform chaining** | Notebook | `run_dbt_migration.py` | SQ → EXP → FIL → LKP → AGG chain produces layered models: `stg_` → `int_` → `mart_` |
+| 52.8 | **Column lineage in model comments** | Notebook | model SQL | `-- Source: M_LOAD_CUSTOMERS.EXP_DERIVE.full_name → CONCAT(first_name, last_name)` |
+
+**Transformation Mapping Reference:**
+
+| Informatica Transform | DBT SQL Pattern | Layer |
+|----------------------|-----------------|-------|
+| Source Qualifier (SQ) | `SELECT cols FROM {{ source() }}` | `staging/stg_*` |
+| Expression (EXP) | `SELECT CASE/CONCAT/CAST/COALESCE` | `intermediate/int_*` |
+| Filter (FIL) | `WHERE condition` | inline in model |
+| Aggregator (AGG) | `GROUP BY cols` + aggregate functions | `intermediate/int_*` or `marts/` |
+| Lookup (LKP) | `LEFT JOIN {{ ref() }} ON keys` | `intermediate/int_*` |
+| Sorter (SRT) | `ORDER BY` or Delta `{{ config(sort=) }}` | inline in model |
+
+**Sprint 52 Exit Criteria:**
+- [ ] 6 Informatica transforms generate valid DBT SQL
+- [ ] `M_LOAD_CUSTOMERS` produces `stg_load_customers.sql` → `int_load_customers.sql`
+- [ ] `dbt compile` succeeds on generated project (with mock adapter)
+- [ ] 1,040+ tests passing
+
+---
+
+## Sprint 53 — Advanced DBT Model Generation
+
+**Goal:** Handle remaining transformation types and complex patterns in DBT.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 53.1 | **JNR (Joiner) → JOIN model** | Notebook | model SQL | `INNER/LEFT/RIGHT/FULL JOIN` with correct ON conditions |
+| 53.2 | **UNI (Union) → UNION ALL** | Notebook | model SQL | Multiple `{{ ref() }}` combined with `UNION ALL` |
+| 53.3 | **RNK (Rank) → WINDOW functions** | Notebook | model SQL | `ROW_NUMBER() / RANK() / DENSE_RANK() OVER (PARTITION BY ... ORDER BY ...)` |
+| 53.4 | **RTR (Router) → conditional models** | Notebook | multiple models | Each router group becomes a separate model with specific WHERE filter |
+| 53.5 | **NRM (Normalizer) → LATERAL FLATTEN** | Notebook | model SQL | `LATERAL VIEW EXPLODE()` or Databricks `LATERAL FLATTEN` syntax |
+| 53.6 | **SEQ (Sequence Generator) → ROW_NUMBER()** | Notebook | model SQL | `ROW_NUMBER() OVER (ORDER BY monotonic_key)` as surrogate key |
+| 53.7 | **MPLT (Mapplet) → dbt macro** | Notebook | `macros/` | Reusable mapplet logic as Jinja macro `{% macro mapplet_name(args) %}` |
+| 53.8 | **Complexity fallback** | Orchestrator | `run_dbt_migration.py` | Transforms that cannot be expressed in SQL (Java TX, Custom TX, HTTP TX) emit a warning + fallback to PySpark |
+
+**Sprint 53 Exit Criteria:**
+- [ ] 13 core transformation types generate valid DBT SQL
+- [ ] Router produces separate models per group
+- [ ] Mapplets generate reusable macros
+- [ ] Unsupported transforms produce PySpark fallback + warning
+- [ ] 1,070+ tests passing
+
+---
+
+## Sprint 54 — SQL Dialect Conversion for DBT
+
+**Goal:** Extend the SQL migration agent to emit Databricks SQL (instead of Spark SQL) for DBT models.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 54.1 | **Oracle → Databricks SQL** function mapping | SQL | `run_sql_migration.py` | `NVL→COALESCE`, `DECODE→CASE`, `SYSDATE→CURRENT_TIMESTAMP()`, `TO_CHAR→DATE_FORMAT`, `TRUNC→DATE_TRUNC`, `ROWNUM→ROW_NUMBER()` |
+| 54.2 | **SQL Server → Databricks SQL** | SQL | `run_sql_migration.py` | `ISNULL→COALESCE`, `GETDATE→CURRENT_TIMESTAMP`, `TOP N→LIMIT N`, `DATEADD→DATE_ADD`, `CONVERT→CAST` |
+| 54.3 | **Teradata → Databricks SQL** | SQL | `run_sql_migration.py` | `QUALIFY→subquery`, `SEL→SELECT`, `SAMPLE→LIMIT`, `FORMAT→DATE_FORMAT` |
+| 54.4 | **DB2 → Databricks SQL** | SQL | `run_sql_migration.py` | `FETCH FIRST→LIMIT`, `VALUE→COALESCE`, `DIGITS→CAST` |
+| 54.5 | **Pre/post session SQL → dbt hooks** | SQL | model config | `{{ config(pre_hook="...", post_hook="...") }}` |
+| 54.6 | **SQL overrides → custom SQL in model** | SQL | model SQL | Source Qualifier SQL overrides embedded directly in `stg_` model |
+| 54.7 | **Stored procedure → dbt run-operation** | SQL | `macros/operations/` | Complex SPs → operational macros invoked via `dbt run-operation sp_name` |
+
+**Sprint 54 Exit Criteria:**
+- [ ] All 6 source databases produce valid Databricks SQL
+- [ ] Pre/post SQL mapped to dbt hooks
+- [ ] SQL overrides embedded in staging models
+- [ ] 1,100+ tests passing
+
+---
+
+## Sprint 55 — DBT Testing & Validation Integration
+
+**Goal:** Map the existing 5-level validation framework to dbt's native testing system.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 55.1 | **L1 (Schema) → schema.yml tests** | Validation | `output/dbt/models/schema.yml` | `not_null`, `unique`, `accepted_values` tests per column |
+| 55.2 | **L2 (Row Count) → custom data test** | Validation | `output/dbt/tests/assert_row_count_*.sql` | `SELECT CASE WHEN ABS(src - tgt) > threshold THEN 1 END` |
+| 55.3 | **L3 (Checksum) → custom data test** | Validation | `output/dbt/tests/assert_checksum_*.sql` | Hash-based row comparison between source and target |
+| 55.4 | **L4 (Transform) → custom data test** | Validation | `output/dbt/tests/assert_transform_*.sql` | Business rule verification (e.g., `full_name = CONCAT(first, last)`) |
+| 55.5 | **L5 (Performance) → dbt meta tag** | Validation | `schema.yml` | `meta: { sla_seconds: 300 }` tag for performance expectation |
+| 55.6 | **Test generator integration** | Validation | `run_validation.py` | `--target dbt` generates `.yml` + `.sql` tests instead of PySpark validation notebooks |
+| 55.7 | **dbt test result → validation report** | Validation | `output/validation/` | Parse `dbt test` JSON output → standard validation report format |
+
+**Validation Mapping:**
+
+| Level | PySpark (existing) | DBT (new) |
+|-------|-------------------|-----------|
+| L1 Schema | Compare DataFrame schemas | `schema.yml`: `not_null`, `unique`, `accepted_values`, custom `data_type` |
+| L2 Row Count | `df.count()` comparison | `tests/assert_row_count_*.sql` |
+| L3 Checksum | `md5(concat_ws)` comparison | `tests/assert_checksum_*.sql` with `MD5(CONCAT_WS())` |
+| L4 Transform | Custom PySpark assertions | `tests/assert_transform_*.sql` with business logic |
+| L5 Performance | Spark UI / execution time | `meta: { sla_seconds }` + dbt Cloud monitoring |
+
+**Sprint 55 Exit Criteria:**
+- [ ] L1–L4 validation levels mapped to dbt tests
+- [ ] `dbt test` produces pass/fail matching PySpark validation output
+- [ ] Validation report generator parses dbt JSON results
+- [ ] 1,130+ tests passing
+
+---
+
+## Sprint 56 — DBT Macros, Incremental Models & Snapshots
+
+**Goal:** Handle advanced dbt patterns — reusable macros, incremental loads, and SCD Type 2 via snapshots.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 56.1 | **Reusable transformation macros** | Notebook | `output/dbt/macros/` | Common patterns as Jinja macros: `clean_string()`, `safe_divide()`, `hash_key()`, `surrogate_key()` |
+| 56.2 | **Incremental models** | Notebook | model config | `{{ config(materialized='incremental', unique_key='id', incremental_strategy='merge') }}` |
+| 56.3 | **SCD Type 2 → dbt snapshot** | Notebook | `output/dbt/snapshots/` | `{% snapshot snp_dim_customer %}` with `strategy='timestamp'` or `check` |
+| 56.4 | **Pre/post hooks** | Notebook | model config | `pre_hook: ["OPTIMIZE table"]`, `post_hook: ["ANALYZE TABLE table"]` |
+| 56.5 | **Seeds for reference data** | Notebook | `output/dbt/seeds/` | Small lookup tables → CSV seeds with `dbt seed` |
+| 56.6 | **dbt packages (deps)** | Notebook | `output/dbt/packages.yml` | Auto-add `dbt-utils`, `dbt-expectations`, `dbt-databricks-utils` when needed |
+| 56.7 | **Mapping UPD strategy → incremental** | Notebook | `run_dbt_migration.py` | `DD_INSERT` → append, `DD_UPDATE` → merge, `DD_DELETE` → soft delete, `DD_REJECT` → filter |
+
+**Materialization Decision Matrix:**
+
+| Informatica Pattern | dbt Materialization | Strategy |
+|--------------------|--------------------|----|
+| Full load (overwrite) | `table` | Full refresh |
+| Append only | `incremental` | `append` |
+| Upsert (MERGE) | `incremental` | `merge` (unique_key) |
+| SCD Type 2 | `snapshot` | `timestamp` or `check` |
+| Lookup / dimension | `table` | Full refresh (small) |
+| Aggregate / mart | `table` or `incremental` | Based on volume |
+
+**Sprint 56 Exit Criteria:**
+- [ ] Incremental models with MERGE strategy generated
+- [ ] SCD2 mappings produce dbt snapshots
+- [ ] 5+ reusable macros generated
+- [ ] `dbt deps` installs required packages
+- [ ] 1,160+ tests passing
+
+---
+
+## Sprint 57 — Orchestration: Databricks Workflows with DBT Tasks
+
+**Goal:** Generate Databricks Workflows that mix dbt tasks and notebook tasks in a single pipeline.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 57.1 | **dbt task in Databricks Workflow** | Pipeline | `output/pipelines/PL_*.json` | `"dbt_task": { "commands": ["dbt run --select model_name"], "project_directory": "/Repos/..." }` |
+| 57.2 | **Mixed pipeline generation** | Pipeline | `run_pipeline_migration.py` | Workflow with both `notebook_task` (complex) and `dbt_task` (simple) steps |
+| 57.3 | **Dependency ordering** | Pipeline | `run_pipeline_migration.py` | dbt `{{ ref() }}` dependencies → Workflow task dependencies |
+| 57.4 | **dbt deps + seed pre-task** | Pipeline | `output/pipelines/PL_*.json` | First task in workflow: `dbt deps && dbt seed` |
+| 57.5 | **dbt Cloud job trigger** | Pipeline | `output/pipelines/PL_*.json` | Alternative: trigger dbt Cloud job via API (for dbt Cloud customers) |
+| 57.6 | **Schedule conversion** | Pipeline | `output/pipelines/PL_*.json` | Informatica schedule → Workflow cron trigger (same as existing) |
+| 57.7 | **SQL Warehouse config in workflow** | Pipeline | `output/pipelines/PL_*.json` | dbt tasks reference SQL Warehouse ID; notebook tasks reference cluster |
+
+**Pipeline Generation Example:**
+
+```json
+{
+  "name": "PL_WF_DAILY_SALES_LOAD",
+  "tasks": [
+    {
+      "task_key": "dbt_deps_seed",
+      "dbt_task": {
+        "commands": ["dbt deps", "dbt seed"],
+        "project_directory": "/Repos/migration/dbt_project",
+        "warehouse_id": "abc123"
+      }
+    },
+    {
+      "task_key": "stg_orders",
+      "depends_on": [{"task_key": "dbt_deps_seed"}],
+      "dbt_task": {
+        "commands": ["dbt run --select stg_orders"],
+        "project_directory": "/Repos/migration/dbt_project",
+        "warehouse_id": "abc123"
+      }
+    },
+    {
+      "task_key": "NB_M_COMPLEX_PLSQL",
+      "depends_on": [{"task_key": "stg_orders"}],
+      "notebook_task": {
+        "notebook_path": "/Repos/migration/notebooks/NB_M_COMPLEX_PLSQL",
+        "base_parameters": {"load_date": "{{job.trigger_time.iso_date}}"}
+      },
+      "new_cluster": { "spark_version": "14.3.x-scala2.12", "num_workers": 4 }
+    },
+    {
+      "task_key": "mart_daily_sales",
+      "depends_on": [{"task_key": "NB_M_COMPLEX_PLSQL"}],
+      "dbt_task": {
+        "commands": ["dbt run --select mart_daily_sales"],
+        "project_directory": "/Repos/migration/dbt_project",
+        "warehouse_id": "abc123"
+      }
+    },
+    {
+      "task_key": "dbt_test",
+      "depends_on": [{"task_key": "mart_daily_sales"}],
+      "dbt_task": {
+        "commands": ["dbt test --select mart_daily_sales"],
+        "project_directory": "/Repos/migration/dbt_project",
+        "warehouse_id": "abc123"
+      }
+    }
+  ],
+  "schedule": {
+    "quartz_cron_expression": "0 0 2 * * ?",
+    "timezone_id": "UTC"
+  }
+}
+```
+
+**Sprint 57 Exit Criteria:**
+- [ ] Databricks Workflows with `dbt_task` type generated
+- [ ] Mixed pipelines (dbt + notebook) produce valid JSON
+- [ ] Task dependencies respect `{{ ref() }}` ordering
+- [ ] 1,190+ tests passing
+
+---
+
+## Sprint 58 — DBT Deployment & Docs
+
+**Goal:** Deploy generated dbt project to Databricks, integrate with Git/Repos, and generate lineage documentation.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 58.1 | **`deploy_dbt_project.py`** | Orchestrator | `deploy_dbt_project.py` | Deploys dbt project to Databricks Repos via API, validates structure |
+| 58.2 | **Databricks Repos integration** | Orchestrator | `deploy_dbt_project.py` | Git push → Databricks Repos sync; supports GitHub, Azure DevOps, GitLab |
+| 58.3 | **CI/CD pipeline template** | Orchestrator | `output/dbt/.github/workflows/dbt_ci.yml` | GitHub Actions: `dbt deps → dbt build → dbt test → dbt docs generate` |
+| 58.4 | **dbt docs generation** | Notebook | `output/dbt/` | `dbt docs generate` produces `catalog.json` + `manifest.json` for lineage |
+| 58.5 | **Lineage comparison report** | Validation | `output/validation/` | Compare Informatica DAG vs dbt DAG — validate all paths preserved |
+| 58.6 | **Profile-per-environment** | Orchestrator | `output/dbt/profiles.yml` | dev / staging / prod profiles targeting different SQL Warehouses |
+| 58.7 | **PyPI optional dependency** | Orchestrator | `pyproject.toml` | `informatica-to-fabric[dbt]` installs `dbt-core>=1.7`, `dbt-databricks>=1.7` |
+
+**Sprint 58 Exit Criteria:**
+- [ ] dbt project deploys to Databricks Repos
+- [ ] CI/CD pipeline runs `dbt build` + `dbt test` successfully
+- [ ] Lineage comparison validates DAG preservation
+- [ ] 1,210+ tests passing
+
+---
+
+## Sprint 59 — Integration Testing & Benchmarks
+
+**Goal:** End-to-end testing of the DBT target with real-world mappings, auto-mode routing, and performance comparison.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 59.1 | **E2E dbt target tests** | Validation | `tests/test_dbt_target.py` | Full pipeline: XML → inventory → dbt models → `dbt compile` → validate |
+| 59.2 | **Auto-mode integration tests** | Validation | `tests/test_auto_target.py` | Mixed output: some mappings → dbt, some → PySpark; unified pipeline |
+| 59.3 | **dbt vs PySpark comparison** | Validation | `tests/benchmarks/` | Same mapping converted to both; output equivalence verified |
+| 59.4 | **Regression snapshots** | Validation | `tests/snapshots/dbt/` | Golden-file comparison for all generated dbt models |
+| 59.5 | **Model count validation** | Validation | `tests/test_dbt_target.py` | Assert: # models = # simple/medium mappings; # notebooks = # complex mappings |
+| 59.6 | **Error handling tests** | Validation | `tests/test_dbt_target.py` | Graceful fallback when mapping cannot be expressed in SQL |
+| 59.7 | **Cross-reference validation** | Validation | `tests/test_dbt_target.py` | `{{ ref() }}` references resolve correctly across all generated models |
+
+**Sprint 59 Exit Criteria:**
+- [ ] 100+ dbt-specific tests passing
+- [ ] Auto-mode produces correct split for all sample mappings
+- [ ] Regression snapshots stable across consecutive runs
+- [ ] 1,250+ tests passing
+
+---
+
+## Sprint 60 — Release, Documentation & Phase 4 Wrap-Up
+
+**Goal:** Complete Phase 4 — documentation, ADRs, packaging, and dashboard update for DBT support.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 60.1 | **Phase 4 documentation** | All | `docs/USER_GUIDE.md`, `README.md` | Full DBT target docs: setup, config, model structure, testing, deployment |
+| 60.2 | **ADR: DBT as migration target** | All | `docs/ADR/004-dbt-target.md` | Decision rationale, alternatives considered, trade-offs documented |
+| 60.3 | **ADR: Auto-mode target routing** | All | `docs/ADR/005-auto-target-routing.md` | Complexity-based routing logic, thresholds, override mechanism |
+| 60.4 | **AGENTS.md update** | All | `AGENTS.md` | Notebook agent description updated for dual output (DBT + PySpark) |
+| 60.5 | **Web UI + dashboard update** | Orchestrator | `web/app.py`, `dashboard.py` | Target selector includes `dbt`, `pyspark`, `auto`; dashboard shows split |
+| 60.6 | **Migration wizard: target recommendation** | Assessment | `web/app.py` | Wizard recommends target per mapping with rationale |
+| 60.7 | **Presentation material** | All | `generate_pptx_*.py` | Slides updated with real DBT output examples |
+| 60.8 | **Phase 4 release** | Orchestrator | `pyproject.toml` | Version bump, `[dbt]` extra published to PyPI |
+
+**Sprint 60 Exit Criteria:**
+- [ ] All documentation reflects DBT target
+- [ ] 2 new ADRs for Phase 4 decisions
+- [ ] `pip install informatica-to-fabric[dbt]` works
+- [ ] Web UI supports DBT target selection
+- [ ] 1,280+ total tests passing
+- [ ] `--target auto` is the default recommended mode
+
+---
+
+## Phase 4 Sprint Summary
+
+```mermaid
+pie title Phase 4 Sprint Effort Distribution
+    "Sprint 51 — Foundation & Router" : 15
+    "Sprint 52 — Core Models (6 TX)" : 20
+    "Sprint 53 — Advanced Models (7 TX)" : 20
+    "Sprint 54 — SQL Dialect" : 15
+    "Sprint 55 — Testing & Validation" : 15
+    "Sprint 56 — Macros & Incremental" : 15
+    "Sprint 57 — Orchestration (Mixed)" : 20
+    "Sprint 58 — Deployment & Docs" : 15
+    "Sprint 59 — Integration Tests" : 15
+    "Sprint 60 — Release & Docs" : 10
+```
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **51** | Orchestrator, Assessment, Notebook | `dbt_project.yml`, `profiles.yml`, `sources.yml`, `--target dbt\|auto` CLI, target router | ✅ Complete |
+| **52** | Notebook, SQL | 6 core transforms → DBT SQL models (`stg_`, `int_`, `mart_`) | ✅ Complete |
+| **53** | Notebook | 7 advanced transforms → DBT SQL, macros for mapplets, complexity fallback | ✅ Complete |
+| **54** | SQL | Oracle/SQL Server/Teradata/DB2 → Databricks SQL for dbt, hooks, SQL overrides | ✅ Complete |
+| **55** | Validation | L1–L5 validation → `schema.yml` + custom data tests, dbt test result parser | ✅ Complete |
+| **56** | Notebook | Reusable macros, incremental models (MERGE), SCD2 snapshots, seeds, packages | ✅ Complete |
+| **57** | Pipeline | Databricks Workflows with `dbt_task` + `notebook_task` mixed, dbt Cloud option | ✅ Complete |
+| **58** | Orchestrator, Validation | `deploy_dbt_project.py`, Databricks Repos, CI/CD template, lineage docs | ✅ Complete |
+| **59** | Validation | 117 Phase 3-5 tests, auto-mode integration, E2E dbt project generation | ✅ Complete |
+| **60** | All | Phase 4 docs, dashboard update, release | ✅ Complete |
+
+## Phase 4 Critical Path
+
+```mermaid
+flowchart LR
+    S51["Sprint 51\nFoundation\n& Router"] --> S52["Sprint 52\nCore Models\n(6 TX)"]
+    S52 --> S53["Sprint 53\nAdvanced Models\n(7 TX)"]
+    S51 --> S54["Sprint 54\nSQL Dialect\nConversion"]
+    S53 --> S55["Sprint 55\nDBT Testing\n& Validation"]
+    S54 --> S55
+    S53 --> S56["Sprint 56\nMacros &\nIncremental"]
+    S56 --> S57["Sprint 57\nOrchestration\n(Mixed Pipelines)"]
+    S55 --> S57
+    S57 --> S58["Sprint 58\nDeployment\n& Docs"]
+    S58 --> S59["Sprint 59\nIntegration\nTests"]
+    S59 --> S60["Sprint 60\nRelease"]
+
+    style S51 fill:#FF694B,color:#fff
+    style S52 fill:#FF694B,color:#fff
+    style S53 fill:#FF694B,color:#fff
+    style S54 fill:#8E44AD,color:#fff
+    style S55 fill:#C0392B,color:#fff
+    style S56 fill:#FF694B,color:#fff
+    style S57 fill:#2980B9,color:#fff
+    style S58 fill:#0078D4,color:#fff
+    style S59 fill:#C0392B,color:#fff
+    style S60 fill:#27AE60,color:#fff
+```
+
+## New Files Created in Phase 4
+
+| File | Purpose | Sprint |
+|------|---------|--------|
+| `run_dbt_migration.py` | DBT model generator (core engine) | 51 |
+| `templates/dbt_template.sql` | Base dbt model template (Jinja + SQL) | 51 |
+| `deploy_dbt_project.py` | Deploy dbt project to Databricks Repos | 58 |
+| `output/dbt/dbt_project.yml` | Generated dbt project config | 51 |
+| `output/dbt/profiles.yml` | Databricks SQL Warehouse connection | 51 |
+| `output/dbt/models/sources.yml` | Source table definitions from inventory | 51 |
+| `output/dbt/models/staging/stg_*.sql` | Staging models (1:1 with sources) | 52 |
+| `output/dbt/models/intermediate/int_*.sql` | Intermediate transforms | 52–53 |
+| `output/dbt/models/marts/mart_*.sql` | Final business entities | 52–53 |
+| `output/dbt/macros/*.sql` | Reusable Jinja macros | 53, 56 |
+| `output/dbt/snapshots/snp_*.sql` | SCD Type 2 snapshots | 56 |
+| `output/dbt/seeds/*.csv` | Reference data as CSV | 56 |
+| `output/dbt/tests/*.sql` | Custom data tests (L2–L4) | 55 |
+| `output/dbt/models/schema.yml` | Column tests + docs | 55 |
+| `output/dbt/packages.yml` | dbt package dependencies | 56 |
+| `output/dbt/.github/workflows/dbt_ci.yml` | CI/CD pipeline template | 58 |
+| `tests/test_dbt_target.py` | DBT target unit tests | 59 |
+| `tests/test_auto_target.py` | Auto-mode routing tests | 59 |
+| `docs/ADR/004-dbt-target.md` | Architecture Decision Record | 60 |
+| `docs/ADR/005-auto-target-routing.md` | Architecture Decision Record | 60 |
+
+---
+
+# Phase 5 — AutoSys JIL Migration (Sprints 61–65)
+
+Many enterprise environments schedule Informatica workflows through **CA AutoSys Workload Automation** (JIL — Job Information Language). Phase 5 adds first-class support for parsing AutoSys JIL definitions and converting them into Fabric Data Pipeline triggers or Databricks Workflow schedules, preserving job dependencies, conditions, calendars, and alert/notification chains.
+
+## Sprint 61 — AutoSys JIL Parser & Inventory
+
+**Goal:** Parse AutoSys JIL files, extract job definitions, build dependency graph, and enrich workflow inventory with AutoSys metadata.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 61.1 | **JIL lexer/parser** | Assessment | `run_autosys_migration.py` | Parses `insert_job`, `job_type`, `box_name`, `command`, `condition`, `std_out_file`, `std_err_file`, `date_conditions`, `start_times`, `start_mins`, `days_of_week`, `run_calendar`, `alarm_if_fail`, `profile`, `machine`, `owner` |
+| 61.2 | **Job type classifier** | Assessment | `run_autosys_migration.py` | Classifies: `CMD` (command), `BOX` (container), `FW` (file watcher), `FT` (file trigger) |
+| 61.3 | **Dependency graph builder** | Assessment | `run_autosys_migration.py` | Builds DAG from `condition` attributes (`s(job)`, `n(job)`, `f(job)`, `d(job)`) |
+| 61.4 | **Calendar resolver** | Assessment | `run_autosys_migration.py` | Converts AutoSys `run_calendar` + `start_times` + `days_of_week` → standard cron expressions |
+| 61.5 | **Inventory enrichment** | Assessment | `run_assessment.py` | Links AutoSys jobs to Informatica workflows via `command` field pattern matching (`pmcmd startworkflow`) |
+| 61.6 | **Sample JIL fixtures** | All | `input/autosys/` | 3+ sample JIL files covering CMD, BOX, FW jobs with conditions |
+| 61.7 | **CLI integration** | Orchestrator | `run_migration.py` | `--autosys-dir` flag, new Phase in PHASES list |
+| 61.8 | **Unit tests** | Validation | `tests/test_autosys.py` | 50+ tests covering parser, classifier, DAG, calendar, cron conversion |
+
+**Sprint 61 Exit Criteria:**
+- [ ] JIL parser handles all standard job attributes
+- [ ] Job dependency DAG is accurate for BOX/CMD/FW hierarchies
+- [ ] AutoSys schedules → cron expressions with ≥90% accuracy
+- [ ] `pmcmd` commands linked to Informatica workflows in inventory
+- [ ] 50+ tests passing
+
+## Sprint 62 — AutoSys → Pipeline/Workflow Conversion
+
+**Goal:** Convert AutoSys job chains into Fabric Data Pipeline or Databricks Workflow definitions, preserving dependency order, conditions, and error handling.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 62.1 | **BOX → Pipeline/Workflow** | Pipeline | `run_autosys_migration.py` | Each AutoSys BOX becomes a Fabric Pipeline or Databricks Workflow with child activities |
+| 62.2 | **CMD → Notebook Activity** | Pipeline | `run_autosys_migration.py` | `pmcmd startworkflow` → Notebook activity; generic commands → Script activity |
+| 62.3 | **Condition → dependsOn** | Pipeline | `run_autosys_migration.py` | `s(job)` → Succeeded, `f(job)` → Failed, `n(job)` → Completed, `d(job)` → skipped annotation |
+| 62.4 | **File Watcher → trigger/sensor** | Pipeline | `run_autosys_migration.py` | FW/FT jobs → Fabric event trigger or Databricks file arrival sensor |
+| 62.5 | **Alarm → notification** | Pipeline | `run_autosys_migration.py` | `alarm_if_fail` / `send_notification` → email/webhook activity on failure |
+| 62.6 | **Cross-box dependencies** | Pipeline | `run_autosys_migration.py` | Dependencies spanning multiple BOXes → Execute Pipeline / Run Job references |
+| 62.7 | **Tests** | Validation | `tests/test_autosys.py` | 30+ conversion tests |
+
+## Sprint 63 — Calendar, Profile & Machine Mapping
+
+**Goal:** Handle enterprise AutoSys features — custom calendars, machine/profile mapping, global variables, and job overrides.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 63.1 | **Custom calendar parsing** | Assessment | `run_autosys_migration.py` | Parse `insert_calendar` definitions, resolve `run_calendar` references |
+| 63.2 | **Calendar → Pipeline schedule** | Pipeline | `run_autosys_migration.py` | Complex calendars (business days, holidays) → schedule annotations + recommended cron |
+| 63.3 | **Machine/profile → cluster config** | Assessment | `run_autosys_migration.py` | `machine`/`profile` → Databricks cluster pool or Fabric capacity annotations |
+| 63.4 | **Global variable extraction** | Assessment | `run_autosys_migration.py` | AutoSys global variables → pipeline parameters |
+| 63.5 | **Override/force-start handling** | Pipeline | `run_autosys_migration.py` | `job_type: OVERRIDE` patterns → documented annotations |
+| 63.6 | **Tests** | Validation | `tests/test_autosys.py` | 20+ calendar/profile tests |
+
+## Sprint 64 — Integration & End-to-End Validation
+
+**Goal:** Full end-to-end AutoSys migration with real-world JIL files, cross-validation with Informatica inventory, and reporting.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 64.1 | **E2E pipeline: JIL → inventory → pipelines** | Orchestrator | `tests/test_autosys.py` | Full flow from JIL → enriched inventory → generated pipelines |
+| 64.2 | **Unlinked job detection** | Validation | `run_autosys_migration.py` | Jobs that call `pmcmd` but no matching workflow → `migration_issues.md` warning |
+| 64.3 | **Coverage report** | Assessment | `run_autosys_migration.py` | Summary: X jobs parsed, Y linked to workflows, Z converted to pipelines |
+| 64.4 | **Dashboard integration** | Orchestrator | `dashboard.py` | AutoSys job count, linkage %, schedule conversion stats |
+| 64.5 | **Tests** | Validation | `tests/test_autosys.py` | 20+ E2E tests |
+
+## Sprint 65 — Documentation & Release
+
+**Goal:** Complete docs, ADR, and release for AutoSys support.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 65.1 | **User Guide update** | All | `docs/USER_GUIDE.md` | AutoSys section: export JIL, placement, CLI flags, output structure |
+| 65.2 | **README update** | All | `README.md` | AutoSys in "What Gets Migrated", supported sources table, quick start |
+| 65.3 | **AGENTS.md update** | All | `AGENTS.md` | Assessment agent updated for AutoSys parsing |
+| 65.4 | **ADR: AutoSys JIL migration** | All | `docs/ADR/006-autosys-jil-migration.md` | Decision rationale, JIL attribute coverage, limitations |
+| 65.5 | **MIGRATION_PLAN update** | All | `MIGRATION_PLAN.md` | AutoSys phase added to migration strategy |
+| 65.6 | **Phase 5 release** | Orchestrator | `pyproject.toml` | Version bump, all tests passing |
+
+## Phase 5 Sprint Summary
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **61** | Assessment, Orchestrator | JIL parser, dependency DAG, cron converter, CLI `--autosys-dir` | ✅ Complete |
+| **62** | Pipeline | BOX→Pipeline, CMD→Activity, condition→dependsOn, alarm activities | ✅ Complete |
+| **63** | Assessment, Pipeline | Calendar parsing, machine→cluster mapping, global variable extraction | ✅ Complete |
+| **64** | Orchestrator, Validation | Coverage report, linkage rate, schedule coverage, conversion rate | ✅ Complete |
+| **65** | All | Docs, test updates, DEVELOPMENT_PLAN, CONTRIBUTING, AGENTS update | ✅ Complete |

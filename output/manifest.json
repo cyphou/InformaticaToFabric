@@ -1,0 +1,801 @@
+{
+  "schema_version": "2.0",
+  "generated": "2026-04-02T12:28:15.097380+00:00",
+  "targets": [
+    "databricks",
+    "dbt"
+  ],
+  "total_mappings": 16,
+  "total_workflows": 13,
+  "artifacts": {
+    "notebooks": {
+      "count": 17,
+      "total_bytes": 41096,
+      "files": [
+        {
+          "name": ".gitkeep",
+          "file": ".gitkeep",
+          "path": "output\\notebooks\\.gitkeep",
+          "size_bytes": 71,
+          "target": "databricks",
+          "deploy_order": 1
+        },
+        {
+          "name": "NB_DQ_STANDARDIZE_ADDRESSES",
+          "file": "NB_DQ_STANDARDIZE_ADDRESSES.py",
+          "path": "output\\notebooks\\NB_DQ_STANDARDIZE_ADDRESSES.py",
+          "size_bytes": 1301,
+          "target": "databricks",
+          "deploy_order": 2
+        },
+        {
+          "name": "NB_DQ_VALIDATE_EMAILS",
+          "file": "NB_DQ_VALIDATE_EMAILS.py",
+          "path": "output\\notebooks\\NB_DQ_VALIDATE_EMAILS.py",
+          "size_bytes": 1283,
+          "target": "databricks",
+          "deploy_order": 3
+        },
+        {
+          "name": "NB_m_cdc_order_pipeline",
+          "file": "NB_m_cdc_order_pipeline.py",
+          "path": "output\\notebooks\\NB_m_cdc_order_pipeline.py",
+          "size_bytes": 4616,
+          "target": "databricks",
+          "deploy_order": 4
+        },
+        {
+          "name": "NB_M_COMPLEX_MULTI_SOURCE",
+          "file": "NB_M_COMPLEX_MULTI_SOURCE.py",
+          "path": "output\\notebooks\\NB_M_COMPLEX_MULTI_SOURCE.py",
+          "size_bytes": 4182,
+          "target": "databricks",
+          "deploy_order": 5
+        },
+        {
+          "name": "NB_m_customer_360",
+          "file": "NB_m_customer_360.py",
+          "path": "output\\notebooks\\NB_m_customer_360.py",
+          "size_bytes": 4903,
+          "target": "databricks",
+          "deploy_order": 6
+        },
+        {
+          "name": "NB_m_customer_activity_log",
+          "file": "NB_m_customer_activity_log.py",
+          "path": "output\\notebooks\\NB_m_customer_activity_log.py",
+          "size_bytes": 1975,
+          "target": "databricks",
+          "deploy_order": 7
+        },
+        {
+          "name": "NB_m_inventory_snapshot",
+          "file": "NB_m_inventory_snapshot.py",
+          "path": "output\\notebooks\\NB_m_inventory_snapshot.py",
+          "size_bytes": 1816,
+          "target": "databricks",
+          "deploy_order": 8
+        },
+        {
+          "name": "NB_m_load_contacts",
+          "file": "NB_m_load_contacts.py",
+          "path": "output\\notebooks\\NB_m_load_contacts.py",
+          "size_bytes": 2831,
+          "target": "databricks",
+          "deploy_order": 9
+        },
+        {
+          "name": "NB_M_LOAD_CUSTOMERS",
+          "file": "NB_M_LOAD_CUSTOMERS.py",
+          "path": "output\\notebooks\\NB_M_LOAD_CUSTOMERS.py",
+          "size_bytes": 1735,
+          "target": "databricks",
+          "deploy_order": 10
+        },
+        {
+          "name": "NB_M_LOAD_EMPLOYEES",
+          "file": "NB_M_LOAD_EMPLOYEES.py",
+          "path": "output\\notebooks\\NB_M_LOAD_EMPLOYEES.py",
+          "size_bytes": 2633,
+          "target": "databricks",
+          "deploy_order": 11
+        },
+        {
+          "name": "NB_M_LOAD_ORDERS",
+          "file": "NB_M_LOAD_ORDERS.py",
+          "path": "output\\notebooks\\NB_M_LOAD_ORDERS.py",
+          "size_bytes": 2816,
+          "target": "databricks",
+          "deploy_order": 12
+        },
+        {
+          "name": "NB_m_realtime_inventory_scd2",
+          "file": "NB_m_realtime_inventory_scd2.py",
+          "path": "output\\notebooks\\NB_m_realtime_inventory_scd2.py",
+          "size_bytes": 4695,
+          "target": "databricks",
+          "deploy_order": 13
+        },
+        {
+          "name": "NB_m_sync_accounts",
+          "file": "NB_m_sync_accounts.py",
+          "path": "output\\notebooks\\NB_m_sync_accounts.py",
+          "size_bytes": 1514,
+          "target": "databricks",
+          "deploy_order": 14
+        },
+        {
+          "name": "NB_M_UPSERT_INVENTORY",
+          "file": "NB_M_UPSERT_INVENTORY.py",
+          "path": "output\\notebooks\\NB_M_UPSERT_INVENTORY.py",
+          "size_bytes": 1848,
+          "target": "databricks",
+          "deploy_order": 15
+        },
+        {
+          "name": "NB_MI_BULK_LOAD_PRODUCTS",
+          "file": "NB_MI_BULK_LOAD_PRODUCTS.py",
+          "path": "output\\notebooks\\NB_MI_BULK_LOAD_PRODUCTS.py",
+          "size_bytes": 1443,
+          "target": "databricks",
+          "deploy_order": 16
+        },
+        {
+          "name": "NB_SYNC_CUSTOMER_DATA",
+          "file": "NB_SYNC_CUSTOMER_DATA.py",
+          "path": "output\\notebooks\\NB_SYNC_CUSTOMER_DATA.py",
+          "size_bytes": 1434,
+          "target": "databricks",
+          "deploy_order": 17
+        }
+      ]
+    },
+    "dbt": {
+      "count": 4,
+      "total_bytes": 3424,
+      "files": [
+        {
+          "name": "dbt_generation_summary",
+          "file": "dbt_generation_summary.json",
+          "path": "output\\dbt\\dbt_generation_summary.json",
+          "size_bytes": 1779,
+          "target": "dbt",
+          "deploy_order": 18
+        },
+        {
+          "name": "dbt_project",
+          "file": "dbt_project.yml",
+          "path": "output\\dbt\\dbt_project.yml",
+          "size_bytes": 751,
+          "target": "dbt",
+          "deploy_order": 19
+        },
+        {
+          "name": "packages",
+          "file": "packages.yml",
+          "path": "output\\dbt\\packages.yml",
+          "size_bytes": 195,
+          "target": "dbt",
+          "deploy_order": 20
+        },
+        {
+          "name": "profiles",
+          "file": "profiles.yml",
+          "path": "output\\dbt\\profiles.yml",
+          "size_bytes": 699,
+          "target": "dbt",
+          "deploy_order": 21
+        }
+      ]
+    },
+    "pipelines": {
+      "count": 14,
+      "total_bytes": 23077,
+      "files": [
+        {
+          "name": ".gitkeep",
+          "file": ".gitkeep",
+          "path": "output\\pipelines\\.gitkeep",
+          "size_bytes": 76,
+          "target": "shared",
+          "deploy_order": 22
+        },
+        {
+          "name": "PL_AI_PROCESS_ORDER_EVENTS",
+          "file": "PL_AI_PROCESS_ORDER_EVENTS.json",
+          "path": "output\\pipelines\\PL_AI_PROCESS_ORDER_EVENTS.json",
+          "size_bytes": 2965,
+          "target": "shared",
+          "deploy_order": 23
+        },
+        {
+          "name": "PL_AI_WATCH_ORDER_FILES",
+          "file": "PL_AI_WATCH_ORDER_FILES.json",
+          "path": "output\\pipelines\\PL_AI_WATCH_ORDER_FILES.json",
+          "size_bytes": 1280,
+          "target": "shared",
+          "deploy_order": 24
+        },
+        {
+          "name": "PL_svc_create_case",
+          "file": "PL_svc_create_case.json",
+          "path": "output\\pipelines\\PL_svc_create_case.json",
+          "size_bytes": 253,
+          "target": "shared",
+          "deploy_order": 25
+        },
+        {
+          "name": "PL_svc_lookup_customer",
+          "file": "PL_svc_lookup_customer.json",
+          "path": "output\\pipelines\\PL_svc_lookup_customer.json",
+          "size_bytes": 265,
+          "target": "shared",
+          "deploy_order": 26
+        },
+        {
+          "name": "PL_svc_publish_event",
+          "file": "PL_svc_publish_event.json",
+          "path": "output\\pipelines\\PL_svc_publish_event.json",
+          "size_bytes": 259,
+          "target": "shared",
+          "deploy_order": 27
+        },
+        {
+          "name": "PL_TF_DAILY_CONTACTS_ETL",
+          "file": "PL_TF_DAILY_CONTACTS_ETL.json",
+          "path": "output\\pipelines\\PL_TF_DAILY_CONTACTS_ETL.json",
+          "size_bytes": 1751,
+          "target": "shared",
+          "deploy_order": 28
+        },
+        {
+          "name": "PL_TF_DATA_QUALITY_PIPELINE",
+          "file": "PL_TF_DATA_QUALITY_PIPELINE.json",
+          "path": "output\\pipelines\\PL_TF_DATA_QUALITY_PIPELINE.json",
+          "size_bytes": 1287,
+          "target": "shared",
+          "deploy_order": 29
+        },
+        {
+          "name": "PL_TF_NIGHTLY_ENTERPRISE_ETL",
+          "file": "PL_TF_NIGHTLY_ENTERPRISE_ETL.json",
+          "path": "output\\pipelines\\PL_TF_NIGHTLY_ENTERPRISE_ETL.json",
+          "size_bytes": 6201,
+          "target": "shared",
+          "deploy_order": 30
+        },
+        {
+          "name": "PL_TF_SUB_CUSTOMER_360",
+          "file": "PL_TF_SUB_CUSTOMER_360.json",
+          "path": "output\\pipelines\\PL_TF_SUB_CUSTOMER_360.json",
+          "size_bytes": 1262,
+          "target": "shared",
+          "deploy_order": 31
+        },
+        {
+          "name": "PL_TF_SUB_KPI_COMPUTATION",
+          "file": "PL_TF_SUB_KPI_COMPUTATION.json",
+          "path": "output\\pipelines\\PL_TF_SUB_KPI_COMPUTATION.json",
+          "size_bytes": 1194,
+          "target": "shared",
+          "deploy_order": 32
+        },
+        {
+          "name": "PL_TF_SUB_REVENUE_AGGREGATION",
+          "file": "PL_TF_SUB_REVENUE_AGGREGATION.json",
+          "path": "output\\pipelines\\PL_TF_SUB_REVENUE_AGGREGATION.json",
+          "size_bytes": 1300,
+          "target": "shared",
+          "deploy_order": 33
+        },
+        {
+          "name": "PL_WF_COMPLEX_FINANCE_ETL",
+          "file": "PL_WF_COMPLEX_FINANCE_ETL.json",
+          "path": "output\\pipelines\\PL_WF_COMPLEX_FINANCE_ETL.json",
+          "size_bytes": 3058,
+          "target": "shared",
+          "deploy_order": 34
+        },
+        {
+          "name": "PL_WF_DAILY_SALES_LOAD",
+          "file": "PL_WF_DAILY_SALES_LOAD.json",
+          "path": "output\\pipelines\\PL_WF_DAILY_SALES_LOAD.json",
+          "size_bytes": 1926,
+          "target": "shared",
+          "deploy_order": 35
+        }
+      ]
+    },
+    "sql": {
+      "count": 12,
+      "total_bytes": 37061,
+      "files": [
+        {
+          "name": ".gitkeep",
+          "file": ".gitkeep",
+          "path": "output\\sql\\.gitkeep",
+          "size_bytes": 59,
+          "target": "shared",
+          "deploy_order": 36
+        },
+        {
+          "name": "SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE",
+          "file": "SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql",
+          "path": "output\\sql\\SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql",
+          "size_bytes": 1474,
+          "target": "shared",
+          "deploy_order": 37
+        },
+        {
+          "name": "SQL_OVERRIDES_M_LOAD_EMPLOYEES",
+          "file": "SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql",
+          "path": "output\\sql\\SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql",
+          "size_bytes": 1281,
+          "target": "shared",
+          "deploy_order": 38
+        },
+        {
+          "name": "SQL_OVERRIDES_M_LOAD_ORDERS",
+          "file": "SQL_OVERRIDES_M_LOAD_ORDERS.sql",
+          "path": "output\\sql\\SQL_OVERRIDES_M_LOAD_ORDERS.sql",
+          "size_bytes": 1196,
+          "target": "shared",
+          "deploy_order": 39
+        },
+        {
+          "name": "SQL_SP_CALC_RANKINGS",
+          "file": "SQL_SP_CALC_RANKINGS.sql",
+          "path": "output\\sql\\SQL_SP_CALC_RANKINGS.sql",
+          "size_bytes": 4658,
+          "target": "shared",
+          "deploy_order": 40
+        },
+        {
+          "name": "SQL_SP_DB2_INVENTORY_REFRESH",
+          "file": "SQL_SP_DB2_INVENTORY_REFRESH.sql",
+          "path": "output\\sql\\SQL_SP_DB2_INVENTORY_REFRESH.sql",
+          "size_bytes": 3639,
+          "target": "shared",
+          "deploy_order": 41
+        },
+        {
+          "name": "SQL_SP_MYSQL_USER_ANALYTICS",
+          "file": "SQL_SP_MYSQL_USER_ANALYTICS.sql",
+          "path": "output\\sql\\SQL_SP_MYSQL_USER_ANALYTICS.sql",
+          "size_bytes": 4179,
+          "target": "shared",
+          "deploy_order": 42
+        },
+        {
+          "name": "SQL_SP_POSTGRESQL_REPORTING",
+          "file": "SQL_SP_POSTGRESQL_REPORTING.sql",
+          "path": "output\\sql\\SQL_SP_POSTGRESQL_REPORTING.sql",
+          "size_bytes": 4074,
+          "target": "shared",
+          "deploy_order": 43
+        },
+        {
+          "name": "SQL_SP_REFRESH_DASHBOARD",
+          "file": "SQL_SP_REFRESH_DASHBOARD.sql",
+          "path": "output\\sql\\SQL_SP_REFRESH_DASHBOARD.sql",
+          "size_bytes": 5529,
+          "target": "shared",
+          "deploy_order": 44
+        },
+        {
+          "name": "SQL_SP_SQLSERVER_CUSTOMER_MERGE",
+          "file": "SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql",
+          "path": "output\\sql\\SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql",
+          "size_bytes": 4694,
+          "target": "shared",
+          "deploy_order": 45
+        },
+        {
+          "name": "SQL_SP_TERADATA_CUSTOMER_STATS",
+          "file": "SQL_SP_TERADATA_CUSTOMER_STATS.sql",
+          "path": "output\\sql\\SQL_SP_TERADATA_CUSTOMER_STATS.sql",
+          "size_bytes": 2430,
+          "target": "shared",
+          "deploy_order": 46
+        },
+        {
+          "name": "SQL_SP_UPDATE_ORDER_STATS",
+          "file": "SQL_SP_UPDATE_ORDER_STATS.sql",
+          "path": "output\\sql\\SQL_SP_UPDATE_ORDER_STATS.sql",
+          "size_bytes": 3848,
+          "target": "shared",
+          "deploy_order": 47
+        }
+      ]
+    },
+    "schema": {
+      "count": 4,
+      "total_bytes": 20503,
+      "files": [
+        {
+          "name": "bronze_ddl",
+          "file": "bronze_ddl.sql",
+          "path": "output\\schema\\bronze_ddl.sql",
+          "size_bytes": 626,
+          "target": "shared",
+          "deploy_order": 48
+        },
+        {
+          "name": "gold_ddl",
+          "file": "gold_ddl.sql",
+          "path": "output\\schema\\gold_ddl.sql",
+          "size_bytes": 2130,
+          "target": "shared",
+          "deploy_order": 49
+        },
+        {
+          "name": "setup_workspace",
+          "file": "setup_workspace.py",
+          "path": "output\\schema\\setup_workspace.py",
+          "size_bytes": 11225,
+          "target": "shared",
+          "deploy_order": 50
+        },
+        {
+          "name": "silver_ddl",
+          "file": "silver_ddl.sql",
+          "path": "output\\schema\\silver_ddl.sql",
+          "size_bytes": 6522,
+          "target": "shared",
+          "deploy_order": 51
+        }
+      ]
+    },
+    "autosys": {
+      "count": 5,
+      "total_bytes": 5462,
+      "files": [
+        {
+          "name": "autosys_summary",
+          "file": "autosys_summary.json",
+          "path": "output\\autosys\\autosys_summary.json",
+          "size_bytes": 1103,
+          "target": "shared",
+          "deploy_order": 52
+        },
+        {
+          "name": "PL_AUTOSYS_BOX_DAILY_SALES_LOAD",
+          "file": "PL_AUTOSYS_BOX_DAILY_SALES_LOAD.json",
+          "path": "output\\autosys\\PL_AUTOSYS_BOX_DAILY_SALES_LOAD.json",
+          "size_bytes": 1309,
+          "target": "shared",
+          "deploy_order": 53
+        },
+        {
+          "name": "PL_AUTOSYS_BOX_FINANCE_ETL",
+          "file": "PL_AUTOSYS_BOX_FINANCE_ETL.json",
+          "path": "output\\autosys\\PL_AUTOSYS_BOX_FINANCE_ETL.json",
+          "size_bytes": 1663,
+          "target": "shared",
+          "deploy_order": 54
+        },
+        {
+          "name": "PL_AUTOSYS_CMD_CUSTOMER_SYNC",
+          "file": "PL_AUTOSYS_CMD_CUSTOMER_SYNC.json",
+          "path": "output\\autosys\\PL_AUTOSYS_CMD_CUSTOMER_SYNC.json",
+          "size_bytes": 904,
+          "target": "shared",
+          "deploy_order": 55
+        },
+        {
+          "name": "PL_AUTOSYS_FW_FINANCE_FILE",
+          "file": "PL_AUTOSYS_FW_FINANCE_FILE.json",
+          "path": "output\\autosys\\PL_AUTOSYS_FW_FINANCE_FILE.json",
+          "size_bytes": 483,
+          "target": "shared",
+          "deploy_order": 56
+        }
+      ]
+    },
+    "validation": {
+      "count": 25,
+      "total_bytes": 217994,
+      "files": [
+        {
+          "name": "test_matrix",
+          "file": "test_matrix.md",
+          "path": "output\\validation\\test_matrix.md",
+          "size_bytes": 3064,
+          "target": "shared",
+          "deploy_order": 57
+        },
+        {
+          "name": "VAL_AGG_ORDERS_BY_CUSTOMER",
+          "file": "VAL_AGG_ORDERS_BY_CUSTOMER.py",
+          "path": "output\\validation\\VAL_AGG_ORDERS_BY_CUSTOMER.py",
+          "size_bytes": 9076,
+          "target": "shared",
+          "deploy_order": 58
+        },
+        {
+          "name": "VAL_DIM_CUSTOMER",
+          "file": "VAL_DIM_CUSTOMER.py",
+          "path": "output\\validation\\VAL_DIM_CUSTOMER.py",
+          "size_bytes": 9039,
+          "target": "shared",
+          "deploy_order": 59
+        },
+        {
+          "name": "VAL_DIM_EMPLOYEE",
+          "file": "VAL_DIM_EMPLOYEE.py",
+          "path": "output\\validation\\VAL_DIM_EMPLOYEE.py",
+          "size_bytes": 9033,
+          "target": "shared",
+          "deploy_order": 60
+        },
+        {
+          "name": "VAL_DIM_INVENTORY",
+          "file": "VAL_DIM_INVENTORY.py",
+          "path": "output\\validation\\VAL_DIM_INVENTORY.py",
+          "size_bytes": 9057,
+          "target": "shared",
+          "deploy_order": 61
+        },
+        {
+          "name": "VAL_FACT_ORDERS",
+          "file": "VAL_FACT_ORDERS.py",
+          "path": "output\\validation\\VAL_FACT_ORDERS.py",
+          "size_bytes": 9038,
+          "target": "shared",
+          "deploy_order": 62
+        },
+        {
+          "name": "VAL_FACT_TXN_HIGH",
+          "file": "VAL_FACT_TXN_HIGH.py",
+          "path": "output\\validation\\VAL_FACT_TXN_HIGH.py",
+          "size_bytes": 9089,
+          "target": "shared",
+          "deploy_order": 63
+        },
+        {
+          "name": "VAL_FACT_TXN_LOW",
+          "file": "VAL_FACT_TXN_LOW.py",
+          "path": "output\\validation\\VAL_FACT_TXN_LOW.py",
+          "size_bytes": 9083,
+          "target": "shared",
+          "deploy_order": 64
+        },
+        {
+          "name": "VAL_FACT_TXN_TAGS",
+          "file": "VAL_FACT_TXN_TAGS.py",
+          "path": "output\\validation\\VAL_FACT_TXN_TAGS.py",
+          "size_bytes": 9089,
+          "target": "shared",
+          "deploy_order": 65
+        },
+        {
+          "name": "VAL_LAKEHOUSE_BRONZE",
+          "file": "VAL_LAKEHOUSE_BRONZE.py",
+          "path": "output\\validation\\VAL_LAKEHOUSE_BRONZE.py",
+          "size_bytes": 9075,
+          "target": "shared",
+          "deploy_order": 66
+        },
+        {
+          "name": "VAL_LAKEHOUSE_SILVER",
+          "file": "VAL_LAKEHOUSE_SILVER.py",
+          "path": "output\\validation\\VAL_LAKEHOUSE_SILVER.py",
+          "size_bytes": 9069,
+          "target": "shared",
+          "deploy_order": 67
+        },
+        {
+          "name": "VAL_PIPELINE_EXECUTION",
+          "file": "VAL_PIPELINE_EXECUTION.py",
+          "path": "output\\validation\\VAL_PIPELINE_EXECUTION.py",
+          "size_bytes": 10196,
+          "target": "shared",
+          "deploy_order": 68
+        },
+        {
+          "name": "VAL_TGT_ACCOUNTS",
+          "file": "VAL_TGT_ACCOUNTS.py",
+          "path": "output\\validation\\VAL_TGT_ACCOUNTS.py",
+          "size_bytes": 9028,
+          "target": "shared",
+          "deploy_order": 69
+        },
+        {
+          "name": "VAL_TGT_ALERT_QUEUE",
+          "file": "VAL_TGT_ALERT_QUEUE.py",
+          "path": "output\\validation\\VAL_TGT_ALERT_QUEUE.py",
+          "size_bytes": 9132,
+          "target": "shared",
+          "deploy_order": 70
+        },
+        {
+          "name": "VAL_TGT_BRONZE_CDC_EVENTS",
+          "file": "VAL_TGT_BRONZE_CDC_EVENTS.py",
+          "path": "output\\validation\\VAL_TGT_BRONZE_CDC_EVENTS.py",
+          "size_bytes": 9149,
+          "target": "shared",
+          "deploy_order": 71
+        },
+        {
+          "name": "VAL_TGT_BRONZE_EVENTS",
+          "file": "VAL_TGT_BRONZE_EVENTS.py",
+          "path": "output\\validation\\VAL_TGT_BRONZE_EVENTS.py",
+          "size_bytes": 9097,
+          "target": "shared",
+          "deploy_order": 72
+        },
+        {
+          "name": "VAL_TGT_GOLD_CUSTOMER_360",
+          "file": "VAL_TGT_GOLD_CUSTOMER_360.py",
+          "path": "output\\validation\\VAL_TGT_GOLD_CUSTOMER_360.py",
+          "size_bytes": 9156,
+          "target": "shared",
+          "deploy_order": 73
+        },
+        {
+          "name": "VAL_TGT_GOLD_DAILY_SUMMARY",
+          "file": "VAL_TGT_GOLD_DAILY_SUMMARY.py",
+          "path": "output\\validation\\VAL_TGT_GOLD_DAILY_SUMMARY.py",
+          "size_bytes": 9151,
+          "target": "shared",
+          "deploy_order": 74
+        },
+        {
+          "name": "VAL_TGT_GOLD_INVENTORY_DASHBOARD",
+          "file": "VAL_TGT_GOLD_INVENTORY_DASHBOARD.py",
+          "path": "output\\validation\\VAL_TGT_GOLD_INVENTORY_DASHBOARD.py",
+          "size_bytes": 9149,
+          "target": "shared",
+          "deploy_order": 75
+        },
+        {
+          "name": "VAL_TGT_GOLD_INVENTORY_HISTORY",
+          "file": "VAL_TGT_GOLD_INVENTORY_HISTORY.py",
+          "path": "output\\validation\\VAL_TGT_GOLD_INVENTORY_HISTORY.py",
+          "size_bytes": 9098,
+          "target": "shared",
+          "deploy_order": 76
+        },
+        {
+          "name": "VAL_TGT_LH_CONTACTS",
+          "file": "VAL_TGT_LH_CONTACTS.py",
+          "path": "output\\validation\\VAL_TGT_LH_CONTACTS.py",
+          "size_bytes": 9043,
+          "target": "shared",
+          "deploy_order": 77
+        },
+        {
+          "name": "VAL_TGT_SILVER_CUSTOMER",
+          "file": "VAL_TGT_SILVER_CUSTOMER.py",
+          "path": "output\\validation\\VAL_TGT_SILVER_CUSTOMER.py",
+          "size_bytes": 9154,
+          "target": "shared",
+          "deploy_order": 78
+        },
+        {
+          "name": "VAL_TGT_SILVER_INVENTORY",
+          "file": "VAL_TGT_SILVER_INVENTORY.py",
+          "path": "output\\validation\\VAL_TGT_SILVER_INVENTORY.py",
+          "size_bytes": 9129,
+          "target": "shared",
+          "deploy_order": 79
+        },
+        {
+          "name": "VAL_TGT_SILVER_ORDERS",
+          "file": "VAL_TGT_SILVER_ORDERS.py",
+          "path": "output\\validation\\VAL_TGT_SILVER_ORDERS.py",
+          "size_bytes": 9089,
+          "target": "shared",
+          "deploy_order": 80
+        },
+        {
+          "name": "validation_report",
+          "file": "validation_report.html",
+          "path": "output\\validation\\validation_report.html",
+          "size_bytes": 4711,
+          "target": "shared",
+          "deploy_order": 81
+        }
+      ]
+    },
+    "scripts": {
+      "count": 1,
+      "total_bytes": 4014,
+      "files": [
+        {
+          "name": "uc_permissions",
+          "file": "uc_permissions.sql",
+          "path": "output\\scripts\\uc_permissions.sql",
+          "size_bytes": 4014,
+          "target": "shared",
+          "deploy_order": 82
+        }
+      ]
+    }
+  },
+  "deployment_order": [
+    "notebooks/.gitkeep",
+    "notebooks/NB_DQ_STANDARDIZE_ADDRESSES.py",
+    "notebooks/NB_DQ_VALIDATE_EMAILS.py",
+    "notebooks/NB_m_cdc_order_pipeline.py",
+    "notebooks/NB_M_COMPLEX_MULTI_SOURCE.py",
+    "notebooks/NB_m_customer_360.py",
+    "notebooks/NB_m_customer_activity_log.py",
+    "notebooks/NB_m_inventory_snapshot.py",
+    "notebooks/NB_m_load_contacts.py",
+    "notebooks/NB_M_LOAD_CUSTOMERS.py",
+    "notebooks/NB_M_LOAD_EMPLOYEES.py",
+    "notebooks/NB_M_LOAD_ORDERS.py",
+    "notebooks/NB_m_realtime_inventory_scd2.py",
+    "notebooks/NB_m_sync_accounts.py",
+    "notebooks/NB_M_UPSERT_INVENTORY.py",
+    "notebooks/NB_MI_BULK_LOAD_PRODUCTS.py",
+    "notebooks/NB_SYNC_CUSTOMER_DATA.py",
+    "dbt/dbt_generation_summary.json",
+    "dbt/dbt_project.yml",
+    "dbt/packages.yml",
+    "dbt/profiles.yml",
+    "pipelines/.gitkeep",
+    "pipelines/PL_AI_PROCESS_ORDER_EVENTS.json",
+    "pipelines/PL_AI_WATCH_ORDER_FILES.json",
+    "pipelines/PL_svc_create_case.json",
+    "pipelines/PL_svc_lookup_customer.json",
+    "pipelines/PL_svc_publish_event.json",
+    "pipelines/PL_TF_DAILY_CONTACTS_ETL.json",
+    "pipelines/PL_TF_DATA_QUALITY_PIPELINE.json",
+    "pipelines/PL_TF_NIGHTLY_ENTERPRISE_ETL.json",
+    "pipelines/PL_TF_SUB_CUSTOMER_360.json",
+    "pipelines/PL_TF_SUB_KPI_COMPUTATION.json",
+    "pipelines/PL_TF_SUB_REVENUE_AGGREGATION.json",
+    "pipelines/PL_WF_COMPLEX_FINANCE_ETL.json",
+    "pipelines/PL_WF_DAILY_SALES_LOAD.json",
+    "sql/.gitkeep",
+    "sql/SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql",
+    "sql/SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql",
+    "sql/SQL_OVERRIDES_M_LOAD_ORDERS.sql",
+    "sql/SQL_SP_CALC_RANKINGS.sql",
+    "sql/SQL_SP_DB2_INVENTORY_REFRESH.sql",
+    "sql/SQL_SP_MYSQL_USER_ANALYTICS.sql",
+    "sql/SQL_SP_POSTGRESQL_REPORTING.sql",
+    "sql/SQL_SP_REFRESH_DASHBOARD.sql",
+    "sql/SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql",
+    "sql/SQL_SP_TERADATA_CUSTOMER_STATS.sql",
+    "sql/SQL_SP_UPDATE_ORDER_STATS.sql",
+    "schema/bronze_ddl.sql",
+    "schema/gold_ddl.sql",
+    "schema/setup_workspace.py",
+    "schema/silver_ddl.sql",
+    "autosys/autosys_summary.json",
+    "autosys/PL_AUTOSYS_BOX_DAILY_SALES_LOAD.json",
+    "autosys/PL_AUTOSYS_BOX_FINANCE_ETL.json",
+    "autosys/PL_AUTOSYS_CMD_CUSTOMER_SYNC.json",
+    "autosys/PL_AUTOSYS_FW_FINANCE_FILE.json",
+    "validation/test_matrix.md",
+    "validation/VAL_AGG_ORDERS_BY_CUSTOMER.py",
+    "validation/VAL_DIM_CUSTOMER.py",
+    "validation/VAL_DIM_EMPLOYEE.py",
+    "validation/VAL_DIM_INVENTORY.py",
+    "validation/VAL_FACT_ORDERS.py",
+    "validation/VAL_FACT_TXN_HIGH.py",
+    "validation/VAL_FACT_TXN_LOW.py",
+    "validation/VAL_FACT_TXN_TAGS.py",
+    "validation/VAL_LAKEHOUSE_BRONZE.py",
+    "validation/VAL_LAKEHOUSE_SILVER.py",
+    "validation/VAL_PIPELINE_EXECUTION.py",
+    "validation/VAL_TGT_ACCOUNTS.py",
+    "validation/VAL_TGT_ALERT_QUEUE.py",
+    "validation/VAL_TGT_BRONZE_CDC_EVENTS.py",
+    "validation/VAL_TGT_BRONZE_EVENTS.py",
+    "validation/VAL_TGT_GOLD_CUSTOMER_360.py",
+    "validation/VAL_TGT_GOLD_DAILY_SUMMARY.py",
+    "validation/VAL_TGT_GOLD_INVENTORY_DASHBOARD.py",
+    "validation/VAL_TGT_GOLD_INVENTORY_HISTORY.py",
+    "validation/VAL_TGT_LH_CONTACTS.py",
+    "validation/VAL_TGT_SILVER_CUSTOMER.py",
+    "validation/VAL_TGT_SILVER_INVENTORY.py",
+    "validation/VAL_TGT_SILVER_ORDERS.py",
+    "validation/validation_report.html",
+    "scripts/uc_permissions.sql"
+  ],
+  "total_artifacts": 82
+}

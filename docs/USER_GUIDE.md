@@ -44,7 +44,8 @@ input/
 ├── workflows/     # Workflow XML exports (.xml)
 ├── mappings/      # Mapping XML exports (.xml)
 ├── sessions/      # Session XML exports (.xml)
-└── sql/           # Oracle/SQL Server SQL files (.sql)
+├── sql/           # Oracle/SQL Server SQL files (.sql)
+└── autosys/       # AutoSys JIL files (.jil) — optional
 ```
 
 ### Exporting from Informatica PowerCenter
@@ -65,16 +66,43 @@ input/
 
 > **Tip:** The tool auto-detects whether files are PowerCenter or IICS format.
 
+### Exporting from AutoSys
+
+If your Informatica workflows are scheduled via CA AutoSys:
+
+1. Use `autorep -J ALL -q` to export job definitions, or
+2. Export individual JIL blocks: `autorep -J BOX_NAME -q > box_name.jil`
+3. Save `.jil` files to `input/autosys/`
+
+The tool will:
+- Parse BOX, CMD, FW, and FT job types
+- Extract `condition` dependency chains (`s(job)`, `f(job)`, `n(job)`, `d(job)`)
+- Convert `days_of_week` + `start_times` to cron schedules
+- **Link** `pmcmd startworkflow` commands to Informatica workflows in the inventory
+- Generate Fabric Pipeline or Databricks Workflow JSON per BOX/chain
+
 ## 4. Running the Migration
 
 ### Full Pipeline (Recommended)
 
 ```bash
-# Run all 5 phases (default target: Fabric)
+# Run all 8 phases (default target: Fabric)
 informatica-to-fabric
 
 # Target Azure Databricks instead
 informatica-to-fabric --target databricks
+
+# Target DBT models on Databricks (SQL-expressible mappings → dbt, complex → PySpark)
+informatica-to-fabric --target dbt
+
+# Auto-route: simple/medium → dbt, complex → PySpark notebooks
+informatica-to-fabric --target auto
+
+# PySpark-only on Databricks (no dbt)
+informatica-to-fabric --target pyspark
+
+# Include AutoSys JIL files from a custom directory
+informatica-to-fabric --autosys-dir /path/to/jil/files
 
 # Or equivalently
 python run_migration.py
@@ -92,10 +120,21 @@ python run_sql_migration.py
 # Phase 2: Notebook generation
 python run_notebook_migration.py
 
-# Phase 3: Pipeline generation
+# Phase 3: DBT model generation (Databricks target only)
+python run_dbt_migration.py
+
+# Phase 4: Pipeline generation
 python run_pipeline_migration.py
 
-# Phase 4: Validation script generation
+# Phase 5: AutoSys JIL migration
+python run_autosys_migration.py
+# Or from a custom directory:
+python run_autosys_migration.py /path/to/jil/files
+
+# Phase 6: Schema generation
+python run_schema_generator.py
+
+# Phase 7: Validation script generation
 python run_validation.py
 ```
 
@@ -132,8 +171,21 @@ output/
 │   └── SQL_OVERRIDES_*.sql     # Converted SQL overrides
 ├── notebooks/
 │   └── NB_*.py                 # PySpark notebooks (one per mapping)
+├── dbt/                        # DBT project (if --target dbt|auto)
+│   ├── dbt_project.yml         # dbt project configuration
+│   ├── profiles.yml            # Databricks SQL Warehouse connection
+│   ├── packages.yml            # dbt package dependencies
+│   └── models/
+│       ├── sources.yml         # Source table definitions
+│       ├── schema.yml          # Column tests & docs
+│       ├── staging/stg_*.sql   # 1:1 source views
+│       ├── intermediate/int_*.sql  # Transformation logic (CTE chains)
+│       └── marts/mart_*.sql    # Business-ready tables
 ├── pipelines/
 │   └── PL_*.json               # Pipeline JSON (one per workflow)
+├── autosys/                    # AutoSys migration output
+│   ├── PL_AUTOSYS_*.json       # Pipeline/Workflow JSON (one per BOX/chain)
+│   └── autosys_summary.json    # Linkage report, job counts, unlinked warnings
 ├── validation/
 │   ├── VAL_*.py                # Validation notebooks
 │   └── test_matrix.md          # Test coverage matrix
@@ -231,14 +283,21 @@ done
 
 | Flag | Description |
 |------|------------|
-| `--skip N [N...]` | Skip specific phases (0=assessment, 1=SQL, 2=notebooks, 3=pipelines, 4=validation) |
+| `--skip N [N...]` | Skip specific phases (0=assessment, 1=SQL, 2=notebooks, 3=dbt, 4=pipelines, 5=autosys, 6=schema, 7=validation) |
 | `--only N [N...]` | Run only specific phases |
 | `--dry-run` | Preview without writing files |
 | `--verbose` | Enable detailed logging |
 | `--resume` | Resume from last checkpoint |
 | `--config FILE` | Load configuration from YAML file |
-| `--target TARGET` | Target platform: `fabric` (default) or `databricks` |
+| `--target TARGET` | Target platform: `fabric` (default), `databricks`, `dbt`, `pyspark`, or `auto` |
+| `--autosys-dir DIR` | Path to directory containing AutoSys JIL files (default: `input/autosys/`) |
 | `--log-format json` | Use JSON-formatted logging |
+| `--batch DIR [DIR...]` | Run migration for multiple input directories |
+| `--manifest` | Generate deployment manifest after migration |
+| `--tenant ID` | Tenant ID for Key Vault secret substitution |
+| `--parallel-waves N` | Max parallel wave executions |
+| `--profile` | Enable per-phase memory and timing profiling |
+| `--reset` | Clear checkpoint and start fresh |
 
 ### Interactive Dashboard
 

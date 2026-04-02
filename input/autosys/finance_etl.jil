@@ -1,0 +1,70 @@
+/* ============================================================
+   AutoSys JIL — Finance ETL with File Watcher + Complex Conditions
+   ============================================================ */
+
+/* --- File Watcher: wait for source file arrival --- */
+insert_job: FW_FINANCE_FILE
+job_type: FW
+machine: ETL_SERVER_02
+owner: finance_etl@server02
+watch_file: /data/incoming/finance/gl_extract_*.csv
+watch_interval: 60
+alarm_if_fail: 1
+description: "Wait for GL extract file from Oracle EBS"
+
+/* --- BOX job: finance pipeline --- */
+insert_job: BOX_FINANCE_ETL
+job_type: BOX
+owner: finance_etl@server02
+condition: s(FW_FINANCE_FILE)
+date_conditions: 1
+days_of_week: mo,tu,we,th,fr
+start_times: "06:00"
+run_calendar: BUSINESS_DAYS_US
+description: "Finance ETL pipeline — GL, AP, AR processing"
+alarm_if_fail: 1
+machine: ETL_SERVER_02
+
+/* --- CMD: Run GL workflow --- */
+insert_job: CMD_RUN_WF_GL_LOAD
+job_type: CMD
+box_name: BOX_FINANCE_ETL
+command: pmcmd startworkflow -sv INT_SVC -d DOMAIN_01 -u admin -p *** -f FINANCE -w WF_COMPLEX_FINANCE_ETL -wait
+machine: ETL_SERVER_02
+owner: finance_etl@server02
+description: "Run Informatica WF_COMPLEX_FINANCE_ETL"
+std_out_file: /opt/logs/autosys/CMD_RUN_WF_GL_LOAD.out
+std_err_file: /opt/logs/autosys/CMD_RUN_WF_GL_LOAD.err
+alarm_if_fail: 1
+profile: /opt/informatica/server/bin/pmenv.sh
+
+/* --- CMD: Run AP workflow (parallel with GL) --- */
+insert_job: CMD_RUN_WF_AP_LOAD
+job_type: CMD
+box_name: BOX_FINANCE_ETL
+command: pmcmd startworkflow -sv INT_SVC -d DOMAIN_01 -u admin -p *** -f FINANCE -w WF_AP_LOAD -wait
+machine: ETL_SERVER_02
+owner: finance_etl@server02
+description: "Run AP data load"
+alarm_if_fail: 1
+
+/* --- CMD: Consolidation (depends on both GL and AP) --- */
+insert_job: CMD_CONSOLIDATE_FINANCE
+job_type: CMD
+box_name: BOX_FINANCE_ETL
+condition: s(CMD_RUN_WF_GL_LOAD) AND s(CMD_RUN_WF_AP_LOAD)
+command: /opt/scripts/consolidate_finance.sh
+machine: ETL_SERVER_02
+owner: finance_etl@server02
+description: "Consolidate GL + AP data"
+alarm_if_fail: 1
+
+/* --- CMD: Error handler (runs if consolidation fails) --- */
+insert_job: CMD_FINANCE_ERROR_HANDLER
+job_type: CMD
+box_name: BOX_FINANCE_ETL
+condition: f(CMD_CONSOLIDATE_FINANCE)
+command: /opt/scripts/finance_error_alert.sh
+machine: ETL_SERVER_02
+owner: finance_etl@server02
+description: "Alert on finance pipeline failure"

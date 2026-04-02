@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_SYNC_CUSTOMER_DATA
@@ -10,7 +10,7 @@
 # Sources: Oracle_CRM
 # Targets: Lakehouse_Silver
 # Flow: SQ → TGT
-# Generated: 2026-03-26
+# Generated: 2026-04-02
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -24,7 +24,7 @@ from delta.tables import DeltaTable
 # CELL 2 — Source Read
 # --- Source: Oracle_CRM ---
 # Oracle: SELECT * FROM Oracle_CRM
-df_source = spark.table("bronze.oracle_crm")
+df_source = spark.table("main.bronze.oracle_crm")
 
 # COMMAND ----------
 
@@ -36,9 +36,9 @@ df = df
 # COMMAND ----------
 
 # CELL 4 — Target Write
-# --- Target: Lakehouse_Silver → silver.lakehouse_silver ---
+# --- Target: Lakehouse_Silver → main.silver.lakehouse_silver ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.lakehouse_silver")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.lakehouse_silver")
 
 # COMMAND ----------
 

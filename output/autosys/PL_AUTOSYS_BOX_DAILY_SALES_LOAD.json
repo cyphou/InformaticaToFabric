@@ -1,0 +1,48 @@
+{
+  "name": "AUTOSYS_BOX_DAILY_SALES_LOAD",
+  "tasks": [
+    {
+      "task_key": "CMD_RUN_WF_DAILY_SALES",
+      "description": "AutoSys → Informatica WF_DAILY_SALES_LOAD",
+      "depends_on": [],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/NB_WF_DAILY_SALES_LOAD",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_VALIDATE_SALES",
+      "description": "AutoSys CMD: Validate row counts after sales load. TODO: Convert command.",
+      "depends_on": [
+        {
+          "task_key": "CMD_RUN_WF_DAILY_SALES"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/SCRIPT_CMD_VALIDATE_SALES",
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "CMD_NOTIFY_SALES_DONE",
+      "description": "AutoSys CMD: Send success email. TODO: Convert command.",
+      "depends_on": [
+        {
+          "task_key": "CMD_VALIDATE_SALES"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/SCRIPT_CMD_NOTIFY_SALES_DONE",
+        "source": "WORKSPACE"
+      }
+    }
+  ],
+  "tags": {
+    "source": "autosys",
+    "migrated": "true"
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 00 02 ? * 1,2,3,4,5 *",
+    "timezone_id": "UTC"
+  }
+}

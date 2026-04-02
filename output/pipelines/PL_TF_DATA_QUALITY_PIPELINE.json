@@ -1,158 +1,42 @@
 {
   "name": "PL_TF_DATA_QUALITY_PIPELINE",
-  "properties": {
-    "description": "Migrated from Informatica workflow TF_DATA_QUALITY_PIPELINE. ",
-    "activities": [
-      {
-        "name": "NB_m_email_quality_check",
-        "description": "Migrated from Informatica session mt_email_validation.",
-        "type": "TridentNotebook",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_m_email_quality_check",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
+  "description": "Migrated from Informatica workflow TF_DATA_QUALITY_PIPELINE. ",
+  "tasks": [
+    {
+      "task_key": "NB_m_email_quality_check",
+      "description": "Migrated from Informatica session mt_email_validation.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_email_quality_check",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
         }
       },
-      {
-        "name": "gw_dq_threshold",
-        "description": "Migrated from Informatica Decision task gw_dq_threshold.",
-        "type": "IfCondition",
-        "dependsOn": [
-          {
-            "activity": "NB_m_email_quality_check",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "typeProperties": {
-          "expression": {
-            "value": "@greater(int(activity('NB_m_email_quality_check').output.status.Output.result.exitValue), 0)",
-            "type": "Expression"
-          },
-          "ifTrueActivities": [
-            {
-              "name": "NB_m_address_standardize",
-              "description": "Migrated from Informatica session mt_address_standard.",
-              "type": "TridentNotebook",
-              "dependsOn": [],
-              "policy": {
-                "timeout": "0.02:00:00",
-                "retry": 2,
-                "retryIntervalInSeconds": 60,
-                "secureOutput": false,
-                "secureInput": false
-              },
-              "typeProperties": {
-                "notebookId": "",
-                "notebook": {
-                  "referenceName": "NB_m_address_standardize",
-                  "type": "NotebookReference"
-                },
-                "parameters": {
-                  "load_date": {
-                    "value": {
-                      "value": "@pipeline().parameters.load_date",
-                      "type": "Expression"
-                    },
-                    "type": "string"
-                  }
-                },
-                "sparkPool": {
-                  "referenceName": "default",
-                  "type": "BigDataPoolReference"
-                }
-              }
-            }
-          ],
-          "ifFalseActivities": [
-            {
-              "name": "Set_Skip_gw_dq_threshold",
-              "type": "SetVariable",
-              "dependsOn": [],
-              "typeProperties": {
-                "variableName": "skip_reason",
-                "value": "gw_dq_threshold evaluated FALSE — downstream skipped."
-              }
-            }
-          ]
-        }
-      },
-      {
-        "name": "notify_dq_issues",
-        "description": "Migrated from Informatica notify_dq_issues. Triggered on Failed.",
-        "type": "WebActivity",
-        "dependsOn": [
-          {
-            "activity": "gw_dq_threshold",
-            "dependencyConditions": [
-              "Failed"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.00:10:00",
-          "retry": 1,
-          "retryIntervalInSeconds": 30
-        },
-        "typeProperties": {
-          "url": {
-            "value": "@pipeline().parameters.alert_webhook_url",
-            "type": "Expression"
-          },
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
-            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"gw_dq_threshold\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
-            "type": "Expression"
-          }
-        }
-      }
-    ],
-    "parameters": {
-      "load_date": {
-        "type": "string",
-        "defaultValue": "@utcnow('yyyy-MM-dd')"
-      },
-      "alert_webhook_url": {
-        "type": "string",
-        "defaultValue": "https://your-logic-app-webhook-url"
-      }
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
     },
-    "variables": {
-      "skip_reason": {
-        "type": "String",
-        "defaultValue": ""
-      }
-    },
-    "annotations": [
-      "MigratedFromInformatica",
-      "OriginalWorkflow:TF_DATA_QUALITY_PIPELINE"
-    ]
-  }
+    {
+      "task_key": "NB_m_address_standardize",
+      "description": "Migrated from Informatica session mt_address_standard.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_address_standardize",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "gw_dq_threshold"
+        }
+      ]
+    }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "TF_DATA_QUALITY_PIPELINE"
+  },
+  "format": "MULTI_TASK"
 }

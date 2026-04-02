@@ -1,0 +1,35 @@
+# dbt project for Informatica → Databricks migration
+# Generated: 2026-04-02 12:27 UTC
+
+name: 'informatica_migration'
+version: '1.0.0'
+config-version: 2
+
+profile: 'databricks_migration'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  informatica_migration:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["staging"]
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+      +tags: ["intermediate"]
+    marts:
+      +materialized: table
+      +schema: silver
+      +tags: ["marts"]

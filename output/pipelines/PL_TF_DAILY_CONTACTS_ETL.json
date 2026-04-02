@@ -1,237 +1,58 @@
 {
   "name": "PL_TF_DAILY_CONTACTS_ETL",
-  "properties": {
-    "description": "Migrated from Informatica workflow TF_DAILY_CONTACTS_ETL. ",
-    "activities": [
-      {
-        "name": "NB_m_load_contacts",
-        "description": "Migrated from Informatica session mt_load_contacts.",
-        "type": "TridentNotebook",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_m_load_contacts",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
+  "description": "Migrated from Informatica workflow TF_DAILY_CONTACTS_ETL. ",
+  "tasks": [
+    {
+      "task_key": "NB_m_load_contacts",
+      "description": "Migrated from Informatica session mt_load_contacts.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_load_contacts",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
         }
       },
-      {
-        "name": "NB_m_sync_accounts",
-        "description": "Migrated from Informatica session mt_sync_accounts.",
-        "type": "TridentNotebook",
-        "dependsOn": [],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_m_sync_accounts",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "NB_cmd_update_stats",
-        "description": "Migrated from Informatica session cmd_update_stats.",
-        "type": "TridentNotebook",
-        "dependsOn": [
-          {
-            "activity": "NB_m_sync_accounts",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          },
-          {
-            "activity": "timer_wait",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.02:00:00",
-          "retry": 2,
-          "retryIntervalInSeconds": 60,
-          "secureOutput": false,
-          "secureInput": false
-        },
-        "typeProperties": {
-          "notebookId": "",
-          "notebook": {
-            "referenceName": "NB_cmd_update_stats",
-            "type": "NotebookReference"
-          },
-          "parameters": {
-            "load_date": {
-              "value": {
-                "value": "@pipeline().parameters.load_date",
-                "type": "Expression"
-              },
-              "type": "string"
-            }
-          },
-          "sparkPool": {
-            "referenceName": "default",
-            "type": "BigDataPoolReference"
-          }
-        }
-      },
-      {
-        "name": "gw_check_quality",
-        "description": "Migrated from Informatica Decision task gw_check_quality.",
-        "type": "IfCondition",
-        "dependsOn": [
-          {
-            "activity": "NB_m_load_contacts",
-            "dependencyConditions": [
-              "Succeeded"
-            ]
-          }
-        ],
-        "typeProperties": {
-          "expression": {
-            "value": "@greater(int(activity('NB_m_load_contacts').output.status.Output.result.exitValue), 0)",
-            "type": "Expression"
-          },
-          "ifTrueActivities": [
-            {
-              "name": "NB_timer_wait",
-              "description": "Migrated from Informatica session timer_wait.",
-              "type": "TridentNotebook",
-              "dependsOn": [],
-              "policy": {
-                "timeout": "0.02:00:00",
-                "retry": 2,
-                "retryIntervalInSeconds": 60,
-                "secureOutput": false,
-                "secureInput": false
-              },
-              "typeProperties": {
-                "notebookId": "",
-                "notebook": {
-                  "referenceName": "NB_timer_wait",
-                  "type": "NotebookReference"
-                },
-                "parameters": {
-                  "load_date": {
-                    "value": {
-                      "value": "@pipeline().parameters.load_date",
-                      "type": "Expression"
-                    },
-                    "type": "string"
-                  }
-                },
-                "sparkPool": {
-                  "referenceName": "default",
-                  "type": "BigDataPoolReference"
-                }
-              }
-            }
-          ],
-          "ifFalseActivities": [
-            {
-              "name": "Set_Skip_gw_check_quality",
-              "type": "SetVariable",
-              "dependsOn": [],
-              "typeProperties": {
-                "variableName": "skip_reason",
-                "value": "gw_check_quality evaluated FALSE — downstream skipped."
-              }
-            }
-          ]
-        }
-      },
-      {
-        "name": "notify_complete",
-        "description": "Migrated from Informatica notify_complete. Triggered on Failed.",
-        "type": "WebActivity",
-        "dependsOn": [
-          {
-            "activity": "gw_check_quality",
-            "dependencyConditions": [
-              "Failed"
-            ]
-          }
-        ],
-        "policy": {
-          "timeout": "0.00:10:00",
-          "retry": 1,
-          "retryIntervalInSeconds": 30
-        },
-        "typeProperties": {
-          "url": {
-            "value": "@pipeline().parameters.alert_webhook_url",
-            "type": "Expression"
-          },
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
-            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"gw_check_quality\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
-            "type": "Expression"
-          }
-        }
-      }
-    ],
-    "parameters": {
-      "load_date": {
-        "type": "string",
-        "defaultValue": "@utcnow('yyyy-MM-dd')"
-      },
-      "alert_webhook_url": {
-        "type": "string",
-        "defaultValue": "https://your-logic-app-webhook-url"
-      }
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
     },
-    "variables": {
-      "skip_reason": {
-        "type": "String",
-        "defaultValue": ""
-      }
+    {
+      "task_key": "NB_m_sync_accounts",
+      "description": "Migrated from Informatica session mt_sync_accounts.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_m_sync_accounts",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000
     },
-    "annotations": [
-      "MigratedFromInformatica",
-      "OriginalWorkflow:TF_DAILY_CONTACTS_ETL"
-    ]
-  }
+    {
+      "task_key": "NB_cmd_update_stats",
+      "description": "Migrated from Informatica session cmd_update_stats.",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/migration/NB_cmd_update_stats",
+        "base_parameters": {
+          "load_date": "{{job.start_time.iso_date}}"
+        }
+      },
+      "timeout_seconds": 7200,
+      "max_retries": 2,
+      "min_retry_interval_millis": 60000,
+      "depends_on": [
+        {
+          "task_key": "NB_m_sync_accounts"
+        },
+        {
+          "task_key": "timer_wait"
+        }
+      ]
+    }
+  ],
+  "tags": {
+    "migrated_from": "informatica",
+    "original_workflow": "TF_DAILY_CONTACTS_ETL"
+  },
+  "format": "MULTI_TASK"
 }

@@ -8,7 +8,7 @@
 <h1 align="center">Migration Plan — Informatica to Microsoft Fabric / Azure Databricks</h1>
 
 <p align="center">
-  <strong>A 6-phase strategy to migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric or Azure Databricks.</strong>
+  <strong>An 8-phase strategy to migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric, Azure Databricks, or DBT — including AutoSys JIL scheduler migration.</strong>
 </p>
 
 ---
@@ -17,13 +17,14 @@
 
 This plan outlines the migration strategy from **Informatica PowerCenter/IICS** to **Microsoft Fabric** or **Azure Databricks**, replacing ETL/ELT workloads with a combination of:
 
-| Informatica Component | Fabric Target | Databricks Target | Agent |
-|---|---|---|---|
-| Mappings (transformations) | **Fabric Notebooks** (PySpark / Spark SQL) | **Databricks Notebooks** (PySpark / Spark SQL) | `@notebook-migration` |
-| Workflows / Taskflows | **Fabric Data Pipelines** (ADF-based orchestration) | **Databricks Workflows** (Jobs API) | `@pipeline-migration` |
-| SQL overrides / Stored Procs | **Fabric SQL / Warehouse SQL** | **Databricks SQL** | `@sql-migration` |
-| Sessions / connections | **Fabric Lakehouses + Shortcuts** | **Unity Catalog + Volumes** | `@assessment` |
-| Scheduler | **Pipeline Triggers + Fabric Scheduler** | **Job Scheduler (cron)** | `@pipeline-migration` |
+| Informatica Component | Fabric Target | Databricks Target | DBT Target | Agent |
+|---|---|---|---|---|
+| Mappings (transformations) | **Fabric Notebooks** (PySpark / Spark SQL) | **Databricks Notebooks** (PySpark / Spark SQL) | **DBT Models** (SQL + Jinja) | `@notebook-migration` |
+| Workflows / Taskflows | **Fabric Data Pipelines** (ADF-based orchestration) | **Databricks Workflows** (Jobs API) | **dbt build** commands | `@pipeline-migration` |
+| SQL overrides / Stored Procs | **Fabric SQL / Warehouse SQL** | **Databricks SQL** | **DBT macros** | `@sql-migration` |
+| Sessions / connections | **Fabric Lakehouses + Shortcuts** | **Unity Catalog + Volumes** | **profiles.yml** | `@assessment` |
+| Scheduler | **Pipeline Triggers + Fabric Scheduler** | **Job Scheduler (cron)** | **dbt Cloud / Airflow** | `@pipeline-migration` |
+| **AutoSys JIL** (BOX/CMD/FW) | **Fabric Data Pipelines** (activities + triggers) | **Databricks Workflows** (multi-task jobs) | — | `@pipeline-migration` |
 
 ### Migration Overview
 
@@ -342,7 +343,64 @@ assert oracle_count == fabric_count, f"Row mismatch: {oracle_count} vs {fabric_c
 
 ---
 
-## Phase 6 — Cutover & Decommission
+## Phase 6 — DBT Model Generation
+
+For teams adopting the **DBT** approach (`--target dbt` or `--target auto`):
+
+### 6.1 DBT Target Router
+- Mappings are classified as **SQL-expressible** or **PySpark-required**
+- SQL-expressible mappings → DBT models (Jinja + SQL)
+- Complex mappings (custom Java, heavy UDF) → PySpark notebooks
+- `--target auto` uses the router to decide per-mapping
+
+### 6.2 DBT Project Generation
+| Artifact | Output |
+|---|---|
+| Model `.sql` files | `output/dbt/models/` |
+| `dbt_project.yml` | `output/dbt/` |
+| `profiles.yml` | `output/dbt/` |
+| Source YAML | `output/dbt/models/sources.yml` |
+| Schema tests | `output/dbt/models/schema.yml` |
+
+---
+
+## Phase 7 — AutoSys JIL Migration
+
+For environments using **CA AutoSys** as the enterprise job scheduler:
+
+### 7.1 JIL Parsing
+- Parse `.jil` files to extract **BOX**, **CMD**, **FW** (File Watcher), and **FT** (File Transfer) jobs
+- Extract job attributes: `condition`, `days_of_week`, `start_times`, `start_mins`, `run_calendar`, `command`, `box_name`, `machine`
+- Parse condition expressions: `s()` (success), `f()` (failure), `n()` (notrunning), `d()` (done)
+- Build cross-job dependency graph from conditions
+
+### 7.2 Informatica Linkage
+- Detect `pmcmd startworkflow` patterns in CMD job commands
+- Link AutoSys jobs to their Informatica workflow counterparts
+- Cross-reference against `output/inventory/inventory.json` for matched workflows
+
+### 7.3 AutoSys → Pipeline Mapping
+
+| AutoSys Element | Fabric Pipeline | Databricks Workflow |
+|---|---|---|
+| BOX job | Pipeline (container) | Multi-task Job |
+| CMD job (pmcmd) | Notebook Activity | Notebook Task |
+| CMD job (generic) | Script Activity | Python Wheel Task |
+| FW (File Watcher) | Get Metadata Activity | File Arrival Sensor |
+| FT (File Transfer) | Copy Activity | DBFS Copy Task |
+| `condition: s(A)` | `dependsOn: Succeeded` | `depends_on: [{task_key}]` |
+| `condition: f(A)` | `dependsOn: Failed` | Failure notification |
+| `days_of_week` | Schedule Trigger (cron) | Quartz cron expression |
+| `run_calendar` | Schedule Trigger | Calendar-based schedule |
+| Standalone chains | Flattened Pipeline | Multi-task Job |
+
+### 7.4 Output
+- `output/autosys/PL_AUTOSYS_*.json` — Generated pipeline/workflow definitions
+- `output/autosys/autosys_summary.json` — Migration summary with linkage report
+
+---
+
+## Phase 8 — Cutover & Decommission
 
 ```mermaid
 flowchart LR
@@ -357,7 +415,7 @@ flowchart LR
 1. **Parallel Run** — Run Informatica and target platform (Fabric/Databricks) side-by-side for 2-4 weeks
 2. **Incremental Cutover** — Migrate workflows in batches by priority and dependency order
 3. **Monitoring** — Fabric Monitor / Databricks Jobs UI + pipeline run history + alerting
-4. **Decommission** — Disable Informatica workflows after validation sign-off
+4. **Decommission** — Disable Informatica workflows and AutoSys JIL schedules after validation sign-off
 
 ---
 
@@ -383,9 +441,13 @@ gantt
     section Testing
     Phase 5 - Validation          :a5, after a2, 14d
 
+    section DBT & AutoSys
+    Phase 6 - DBT Models          :a6, after a1, 14d
+    Phase 7 - AutoSys JIL         :a7, after a1, 14d
+
     section Cutover
-    Phase 6 - Parallel Run        :a6, after a5, 28d
-    Phase 6 - Decommission        :milestone, after a6, 0d
+    Phase 8 - Parallel Run        :a8, after a5, 28d
+    Phase 8 - Decommission        :milestone, after a8, 0d
 ```
 
 | Phase | Description | Key Outputs |
@@ -396,7 +458,9 @@ gantt
 | **Phase 3** | Orchestration Migration | `PL_*.json` pipelines in `output/pipelines/` |
 | **Phase 4** | SQL Migration | `SQL_*.sql` files in `output/sql/` |
 | **Phase 5** | Testing & Validation | `VAL_*.py` scripts + `test_matrix.md` |
-| **Phase 6** | Cutover & Decommission | Sign-off, Informatica shutdown |
+| **Phase 6** | DBT Model Generation | `output/dbt/models/`, `dbt_project.yml`, `profiles.yml` |
+| **Phase 7** | AutoSys JIL Migration | `output/autosys/PL_AUTOSYS_*.json`, `autosys_summary.json` |
+| **Phase 8** | Cutover & Decommission | Sign-off, Informatica + AutoSys shutdown |
 
 ---
 

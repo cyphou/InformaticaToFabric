@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================ -->
+<!-- IICS Export — Mapping: m_customer_360                            -->
+<!-- Pattern: Customer 360 — multi-source join + SCD Type 2           -->
+<!-- Sources: Salesforce, Oracle ERP, Snowflake Analytics, REST API   -->
+<!-- Targets: Silver (dim_customer), Gold (customer_360_view)         -->
+<!-- ================================================================ -->
+<exportMetadata xmlns="http://schemas.informatica.com/socrates/data-services/2014/05/export">
+  <weightedCSPackage>
+
+    <!-- ============================================================ -->
+    <!-- Mapping: Customer 360 — enterprise customer master            -->
+    <!-- Complexity: Complex (4 sources, SCD2, 8+ transformations)    -->
+    <!-- ============================================================ -->
+    <dTemplate name="m_customer_360" objectType="com.infa.deployment.mapping"
+               description="Build Customer 360 view from CRM, ERP, Analytics, and external enrichment sources">
+
+      <field name="transformations">
+
+        <!-- Source 1: Salesforce CRM — Contact + Account -->
+        <dTemplate name="src_sf_contacts" objectType="com.infa.adapter.salesforce.reader"
+                   description="Read contacts from Salesforce CRM">
+          <field name="connectionReference" value="CONN_SALESFORCE_PROD"/>
+          <field name="object" value="Contact"/>
+          <field name="soqlOverride" value="SELECT Id, FirstName, LastName, Email, Phone, AccountId, MailingCity, MailingState, MailingCountry, CreatedDate, LastModifiedDate FROM Contact WHERE IsDeleted = false"/>
+        </dTemplate>
+
+        <dTemplate name="src_sf_accounts" objectType="com.infa.adapter.salesforce.reader"
+                   description="Read accounts from Salesforce CRM">
+          <field name="connectionReference" value="CONN_SALESFORCE_PROD"/>
+          <field name="object" value="Account"/>
+          <field name="soqlOverride" value="SELECT Id, Name, Industry, AnnualRevenue, NumberOfEmployees, BillingCountry, Type FROM Account WHERE IsDeleted = false"/>
+        </dTemplate>
+
+        <!-- Source 2: Oracle ERP — Customer master + transactions -->
+        <dTemplate name="src_erp_customers" objectType="com.infa.adapter.oracle.reader"
+                   description="Read customer master from Oracle ERP">
+          <field name="connectionReference" value="CONN_ORACLE_ERP"/>
+          <field name="object" value="ERP.AR_CUSTOMERS"/>
+          <field name="sqlOverride" value="SELECT CUSTOMER_ID, CUSTOMER_NAME, CREDIT_LIMIT, PAYMENT_TERMS, CUSTOMER_CLASS, CREATION_DATE, STATUS FROM AR_CUSTOMERS WHERE STATUS != 'INACTIVE'"/>
+        </dTemplate>
+
+        <dTemplate name="src_erp_transactions" objectType="com.infa.adapter.oracle.reader"
+                   description="Read transaction summary from Oracle ERP">
+          <field name="connectionReference" value="CONN_ORACLE_ERP"/>
+          <field name="object" value="ERP.AR_PAYMENT_SCHEDULES_ALL"/>
+          <field name="sqlOverride" value="SELECT CUSTOMER_ID, SUM(AMOUNT_DUE_ORIGINAL) AS TOTAL_INVOICED, SUM(AMOUNT_DUE_REMAINING) AS TOTAL_OUTSTANDING, COUNT(*) AS INVOICE_COUNT, MAX(TRX_DATE) AS LAST_TRX_DATE FROM AR_PAYMENT_SCHEDULES_ALL GROUP BY CUSTOMER_ID"/>
+        </dTemplate>
+
+        <!-- Source 3: Snowflake Analytics — behavioral scores -->
+        <dTemplate name="src_snow_scores" objectType="com.infa.adapter.snowflake.reader"
+                   description="Read customer health and engagement scores from Snowflake">
+          <field name="connectionReference" value="CONN_SNOWFLAKE_ANALYTICS"/>
+          <field name="object" value="ANALYTICS.CUSTOMER_SCORES"/>
+          <field name="warehouse" value="COMPUTE_WH"/>
+        </dTemplate>
+
+        <!-- Source 4: REST API — enrichment (firmographics) -->
+        <dTemplate name="src_api_firmographics" objectType="com.infa.adapter.http.reader"
+                   description="Call external API for firmographic data enrichment">
+          <field name="connectionReference" value="CONN_ENRICHMENT_API"/>
+          <field name="httpMethod" value="POST"/>
+          <field name="endpointUrl" value="https://api.enrichment.example.com/v2/firmographics"/>
+          <field name="requestBodyTemplate" value="{&quot;company_name&quot;: &quot;$$COMPANY_NAME&quot;, &quot;country&quot;: &quot;$$COUNTRY&quot;}"/>
+          <field name="responseFormat" value="JSON"/>
+          <field name="batchSize" value="50"/>
+          <field name="rateLimitPerSecond" value="10"/>
+        </dTemplate>
+
+        <!-- Joiner: CRM Contact + Account -->
+        <dTemplate name="jnr_contact_account" objectType="com.infa.adapter.joiner"
+                   description="Join contacts with their parent accounts">
+          <field name="joinType" value="LEFT_OUTER"/>
+          <field name="joinCondition" value="src_sf_contacts.AccountId = src_sf_accounts.Id"/>
+          <field name="masterSource" value="src_sf_contacts"/>
+          <field name="detailSource" value="src_sf_accounts"/>
+        </dTemplate>
+
+        <!-- Joiner: CRM + ERP (cross-system customer match) -->
+        <dTemplate name="jnr_crm_erp" objectType="com.infa.adapter.joiner"
+                   description="Match CRM contacts to ERP customer master by email/name">
+          <field name="joinType" value="LEFT_OUTER"/>
+          <field name="joinCondition" value="UPPER(jnr_contact_account.Email) = UPPER(src_erp_customers.EMAIL_ADDRESS) OR (UPPER(jnr_contact_account.LastName) = UPPER(src_erp_customers.CUSTOMER_NAME_LAST) AND jnr_contact_account.MailingCountry = src_erp_customers.COUNTRY)"/>
+          <field name="masterSource" value="jnr_contact_account"/>
+          <field name="detailSource" value="src_erp_customers"/>
+        </dTemplate>
+
+        <!-- Lookup: ERP transaction summary -->
+        <dTemplate name="lkp_erp_transactions" objectType="com.infa.adapter.lookup"
+                   description="Lookup aggregated transaction data for each customer">
+          <field name="lookupObject" value="ERP.AR_PAYMENT_SCHEDULES_ALL"/>
+          <field name="condition" value="CUSTOMER_ID = src_erp_customers.CUSTOMER_ID"/>
+          <field name="connectionReference" value="CONN_ORACLE_ERP"/>
+          <field name="returnFields" value="TOTAL_INVOICED,TOTAL_OUTSTANDING,INVOICE_COUNT,LAST_TRX_DATE"/>
+          <field name="cacheEnabled" value="true"/>
+        </dTemplate>
+
+        <!-- Lookup: Snowflake analytics scores -->
+        <dTemplate name="lkp_analytics_scores" objectType="com.infa.adapter.lookup"
+                   description="Lookup customer health and engagement scores">
+          <field name="lookupObject" value="ANALYTICS.CUSTOMER_SCORES"/>
+          <field name="condition" value="customer_email = Email"/>
+          <field name="connectionReference" value="CONN_SNOWFLAKE_ANALYTICS"/>
+          <field name="returnFields" value="health_score,engagement_score,churn_probability,ltv_predicted"/>
+          <field name="cacheEnabled" value="true"/>
+        </dTemplate>
+
+        <!-- Expression: Customer 360 derived fields -->
+        <dTemplate name="exp_customer_360" objectType="com.infa.adapter.expression"
+                   description="Compute customer 360 metrics and segmentation">
+          <field name="expression">
+            <dTemplate name="customer_key" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="MD5(LOWER(LTRIM(RTRIM(Email))))"/>
+              <field name="datatype" value="string(32)"/>
+            </dTemplate>
+            <dTemplate name="full_name" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="INITCAP(FirstName) || ' ' || INITCAP(LastName)"/>
+              <field name="datatype" value="string(200)"/>
+            </dTemplate>
+            <dTemplate name="customer_segment" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(AnnualRevenue >= 10000000, 'Enterprise', IIF(AnnualRevenue >= 1000000, 'Mid-Market', IIF(AnnualRevenue >= 100000, 'SMB', 'Startup')))"/>
+              <field name="datatype" value="string(20)"/>
+            </dTemplate>
+            <dTemplate name="risk_tier" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(churn_probability >= 0.8, 'Critical', IIF(churn_probability >= 0.5, 'High', IIF(churn_probability >= 0.3, 'Medium', 'Low')))"/>
+              <field name="datatype" value="string(10)"/>
+            </dTemplate>
+            <dTemplate name="customer_value_score" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="(NVL(TOTAL_INVOICED,0) * 0.3) + (NVL(ltv_predicted,0) * 0.4) + (NVL(health_score,50) * 100 * 0.3)"/>
+              <field name="datatype" value="decimal(18,2)"/>
+            </dTemplate>
+            <dTemplate name="is_new_customer" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="IIF(DATEDIFF(SYSDATE, CreatedDate, 'DD') &lt;= 90, 1, 0)"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="days_since_last_txn" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="DATEDIFF(SYSDATE, LAST_TRX_DATE, 'DD')"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+            <dTemplate name="effective_from" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="SESSSTARTTIME"/>
+              <field name="datatype" value="timestamp"/>
+            </dTemplate>
+            <dTemplate name="is_current" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="1"/>
+              <field name="datatype" value="integer"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Filter: Exclude test/sandbox accounts -->
+        <dTemplate name="fil_exclude_test" objectType="com.infa.adapter.filter"
+                   description="Exclude test and internal accounts">
+          <field name="condition" value="Email NOT LIKE '%@test.%' AND Email NOT LIKE '%@example.%' AND NVL(AccountType, '') != 'Internal' AND customer_key IS NOT NULL"/>
+        </dTemplate>
+
+        <!-- Sorter: By customer key for SCD2 lookup -->
+        <dTemplate name="srt_by_customer_key" objectType="com.infa.adapter.sorter"
+                   description="Sort by customer key for efficient SCD2 comparison">
+          <field name="sortKeys" value="customer_key ASC"/>
+          <field name="distinct" value="false"/>
+          <field name="cacheSize" value="auto"/>
+        </dTemplate>
+
+        <!-- Lookup: Existing Silver record (for SCD Type 2) -->
+        <dTemplate name="lkp_existing_customer" objectType="com.infa.adapter.lookup"
+                   description="Lookup current Silver record to detect SCD2 changes">
+          <field name="lookupObject" value="silver.dim_customer"/>
+          <field name="condition" value="customer_key = lkp_existing_customer.customer_key AND is_current = 1"/>
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="returnFields" value="customer_sk,customer_segment AS prev_segment,risk_tier AS prev_risk_tier,customer_value_score AS prev_value_score,effective_from AS prev_effective_from"/>
+          <field name="lookupPolicy" value="USE_FIRST_VALUE"/>
+        </dTemplate>
+
+        <!-- Router: SCD2 — new vs changed vs unchanged -->
+        <dTemplate name="rtr_scd2" objectType="com.infa.adapter.router"
+                   description="Route SCD Type 2: new inserts, changed records, unchanged">
+          <field name="groups">
+            <dTemplate name="grp_new_customer" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="ISNULL(customer_sk)"/>
+              <field name="description" value="Brand new customer — insert"/>
+            </dTemplate>
+            <dTemplate name="grp_changed" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="customer_segment != prev_segment OR risk_tier != prev_risk_tier OR ABS(customer_value_score - prev_value_score) > 100"/>
+              <field name="description" value="SCD2-tracked attributes changed — expire old, insert new"/>
+            </dTemplate>
+            <dTemplate name="grp_unchanged" objectType="com.infa.adapter.router.group">
+              <field name="condition" value="TRUE"/>
+              <field name="description" value="No SCD2 change — skip (default group)"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <!-- Update Strategy: Expire old SCD2 records -->
+        <dTemplate name="upd_expire_old" objectType="com.infa.adapter.updatestrategy"
+                   description="Set is_current = 0 and effective_to = SYSDATE on old SCD2 records">
+          <field name="updateStrategy" value="DD_UPDATE"/>
+        </dTemplate>
+
+        <!-- Sequence Generator: Surrogate key for dim_customer -->
+        <dTemplate name="seq_customer_sk" objectType="com.infa.adapter.sequencegenerator"
+                   description="Generate surrogate key for new/changed customer records">
+          <field name="startValue" value="1"/>
+          <field name="incrementBy" value="1"/>
+          <field name="endValue" value="99999999"/>
+          <field name="currentValue" value="$$LAST_SK_VALUE"/>
+          <field name="cycleEnabled" value="false"/>
+        </dTemplate>
+
+        <!-- Target: Silver — dim_customer (SCD Type 2) -->
+        <dTemplate name="tgt_silver_customer" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Write to Silver dim_customer with SCD2 versioning">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="silver.dim_customer"/>
+          <field name="writeMode" value="merge"/>
+          <field name="mergeKeys" value="customer_key,effective_from"/>
+        </dTemplate>
+
+        <!-- Target: Gold — customer_360_view (latest snapshot) -->
+        <dTemplate name="tgt_gold_customer_360" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Overwrite Gold customer 360 view with current snapshot">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="gold.customer_360_view"/>
+          <field name="writeMode" value="overwrite"/>
+        </dTemplate>
+
+      </field>
+
+      <!-- Mapping Parameters -->
+      <dParameter name="$$LAST_SK_VALUE" type="integer" defaultValue="0"/>
+      <dParameter name="$$LOAD_DATE" type="date" defaultValue="sysdate"/>
+      <dParameter name="$$SCD2_TRACKING_FIELDS" type="string" defaultValue="customer_segment,risk_tier,customer_value_score"/>
+    </dTemplate>
+
+    <!-- ============================================================ -->
+    <!-- Mapping: m_customer_activity_log — event stream to lakehouse -->
+    <!-- Complexity: Medium (source + expression + filter + target)   -->
+    <!-- ============================================================ -->
+    <dTemplate name="m_customer_activity_log" objectType="com.infa.deployment.mapping"
+               description="Ingest customer activity events from Kafka to Bronze">
+
+      <field name="transformations">
+
+        <dTemplate name="src_kafka_events" objectType="com.infa.adapter.kafka.reader"
+                   description="Read from Kafka customer-activity topic">
+          <field name="connectionReference" value="CONN_KAFKA_CLUSTER"/>
+          <field name="topic" value="customer-activity-events"/>
+          <field name="consumerGroup" value="cg_customer_360_ingest"/>
+          <field name="offsetStrategy" value="EARLIEST_UNCOMMITTED"/>
+          <field name="messageFormat" value="JSON"/>
+        </dTemplate>
+
+        <dTemplate name="exp_parse_event" objectType="com.infa.adapter.expression"
+                   description="Parse JSON event fields">
+          <field name="expression">
+            <dTemplate name="event_ts" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="TO_DATE(event_timestamp, 'YYYY-MM-DD HH24:MI:SS.US')"/>
+              <field name="datatype" value="timestamp"/>
+            </dTemplate>
+            <dTemplate name="event_date" objectType="com.infa.adapter.expression.port">
+              <field name="expression" value="TRUNC(event_ts, 'DD')"/>
+              <field name="datatype" value="date"/>
+            </dTemplate>
+          </field>
+        </dTemplate>
+
+        <dTemplate name="fil_valid_events" objectType="com.infa.adapter.filter"
+                   description="Filter out malformed events">
+          <field name="condition" value="customer_id IS NOT NULL AND event_type IS NOT NULL"/>
+        </dTemplate>
+
+        <dTemplate name="tgt_bronze_events" objectType="com.infa.adapter.lakehouse.writer"
+                   description="Append events to Bronze activity log">
+          <field name="connectionReference" value="CONN_FABRIC_LAKEHOUSE"/>
+          <field name="table" value="bronze.customer_activity_log"/>
+          <field name="writeMode" value="append"/>
+          <field name="partitionBy" value="event_date"/>
+        </dTemplate>
+
+      </field>
+    </dTemplate>
+
+  </weightedCSPackage>
+</exportMetadata>

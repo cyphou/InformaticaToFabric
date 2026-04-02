@@ -1,7 +1,7 @@
-# Fabric notebook source
+# Databricks notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_DQ_VALIDATE_EMAILS
@@ -10,7 +10,7 @@
 # Sources: 
 # Targets: 
 # Flow: SQ → DQ → TGT
-# Generated: 2026-03-26
+# Generated: 2026-04-02
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,

@@ -21,6 +21,21 @@ from pathlib import Path
 WORKSPACE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE))
 
+
+def _safe_write_upload(target_dir, uploaded_file):
+    """Write an uploaded file to target_dir, sanitizing the filename to prevent path traversal."""
+    # Strip directory components from filename (prevents ../../ attacks)
+    safe_name = Path(uploaded_file.name).name
+    # Reject empty or dot-only names
+    if not safe_name or safe_name.startswith("."):
+        return False
+    dest = (target_dir / safe_name).resolve()
+    # Verify the resolved path is still inside the target directory
+    if not str(dest).startswith(str(target_dir.resolve())):
+        return False
+    dest.write_bytes(uploaded_file.read())
+    return True
+
 # Step definitions
 STEPS = [
     {"id": 1, "title": "Upload", "icon": "📂", "desc": "Upload Informatica XML exports and SQL files"},
@@ -91,7 +106,7 @@ def run_streamlit():
                 mapping_dir = WORKSPACE / "input" / "mappings"
                 mapping_dir.mkdir(parents=True, exist_ok=True)
                 for f in mapping_files:
-                    (mapping_dir / f.name).write_bytes(f.read())
+                    _safe_write_upload(mapping_dir, f)
                 st.success(f"✅ {len(mapping_files)} mapping files uploaded")
 
         with col2:
@@ -106,7 +121,7 @@ def run_streamlit():
                 workflow_dir = WORKSPACE / "input" / "workflows"
                 workflow_dir.mkdir(parents=True, exist_ok=True)
                 for f in workflow_files:
-                    (workflow_dir / f.name).write_bytes(f.read())
+                    _safe_write_upload(workflow_dir, f)
                 st.success(f"✅ {len(workflow_files)} workflow files uploaded")
 
         sql_files = st.file_uploader(
@@ -119,7 +134,7 @@ def run_streamlit():
             sql_dir = WORKSPACE / "input" / "sql"
             sql_dir.mkdir(parents=True, exist_ok=True)
             for f in sql_files:
-                (sql_dir / f.name).write_bytes(f.read())
+                _safe_write_upload(sql_dir, f)
             st.success(f"✅ {len(sql_files)} SQL files uploaded")
 
         if st.button("Next → Assess", type="primary"):
@@ -135,8 +150,11 @@ def run_streamlit():
                 try:
                     run_assessment.main()
                     st.success("✅ Assessment complete!")
-                except SystemExit:
-                    st.success("✅ Assessment complete!")
+                except SystemExit as e:
+                    if e.code and e.code != 0:
+                        st.error(f"❌ Assessment failed with exit code {e.code}")
+                    else:
+                        st.success("✅ Assessment complete!")
 
         inv = _load_inventory()
         if inv:
@@ -234,8 +252,11 @@ def run_streamlit():
                         importlib.reload(mod)
                         mod.main()
                         st.success(f"✅ {phase_name} complete")
-                    except SystemExit:
-                        st.success(f"✅ {phase_name} complete")
+                    except SystemExit as e:
+                        if e.code and e.code != 0:
+                            st.error(f"❌ {phase_name} failed with exit code {e.code}")
+                        else:
+                            st.success(f"✅ {phase_name} complete")
                     except Exception as e:
                         st.error(f"❌ {phase_name} failed: {e}")
 

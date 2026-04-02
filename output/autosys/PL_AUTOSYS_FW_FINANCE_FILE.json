@@ -1,0 +1,18 @@
+{
+  "name": "AUTOSYS_FW_FINANCE_FILE",
+  "tasks": [
+    {
+      "task_key": "FW_FINANCE_FILE",
+      "description": "AutoSys FW → file sensor. Watch: /data/incoming/finance/gl_extract_*.csv. TODO: Use Databricks file arrival trigger.",
+      "depends_on": [],
+      "notebook_task": {
+        "notebook_path": "/Shared/migration/FW_FW_FINANCE_FILE",
+        "source": "WORKSPACE"
+      }
+    }
+  ],
+  "tags": {
+    "source": "autosys",
+    "migrated": "true"
+  }
+}

@@ -3,14 +3,14 @@
 <p align="center">
   <img src="https://img.shields.io/badge/objects_covered-98%25-27AE60?style=for-the-badge" alt="98% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-6-F39C12?style=for-the-badge" alt="6 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_40_complete-27AE60?style=for-the-badge" alt="Sprint 40 complete"/>
-  <img src="https://img.shields.io/badge/tests-780_(779_passing)-2980B9?style=for-the-badge" alt="780 tests"/>
-  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks-0078D4?style=for-the-badge" alt="Fabric | Databricks"/>
+  <img src="https://img.shields.io/badge/status-sprint_61_complete-27AE60?style=for-the-badge" alt="Sprint 61 complete"/>
+  <img src="https://img.shields.io/badge/tests-918-2980B9?style=for-the-badge" alt="918 tests"/>
+  <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-08-15 (Sprint 40 — Phase 2 Complete + Azure Databricks Target)  
-**Scope:** Informatica PowerCenter 9.x/10.x + IICS → **Microsoft Fabric** or **Azure Databricks**  
+**Last Updated:** 2026-08-15 (Sprint 61 — Phase 2 + Databricks + DBT + AutoSys JIL)  
+**Scope:** Informatica PowerCenter 9.x/10.x + IICS → **Microsoft Fabric** or **Azure Databricks** or **DBT**  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
 ---
