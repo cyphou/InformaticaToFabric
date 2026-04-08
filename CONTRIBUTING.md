@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 1,111 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
+**Current status:** 1,489 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
 
 ## Test Files
 
@@ -51,6 +51,13 @@ py -m pytest tests/test_coverage.py::TestSqlConversion -v
 | `tests/test_autosys.py` | AutoSys JIL parsing, DAG, cron, pipeline gen | 63 |
 | `tests/test_phase3_5.py` | Sprints 47–65: DLT, UC lineage, cluster policies, DBT advanced, AutoSys enhanced | 117 |
 | `tests/test_artifact_validation.py` | Artifact validation: pipeline JSON, DBT SQL, notebook structure | 76 |
+| `tests/test_sprint45.py` | Sprint 45: additional coverage | ~30 |
+| `tests/test_sprint66.py` | Gap closure & lineage reports (Sprint 66) | ~40 |
+| `tests/test_dbt_enhancements.py` | DBT enhancements (Sprint 67) | ~35 |
+| `tests/test_sprint68_70.py` | Phase 7: DevOps, Platform-Native, Observability | ~60 |
+| `tests/test_sprint71_73.py` | Phase 8: Query Optimization, PL/SQL, Dynamic SQL | ~55 |
+| `tests/test_sprint74_76.py` | Phase 9: Plugins, SDK, Rule Engine | ~50 |
+| `tests/test_sprint77_79.py` | Phase 10: Validation, Catalog Integration | ~50 |
 
 ## Code Style
 
@@ -77,12 +84,21 @@ Configuration is in `pyproject.toml`.
 ├── run_validation.py          # Phase 5: Validation script generation
 ├── run_dbt_migration.py        # Phase 3: DBT model generation
 ├── run_autosys_migration.py    # Phase 5: AutoSys JIL migration
-├── run_migration.py           # Orchestrator (runs all 8 phases)
+├── run_migration.py           # Orchestrator (runs all phases)
+├── run_artifact_validation.py  # Artifact validation
+├── run_target_comparison.py    # Target comparison reports
 ├── generate_html_reports.py   # HTML report generation
+├── generate_pptx.py           # PowerPoint deck generation
 ├── dashboard.py               # Interactive dashboard
 ├── deploy_to_fabric.py        # Fabric deployment
 ├── deploy_to_databricks.py    # Databricks deployment
-├── tests/                     # 1,111 tests (15 test files)
+├── deploy_dbt_project.py      # DBT project deployment
+├── plugins.py                 # Plugin system (custom transforms)
+├── sdk.py                     # Python SDK
+├── api_server.py              # REST API server
+├── rule_engine.py             # Configurable rule engine
+├── catalog_integration.py     # Data catalog integration
+├── tests/                     # 1,489 tests (22 test files)
 ├── input/                     # Informatica XML exports
 │   └── autosys/               # AutoSys JIL files (.jil)
 ├── output/                    # Generated artifacts

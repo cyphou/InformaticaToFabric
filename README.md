@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/79%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="70/100 sprints complete"/>
-  <img src="https://img.shields.io/badge/1489%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1336 tests"/>
+  <img src="https://img.shields.io/badge/79%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="79/100 sprints complete"/>
+  <img src="https://img.shields.io/badge/1489%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1489 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
   <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT"/>
   <img src="https://img.shields.io/badge/AutoSys-JIL%20support-9B59B6?style=flat-square&logo=clockify&logoColor=white" alt="AutoSys JIL"/>

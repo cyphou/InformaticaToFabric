@@ -326,6 +326,8 @@ InformaticaToDBFabric/
 ├── docs/                                # 📖 User documentation
 │   ├── USER_GUIDE.md                    #   Usage guide & examples
 │   ├── TROUBLESHOOTING.md               #   Common issues & fixes
+│   ├── ENTERPRISE_PLAYBOOK.md           #   Enterprise migration playbook
+│   ├── RUNBOOK.md                       #   Operations runbook
 │   └── ADR/                             #   Architecture Decision Records
 ├── input/                               # 📂 Informatica exports
 │   ├── workflows/                       #   Workflow XML
@@ -340,6 +342,8 @@ InformaticaToDBFabric/
 │   ├── pipelines/                       #   ⚡ Pipeline JSON
 │   ├── autosys/                         #   ⏰ AutoSys → Pipeline/Workflow JSON
 │   ├── sql/                             #   🗄️ Converted SQL
+│   ├── schema/                          #   📐 Delta Lake schema DDL
+│   ├── scripts/                         #   📜 Deployment scripts
 │   └── validation/                      #   ✅ Test scripts
 ├── templates/                           # 📋 Reusable templates
 │   ├── notebook_template.py             #   Fabric notebook template
@@ -355,12 +359,14 @@ InformaticaToDBFabric/
 │   ├── test_e2e.py                      #   End-to-end integration tests
 │   ├── test_iics.py                     #   IICS-specific tests
 │   ├── test_gaps.py                     #   Gap remediation tests
+│   ├── test_sprint22_24.py              #   Session config, scheduler, GTT/MV tests
 │   ├── test_sprint25.py                 #   Lineage & scoring tests
 │   ├── test_sprint26_30.py              #   Templates, schema, waves, validation, production
 │   ├── test_sprint31_40.py              #   Phase 2 tests (object gaps, PL/SQL, multi-tenant, DQ)
 │   ├── test_databricks_target.py        #   Azure Databricks target tests
 │   ├── test_dbt_target.py              #   DBT target tests (Sprint 51)
 │   ├── test_autosys.py                 #   AutoSys JIL tests (Sprint 61)
+│   ├── test_sprint45.py               #   Sprint 45 coverage tests
 │   ├── test_phase3_5.py               #   Phase 3-5 tests (Sprints 47–65)
 │   ├── test_artifact_validation.py   #   Artifact validation (pipeline/DBT/notebook)
 │   ├── test_sprint66.py              #   Gap closure & lineage reports (Sprint 66)
@@ -369,6 +375,32 @@ InformaticaToDBFabric/
 │   ├── test_sprint71_73.py           #   Phase 8 tests (Query Opt, PL/SQL, Dynamic SQL)
 │   ├── test_sprint74_76.py           #   Phase 9 tests (Plugins, SDK, Rule Engine)
 │   └── test_sprint77_79.py           #   Phase 10 tests (Validation, Catalog)
+├── examples/                            # 📋 Example files
+│   └── README.md
+├── web/                                 # 🌐 Web UI wizard
+│   └── app.py
+├── run_migration.py                     # 🚀 Orchestrator (runs all phases)
+├── run_assessment.py                    # XML parsing & inventory
+├── run_sql_migration.py                 # Oracle/SQL → Spark SQL
+├── run_notebook_migration.py            # Mappings → PySpark notebooks
+├── run_pipeline_migration.py            # Workflows → Pipeline JSON
+├── run_dbt_migration.py                 # DBT model generation
+├── run_autosys_migration.py             # AutoSys JIL migration
+├── run_schema_generator.py              # Delta Lake schema generation
+├── run_validation.py                    # Validation script generation
+├── run_artifact_validation.py           # Artifact validation
+├── run_target_comparison.py             # Target comparison reports
+├── generate_html_reports.py             # HTML report generation
+├── generate_pptx.py                     # PowerPoint deck generation
+├── dashboard.py                         # Interactive dashboard
+├── deploy_to_fabric.py                  # Fabric deployment
+├── deploy_to_databricks.py              # Databricks deployment
+├── deploy_dbt_project.py                # DBT project deployment
+├── plugins.py                           # Plugin system (custom transforms)
+├── sdk.py                               # Python SDK
+├── api_server.py                        # REST API server
+├── rule_engine.py                       # Configurable rule engine
+├── catalog_integration.py               # Data catalog integration (Purview/Unity)
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
 ├── DEVELOPMENT_PLAN.md                  # 📝 100-sprint dev plan (Phase 1-17)
