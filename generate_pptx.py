@@ -92,9 +92,9 @@ def _add_title_bar(slide, title, subtitle=None):
 
 def _add_kpi_card(slide, left, top, value, label, color):
     """Small KPI card (value + label)."""
-    _add_shape(slide, left, top, Inches(2.6), Inches(1.5), color)
-    _add_text_box(slide, left + Inches(0.1), top + Inches(0.15), Inches(2.4), Inches(0.8), value, font_size=36, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
-    _add_text_box(slide, left + Inches(0.1), top + Inches(0.85), Inches(2.4), Inches(0.5), label, font_size=13, font_color=WHITE, align=PP_ALIGN.CENTER)
+    _add_shape(slide, left, top, Inches(2.2), Inches(1.5), color)
+    _add_text_box(slide, left + Inches(0.05), top + Inches(0.15), Inches(2.1), Inches(0.8), value, font_size=32, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
+    _add_text_box(slide, left + Inches(0.05), top + Inches(0.85), Inches(2.1), Inches(0.5), label, font_size=12, font_color=WHITE, align=PP_ALIGN.CENTER)
 
 
 # ═════════════════════════════════════════════════════════════════
@@ -121,10 +121,10 @@ def slide_title(prs):
         ("6", "AI Agents", FABRIC_BLUE),
         ("3", "Target Platforms", ACCENT_PURPLE),
     ]
-    x = Inches(1.1)
+    x = Inches(1.5)
     for val, lbl, clr in stats:
         _add_kpi_card(slide, x, Inches(4.0), val, lbl, clr)
-        x += Inches(2.95)
+        x += Inches(2.6)
 
     _add_text_box(slide, Inches(1), Inches(6.3), Inches(11), Inches(0.5),
                   "Powered by GitHub Copilot  •  6-Agent AI Architecture  •  Zero Manual Code Rewriting",
@@ -435,13 +435,13 @@ def slide_roi_model(prs):
         y += Inches(0.48)
 
     # --- Right column: KPI cards ---
-    _add_kpi_card(slide, Inches(9.0), Inches(1.6), "85–95%", "Cost Reduction\nvs Manual Migration", ACCENT_GREEN)
-    _add_kpi_card(slide, Inches(9.0), Inches(3.4), "3–6×", "Faster Time-\nto-Production", FABRIC_BLUE)
-    _add_kpi_card(slide, Inches(9.0), Inches(5.2), "$1.2–3.5M", "Annual License\nSavings", ACCENT_ORANGE)
+    _add_kpi_card(slide, Inches(8.7), Inches(1.6), "85–95%", "Cost Reduction\nvs Manual Migration", ACCENT_GREEN)
+    _add_kpi_card(slide, Inches(8.7), Inches(3.4), "3–6×", "Faster Time-\nto-Production", FABRIC_BLUE)
+    _add_kpi_card(slide, Inches(8.7), Inches(5.2), "$1.2–3.5M", "Annual License\nSavings", ACCENT_ORANGE)
 
-    _add_kpi_card(slide, Inches(11.8), Inches(1.6), "80–90%", "Reduction in\nFTE Requirement", ACCENT_PURPLE)
-    _add_kpi_card(slide, Inches(11.8), Inches(3.4), "99%+", "Automated Test\nCoverage", RGBColor(0xC0, 0x39, 0x2B))
-    _add_kpi_card(slide, Inches(11.8), Inches(5.2), "< 5%", "Rework Rate\nvs 20-30% Manual", DARK_BLUE)
+    _add_kpi_card(slide, Inches(11.0), Inches(1.6), "80–90%", "Reduction in\nFTE Requirement", ACCENT_PURPLE)
+    _add_kpi_card(slide, Inches(11.0), Inches(3.4), "99%+", "Automated Test\nCoverage", RGBColor(0xC0, 0x39, 0x2B))
+    _add_kpi_card(slide, Inches(11.0), Inches(5.2), "< 5%", "Rework Rate\nvs 20-30% Manual", DARK_BLUE)
 
 
 def slide_roi_timeline(prs):
@@ -489,9 +489,9 @@ def slide_roi_timeline(prs):
                "Total: 4–8 weeks  •  1–2 FTEs  •  $58K–$154K labor", font_size=12, font_color=WHITE, bold=True)
 
     # Savings callout
-    _add_shape(slide, Inches(8.5), Inches(4.3), Inches(4.3), Inches(2.5), DARK_BLUE,
+    _add_shape(slide, Inches(9.6), Inches(4.3), Inches(3.4), Inches(2.5), DARK_BLUE,
                "Net Savings\n\n$840K – $2.25M\nlabor cost avoided\n\n+ $1.2–3.5M/year\nlicense elimination\n\nPayback: < 3 months",
-               font_size=16, font_color=WHITE, bold=False)
+               font_size=15, font_color=WHITE, bold=False)
 
 
 def slide_customer_scenarios(prs):
@@ -578,8 +578,8 @@ def slide_detailed_savings(prs):
                    "Per-task breakdown — 200 mappings, 50 workflows, 3 DB types, AutoSys")
 
     # Table header
-    headers = ["Migration Task", "Manual\n(hours/item)", "Automated\n(hours/item)", "Items", "Manual\nTotal (h)", "Automated\nTotal (h)", "Savings"]
-    col_widths = [Inches(2.7), Inches(1.25), Inches(1.25), Inches(0.75), Inches(1.25), Inches(1.25), Inches(1.1)]
+    headers = ["Migration Task", "Manual\n(h/item)", "Auto\n(h/item)", "Items", "Manual\nTotal (h)", "Auto\nTotal (h)", "Saved"]
+    col_widths = [Inches(2.4), Inches(0.9), Inches(0.9), Inches(0.6), Inches(1.05), Inches(1.05), Inches(0.85)]
 
     # Data rows: (task, manual_h, auto_h, count)
     tasks = [
@@ -659,13 +659,13 @@ def slide_detailed_savings(prs):
         f"Net Saved: ${saved/1000:,.0f}K\n"
         f"({savings_total_pct} reduction)"
     )
-    _add_shape(slide, Inches(9.2), Inches(1.55), Inches(3.8), Inches(4.2), FABRIC_BLUE,
+    _add_shape(slide, Inches(8.2), Inches(1.55), Inches(4.8), Inches(3.8), FABRIC_BLUE,
                summary, font_size=14, font_color=WHITE, bold=False, align=PP_ALIGN.LEFT)
 
     # License savings note at bottom
-    _add_shape(slide, Inches(9.2), Inches(5.9), Inches(3.8), Inches(1.2), ACCENT_ORANGE,
-               "Additional Savings:\n+$1.2–3.5M/year\nInformatica license\nelimination",
-               font_size=13, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
+    _add_shape(slide, Inches(8.2), Inches(5.5), Inches(4.8), Inches(1.3), ACCENT_ORANGE,
+               "Additional Savings:\n+$1.2–3.5M/year\nInformatica license elimination",
+               font_size=14, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
 
 
 # ═════════════════════════════════════════════════════════════════
@@ -692,7 +692,7 @@ def main():
     slide_security(prs)        # 13 - Security
     slide_next_steps(prs)      # 14 - Next Steps
 
-    out_path = os.path.join(os.path.dirname(__file__), "output", "Informatica_to_Fabric_Migration_Tool_v2.pptx")
+    out_path = os.path.join(os.path.dirname(__file__), "output", "Informatica_to_Fabric_Migration_Tool.pptx")
     prs.save(out_path)
     print(f"✅ Presentation saved: {out_path}")
     print(f"   {len(prs.slides)} slides generated")
