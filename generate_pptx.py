@@ -6,6 +6,7 @@ from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.oxml.ns import qn
 import os
 
 # ── Brand colours ─────────────────────────────────────────────
@@ -178,10 +179,15 @@ def slide_solution(prs):
         ("✅ Validate\n& Deploy", RGBColor(0xC0, 0x39, 0x2B)),
     ]
     x = Inches(0.4)
-    for lbl, clr in labels:
+    for i, (lbl, clr) in enumerate(labels):
         _add_shape(slide, x, Inches(2.4), Inches(1.9), Inches(1.1), clr, lbl, font_size=13, font_color=WHITE, bold=True)
-        if lbl != labels[-1][0]:
-            _add_text_box(slide, x + Inches(1.95), Inches(2.65), Inches(0.3), Inches(0.5), "→", font_size=24, font_color=DARK_GRAY, bold=True, align=PP_ALIGN.CENTER)
+        if i < len(labels) - 1:
+            # Proper arrow shape instead of text
+            arrow = slide.shapes.add_shape(
+                MSO_SHAPE.RIGHT_ARROW, x + Inches(1.93), Inches(2.65), Inches(0.28), Inches(0.35))
+            arrow.fill.solid()
+            arrow.fill.fore_color.rgb = DARK_GRAY
+            arrow.line.fill.background()
         x += Inches(2.15)
 
     # Key features below
@@ -564,6 +570,103 @@ def slide_next_steps(prs):
                   "informatica-to-fabric  •  MIT Licensed  •  github.com/cyphou/InformaticaToFabric",
                   font_size=14, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
+def slide_detailed_savings(prs):
+    """Slide 11 — Detailed per-task time savings breakdown."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Detailed Time & Cost Savings Estimate",
+                   "Per-task breakdown — 200 mappings, 50 workflows, 3 DB types, AutoSys")
+
+    # Table header
+    headers = ["Migration Task", "Manual\n(hours/item)", "Automated\n(hours/item)", "Items", "Manual\nTotal (h)", "Automated\nTotal (h)", "Savings"]
+    col_widths = [Inches(2.7), Inches(1.25), Inches(1.25), Inches(0.75), Inches(1.25), Inches(1.25), Inches(1.1)]
+
+    # Data rows: (task, manual_h, auto_h, count)
+    tasks = [
+        ("Assessment & Inventory",             8,   0.1,  200),
+        ("SQL Override Conversion",           12,   0.1,  120),
+        ("Stored Procedure Conversion",       24,   0.5,   30),
+        ("Mapping → PySpark Notebook",        16,   0.2,  200),
+        ("Mapping → DBT Model",              10,   0.1,   80),
+        ("Workflow → Pipeline JSON",          12,   0.2,   50),
+        ("AutoSys JIL → Pipeline",            8,   0.1,   40),
+        ("Delta Lake Schema (DDL)",            4,   0.05, 200),
+        ("Validation Notebook Generation",     6,   0.1,  200),
+        ("Unit/Integration Testing",          10,   0.5,  200),
+        ("Lineage Documentation",              4,   0.05, 200),
+        ("Data Catalog (Purview/UC) Setup",    6,   0.1,  200),
+    ]
+
+    x_off = Inches(0.3)
+    y = Inches(1.55)
+
+    # Draw header row
+    x = x_off
+    for hdr, w in zip(headers, col_widths):
+        _add_shape(slide, x, y, w, Inches(0.55), DARK_BLUE, hdr, font_size=10, font_color=WHITE, bold=True)
+        x += w
+
+    # Draw data rows
+    total_manual = 0
+    total_auto = 0
+    for i, (task, mh, ah, count) in enumerate(tasks):
+        y += Inches(0.42)
+        m_total = mh * count
+        a_total = ah * count
+        savings_pct = f"{((m_total - a_total) / m_total * 100):.0f}%"
+        total_manual += m_total
+        total_auto += a_total
+
+        bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+        vals = [task, f"{mh}", f"{ah}", f"{count}", f"{m_total:,.0f}", f"{a_total:,.0f}", savings_pct]
+        x = x_off
+        for j, (val, w) in enumerate(zip(vals, col_widths)):
+            clr = bg
+            fc = DARK_GRAY
+            if j == 6:  # savings column
+                clr = ACCENT_GREEN
+                fc = WHITE
+            al = PP_ALIGN.LEFT if j == 0 else PP_ALIGN.CENTER
+            _add_shape(slide, x, y, w, Inches(0.38), clr, val, font_size=10, font_color=fc, bold=False, align=al)
+            x += w
+
+    # Totals row
+    y += Inches(0.44)
+    savings_total_pct = f"{((total_manual - total_auto) / total_manual * 100):.0f}%"
+    totals = ["TOTAL", "", "", "", f"{total_manual:,.0f}", f"{total_auto:,.0f}", savings_total_pct]
+    x = x_off
+    for j, (val, w) in enumerate(zip(totals, col_widths)):
+        clr = DARK_BLUE if j < 4 else ACCENT_GREEN
+        fc = WHITE
+        al = PP_ALIGN.LEFT if j == 0 else PP_ALIGN.CENTER
+        _add_shape(slide, x, y, w, Inches(0.45), clr, val, font_size=11, font_color=fc, bold=True, align=al)
+        x += w
+
+    # Summary callout on the right
+    manual_fte_months = total_manual / 160  # 160h/month per FTE
+    auto_fte_months = total_auto / 160
+    labor_manual = total_manual * 95  # $95/h blended rate
+    labor_auto = total_auto * 95
+    saved = labor_manual - labor_auto
+
+    summary = (
+        f"Manual: {total_manual:,.0f} hours\n"
+        f"= {manual_fte_months:.0f} FTE-months\n"
+        f"= ${labor_manual/1000:,.0f}K labor\n\n"
+        f"Automated: {total_auto:,.0f} hours\n"
+        f"= {auto_fte_months:.1f} FTE-months\n"
+        f"= ${labor_auto/1000:,.0f}K labor\n\n"
+        f"Net Saved: ${saved/1000:,.0f}K\n"
+        f"({savings_total_pct} reduction)"
+    )
+    _add_shape(slide, Inches(9.2), Inches(1.55), Inches(3.8), Inches(4.2), FABRIC_BLUE,
+               summary, font_size=14, font_color=WHITE, bold=False, align=PP_ALIGN.LEFT)
+
+    # License savings note at bottom
+    _add_shape(slide, Inches(9.2), Inches(5.9), Inches(3.8), Inches(1.2), ACCENT_ORANGE,
+               "Additional Savings:\n+$1.2–3.5M/year\nInformatica license\nelimination",
+               font_size=13, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
+
 
 # ═════════════════════════════════════════════════════════════════
 #  MAIN
@@ -584,11 +687,12 @@ def main():
     slide_extensibility(prs)   # 8 - Extensibility
     slide_roi_model(prs)       # 9 - ROI Model
     slide_roi_timeline(prs)    # 10 - Timeline
-    slide_customer_scenarios(prs)  # 11 - Scenarios
-    slide_security(prs)        # 12 - Security
-    slide_next_steps(prs)      # 13 - Next Steps
+    slide_detailed_savings(prs)   # 11 - Detailed Savings Breakdown
+    slide_customer_scenarios(prs)  # 12 - Scenarios
+    slide_security(prs)        # 13 - Security
+    slide_next_steps(prs)      # 14 - Next Steps
 
-    out_path = os.path.join(os.path.dirname(__file__), "output", "Informatica_to_Fabric_Migration_Tool.pptx")
+    out_path = os.path.join(os.path.dirname(__file__), "output", "Informatica_to_Fabric_Migration_Tool_v2.pptx")
     prs.save(out_path)
     print(f"✅ Presentation saved: {out_path}")
     print(f"   {len(prs.slides)} slides generated")
