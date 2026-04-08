@@ -1,35 +1,67 @@
 {
-  "name": "AUTOSYS_CMD_CUSTOMER_SYNC",
-  "tasks": [
-    {
-      "task_key": "CMD_CUSTOMER_SYNC",
-      "description": "AutoSys → Informatica WF_CUSTOMER_SYNC",
-      "depends_on": [],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/NB_WF_CUSTOMER_SYNC",
-        "source": "WORKSPACE"
+  "name": "PL_AUTOSYS_CMD_CUSTOMER_SYNC",
+  "properties": {
+    "description": "Migrated from AutoSys BOX/chain CMD_CUSTOMER_SYNC.",
+    "activities": [
+      {
+        "name": "CMD_CUSTOMER_SYNC",
+        "type": "Notebook",
+        "dependsOn": [],
+        "description": "AutoSys CMD → Informatica WF_CUSTOMER_SYNC. Nightly customer sync — runs every 30 min from 23:00",
+        "typeProperties": {
+          "notebook": {
+            "referenceName": "NB_WF_CUSTOMER_SYNC",
+            "type": "NotebookReference"
+          },
+          "parameters": {}
+        },
+        "annotations": [
+          "AutoSysJob:CMD_CUSTOMER_SYNC",
+          "InformaticaWorkflow:WF_CUSTOMER_SYNC",
+          "AlarmIfFail"
+        ]
+      },
+      {
+        "name": "CMD_CUSTOMER_REPORT",
+        "type": "Script",
+        "dependsOn": [
+          {
+            "activity": "CMD_CUSTOMER_SYNC",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "description": "AutoSys CMD: Generate customer report after sync. Command: /opt/scripts/generate_customer_report.sh",
+        "typeProperties": {
+          "content": "-- TODO: Convert AutoSys command to Fabric activity\n-- Original: /opt/scripts/generate_customer_report.sh"
+        },
+        "annotations": [
+          "AutoSysJob:CMD_CUSTOMER_REPORT",
+          "ManualReviewRequired"
+        ]
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
       }
     },
-    {
-      "task_key": "CMD_CUSTOMER_REPORT",
-      "description": "AutoSys CMD: Generate customer report after sync. TODO: Convert command.",
-      "depends_on": [
-        {
-          "task_key": "CMD_CUSTOMER_SYNC"
+    "variables": {},
+    "annotations": [
+      "MigratedFromAutoSys",
+      "OriginalBox:CMD_CUSTOMER_SYNC"
+    ],
+    "trigger": {
+      "type": "ScheduleTrigger",
+      "description": "AutoSys schedule: 23:00 all",
+      "typeProperties": {
+        "recurrence": {
+          "cron": "0,30 23 * * *",
+          "timeZone": "UTC"
         }
-      ],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/SCRIPT_CMD_CUSTOMER_REPORT",
-        "source": "WORKSPACE"
       }
     }
-  ],
-  "tags": {
-    "source": "autosys",
-    "migrated": "true"
-  },
-  "schedule": {
-    "quartz_cron_expression": "0 0,30 23 * * ? *",
-    "timezone_id": "UTC"
   }
 }

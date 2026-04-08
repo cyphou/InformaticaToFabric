@@ -1,37 +1,90 @@
 {
   "name": "PL_TF_SUB_KPI_COMPUTATION",
-  "description": "Migrated from Informatica workflow TF_SUB_KPI_COMPUTATION. ",
-  "tasks": [
-    {
-      "task_key": "NB_m_compute_sales_kpis",
-      "description": "Migrated from Informatica session mt_compute_sales_kpis.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_compute_sales_kpis",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
+  "properties": {
+    "description": "Migrated from Informatica workflow TF_SUB_KPI_COMPUTATION. ",
+    "activities": [
+      {
+        "name": "NB_m_compute_sales_kpis",
+        "description": "Migrated from Informatica session mt_compute_sales_kpis.",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_compute_sales_kpis",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
         }
       },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000
+      {
+        "name": "NB_m_compute_customer_kpis",
+        "description": "Migrated from Informatica session mt_compute_customer_kpis.",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_compute_customer_kpis",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
     },
-    {
-      "task_key": "NB_m_compute_customer_kpis",
-      "description": "Migrated from Informatica session mt_compute_customer_kpis.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_compute_customer_kpis",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000
-    }
-  ],
-  "tags": {
-    "migrated_from": "informatica",
-    "original_workflow": "TF_SUB_KPI_COMPUTATION"
-  },
-  "format": "MULTI_TASK"
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:TF_SUB_KPI_COMPUTATION"
+    ]
+  }
 }

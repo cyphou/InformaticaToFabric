@@ -1,6 +1,6 @@
 {
-  "generated": "2026-04-02 12:27 UTC",
-  "target": "databricks",
+  "generated": "2026-04-07 16:43 UTC",
+  "target": "fabric",
   "total_jil_jobs": 12,
   "job_types": {
     "BOX": 2,

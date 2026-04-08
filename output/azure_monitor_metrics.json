@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-04-07T16:45:49.095155+00:00",
+  "workspace_id": "unknown",
+  "custom_metrics": [
+    {
+      "name": "migration/artifacts_deployed",
+      "value": 0,
+      "unit": "Count"
+    },
+    {
+      "name": "migration/deployment_errors",
+      "value": 0,
+      "unit": "Count"
+    }
+  ]
+}

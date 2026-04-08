@@ -1,10 +1,23 @@
 {
   "name": "PL_svc_lookup_customer",
-  "description": "Migrated from Informatica workflow svc_lookup_customer. ",
-  "tasks": [],
-  "tags": {
-    "migrated_from": "informatica",
-    "original_workflow": "svc_lookup_customer"
-  },
-  "format": "MULTI_TASK"
+  "properties": {
+    "description": "Migrated from Informatica workflow svc_lookup_customer. ",
+    "activities": [],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
+    },
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:svc_lookup_customer"
+    ]
+  }
 }

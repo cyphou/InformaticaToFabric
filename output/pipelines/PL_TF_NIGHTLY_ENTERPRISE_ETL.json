@@ -1,204 +1,623 @@
 {
   "name": "PL_TF_NIGHTLY_ENTERPRISE_ETL",
-  "description": "Migrated from Informatica workflow TF_NIGHTLY_ENTERPRISE_ETL. ",
-  "tasks": [
-    {
-      "task_key": "NB_cmd_preflight_checks",
-      "description": "Migrated from Informatica session cmd_preflight_checks.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_cmd_preflight_checks",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
+  "properties": {
+    "description": "Migrated from Informatica workflow TF_NIGHTLY_ENTERPRISE_ETL. ",
+    "activities": [
+      {
+        "name": "NB_cmd_preflight_checks",
+        "description": "Migrated from Informatica session cmd_preflight_checks.",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_cmd_preflight_checks",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
         }
       },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000
+      {
+        "name": "NB_cmd_acquire_lock",
+        "description": "Migrated from Informatica session cmd_acquire_lock.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "cmd_preflight_checks",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_cmd_acquire_lock",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_load_contacts",
+        "description": "Migrated from Informatica session mt_ingest_contacts.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "gw_parallel_ingest_start",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_load_contacts",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_sync_accounts",
+        "description": "Migrated from Informatica session mt_ingest_accounts.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_load_contacts",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_sync_accounts",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_load_opportunities",
+        "description": "Migrated from Informatica session mt_ingest_opportunities.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_sync_accounts",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_load_opportunities",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_cdc_order_pipeline",
+        "description": "Migrated from Informatica session mt_ingest_orders.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "gw_parallel_ingest_start",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_cdc_order_pipeline",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_upsert_inventory",
+        "description": "Migrated from Informatica session mt_ingest_inventory.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_cdc_order_pipeline",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_upsert_inventory",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_load_gl_journals",
+        "description": "Migrated from Informatica session mt_ingest_financials.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_upsert_inventory",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_load_gl_journals",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_m_enrich_order_details",
+        "description": "Migrated from Informatica session mt_enrich_orders.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "sf_customer_360",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_enrich_order_details",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_cmd_refresh_pbi",
+        "description": "Migrated from Informatica session cmd_refresh_pbi.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "timer_pre_refresh",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_cmd_refresh_pbi",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "NB_cmd_release_lock",
+        "description": "Migrated from Informatica session cmd_release_lock.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "cmd_refresh_pbi",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_cmd_release_lock",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "gw_dq_check",
+        "description": "Migrated from Informatica Decision task gw_dq_check.",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "NB_m_enrich_order_details",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@greater(int(activity('NB_m_enrich_order_details').output.status.Output.result.exitValue), 0)",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "NB_sf_revenue_agg",
+              "description": "Migrated from Informatica session sf_revenue_agg.",
+              "type": "TridentNotebook",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.02:00:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "notebookId": "",
+                "notebook": {
+                  "referenceName": "NB_sf_revenue_agg",
+                  "type": "NotebookReference"
+                },
+                "parameters": {
+                  "load_date": {
+                    "value": {
+                      "value": "@pipeline().parameters.load_date",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  }
+                },
+                "sparkPool": {
+                  "referenceName": "default",
+                  "type": "BigDataPoolReference"
+                }
+              }
+            },
+            {
+              "name": "NB_ht_dq_approval",
+              "description": "Migrated from Informatica session ht_dq_approval.",
+              "type": "TridentNotebook",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.02:00:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "notebookId": "",
+                "notebook": {
+                  "referenceName": "NB_ht_dq_approval",
+                  "type": "NotebookReference"
+                },
+                "parameters": {
+                  "load_date": {
+                    "value": {
+                      "value": "@pipeline().parameters.load_date",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  }
+                },
+                "sparkPool": {
+                  "referenceName": "default",
+                  "type": "BigDataPoolReference"
+                }
+              }
+            }
+          ],
+          "ifFalseActivities": [
+            {
+              "name": "Set_Skip_gw_dq_check",
+              "type": "SetVariable",
+              "dependsOn": [],
+              "typeProperties": {
+                "variableName": "skip_reason",
+                "value": "gw_dq_check evaluated FALSE — downstream skipped."
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "notify_success",
+        "description": "Migrated from Informatica notify_success. Triggered on Failed.",
+        "type": "WebActivity",
+        "dependsOn": [
+          {
+            "activity": "cmd_release_lock",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+          "url": {
+            "value": "@pipeline().parameters.alert_webhook_url",
+            "type": "Expression"
+          },
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"cmd_release_lock\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
+            "type": "Expression"
+          }
+        }
+      },
+      {
+        "name": "notify_failure",
+        "description": "Migrated from Informatica notify_failure. Triggered on Failed.",
+        "type": "WebActivity",
+        "dependsOn": [
+          {
+            "activity": "ht_dq_approval",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+          "url": {
+            "value": "@pipeline().parameters.alert_webhook_url",
+            "type": "Expression"
+          },
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, '\",\"activity\":\"ht_dq_approval\",\"status\":\"Failed\",\"runId\":\"', pipeline().RunId, '\"}'))",
+            "type": "Expression"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      },
+      "alert_webhook_url": {
+        "type": "string",
+        "defaultValue": "https://your-logic-app-webhook-url"
+      }
     },
-    {
-      "task_key": "NB_cmd_acquire_lock",
-      "description": "Migrated from Informatica session cmd_acquire_lock.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_cmd_acquire_lock",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "cmd_preflight_checks"
-        }
-      ]
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
     },
-    {
-      "task_key": "NB_m_load_contacts",
-      "description": "Migrated from Informatica session mt_ingest_contacts.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_load_contacts",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "gw_parallel_ingest_start"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_sync_accounts",
-      "description": "Migrated from Informatica session mt_ingest_accounts.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_sync_accounts",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_load_contacts"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_load_opportunities",
-      "description": "Migrated from Informatica session mt_ingest_opportunities.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_load_opportunities",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_sync_accounts"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_cdc_order_pipeline",
-      "description": "Migrated from Informatica session mt_ingest_orders.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_cdc_order_pipeline",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "gw_parallel_ingest_start"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_upsert_inventory",
-      "description": "Migrated from Informatica session mt_ingest_inventory.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_upsert_inventory",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_cdc_order_pipeline"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_load_gl_journals",
-      "description": "Migrated from Informatica session mt_ingest_financials.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_load_gl_journals",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_upsert_inventory"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_m_enrich_order_details",
-      "description": "Migrated from Informatica session mt_enrich_orders.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_enrich_order_details",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "sf_customer_360"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_cmd_refresh_pbi",
-      "description": "Migrated from Informatica session cmd_refresh_pbi.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_cmd_refresh_pbi",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "timer_pre_refresh"
-        }
-      ]
-    },
-    {
-      "task_key": "NB_cmd_release_lock",
-      "description": "Migrated from Informatica session cmd_release_lock.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_cmd_release_lock",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "cmd_refresh_pbi"
-        }
-      ]
-    }
-  ],
-  "tags": {
-    "migrated_from": "informatica",
-    "original_workflow": "TF_NIGHTLY_ENTERPRISE_ETL"
-  },
-  "format": "MULTI_TASK"
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:TF_NIGHTLY_ENTERPRISE_ETL"
+    ]
+  }
 }

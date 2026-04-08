@@ -1,0 +1,22 @@
+{
+  "target": "fabric",
+  "sku_baseline": "F2",
+  "cu_cost_per_hour": 0.36,
+  "total_mappings": 1,
+  "estimated_monthly_cu_hours": 15.0,
+  "estimated_monthly_cost_usd": 5.4,
+  "details": [
+    {
+      "mapping": "M_X",
+      "complexity": "Simple",
+      "cu_hours_per_run": 0.5,
+      "monthly_cu_hours": 15.0,
+      "monthly_cost_usd": 5.4
+    }
+  ],
+  "notes": [
+    "Estimates assume daily execution (30 runs/month)",
+    "Actual CU consumption depends on data volume and cluster warm-up",
+    "F2 SKU baseline — adjust for F4/F8/F16 as needed"
+  ]
+}

@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_ALERT_QUEUE
-# Source: src_sap_materials, src_sap_warehouse_bins, src_iot_sensors → Target: main.silver.tgt_alert_queue
+# Source: src_sap_materials, src_sap_warehouse_bins, src_iot_sensors → Target: silver.tgt_alert_queue
 # Mapping: m_realtime_inventory_scd2
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_realtime_inventory_scd2"
-target_table = "main.silver.tgt_alert_queue"
+target_table = "silver.tgt_alert_queue"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

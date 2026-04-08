@@ -1,0 +1,12 @@
+{
+  "environment": "dev",
+  "fabric": {
+    "workspace_id": "{{ DEV_WORKSPACE_ID }}"
+  },
+  "logging": {
+    "level": "DEBUG"
+  },
+  "sources": {
+    "connection_string": "{{ DEV_CONNECTION_STRING }}"
+  }
+}

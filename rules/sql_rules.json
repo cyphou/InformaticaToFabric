@@ -1,0 +1,104 @@
+{
+  "rules": [
+    {
+      "name": "NVL to COALESCE",
+      "category": "sql",
+      "db_type": "oracle",
+      "match": "\\bNVL\\s*\\(",
+      "action": "replace",
+      "output": "COALESCE(",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "SYSDATE to current_timestamp",
+      "category": "sql",
+      "db_type": "oracle",
+      "match": "\\bSYSDATE\\b",
+      "action": "replace",
+      "output": "current_timestamp()",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "GETDATE to current_timestamp",
+      "category": "sql",
+      "db_type": "sqlserver",
+      "match": "\\bGETDATE\\s*\\(\\s*\\)",
+      "action": "replace",
+      "output": "current_timestamp()",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "ISNULL to COALESCE",
+      "category": "sql",
+      "db_type": "sqlserver",
+      "match": "\\bISNULL\\s*\\(",
+      "action": "replace",
+      "output": "COALESCE(",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "ZEROIFNULL to COALESCE",
+      "category": "sql",
+      "db_type": "teradata",
+      "match": "\\bZEROIFNULL\\s*\\(([^)]+)\\)",
+      "action": "replace",
+      "output": "COALESCE(\\1, 0)",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "Remove DUAL",
+      "category": "sql",
+      "db_type": "oracle",
+      "match": "\\bFROM\\s+DUAL\\b",
+      "action": "replace",
+      "output": "",
+      "priority": 40,
+      "enabled": true
+    },
+    {
+      "name": "VARCHAR2 to STRING",
+      "category": "sql",
+      "db_type": "oracle",
+      "match": "\\bVARCHAR2\\s*\\(\\d+\\)",
+      "action": "replace",
+      "output": "STRING",
+      "priority": 30,
+      "enabled": true
+    },
+    {
+      "name": "IFNULL to COALESCE (MySQL)",
+      "category": "sql",
+      "db_type": "mysql",
+      "match": "\\bIFNULL\\s*\\(",
+      "action": "replace",
+      "output": "COALESCE(",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "VALUE to COALESCE (DB2)",
+      "category": "sql",
+      "db_type": "db2",
+      "match": "\\bVALUE\\s*\\(",
+      "action": "replace",
+      "output": "COALESCE(",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "name": "PostgreSQL cast to CAST",
+      "category": "sql",
+      "db_type": "postgresql",
+      "match": "(\\w+)::(\\w+)",
+      "action": "replace",
+      "output": "CAST(\\1 AS \\2)",
+      "priority": 50,
+      "enabled": true
+    }
+  ]
+}

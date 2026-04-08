@@ -12,7 +12,7 @@
 
 This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 59 sprints complete (Phase 1 + Phase 2 + Sprints 41, 47–50, 51–60, 61–65) — 1,111 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, and advanced PL/SQL conversion.
+**Current state:** 79 sprints complete (Phase 1–10) — 1,489 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, DECODE→CASE SQL expansion, SCD2 snapshot detection, enriched CTEs from field lineage, Router→separate dbt models, standalone dbt deploy script, SVG lineage flow diagrams, HTML lineage reports, Event Wait/Raise pipeline activities, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, advanced PL/SQL conversion, DevOps CI/CD (env configs, deployment pipelines, DAB bundles, promotion), platform-native features (Lakehouse vs Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring), observability (Fabric CU cost estimator, Azure Monitor metrics, Teams/Slack webhook alerting), query optimization (partition strategy, Spark config tuning, broadcast join detection, materialization advisor), advanced PL/SQL engine (cursors, BULK COLLECT, FORALL, exception blocks, package state), dynamic SQL (EXECUTE IMMEDIATE, CONNECT BY→CTE, PIVOT/UNPIVOT, correlated subquery rewrite, temporal tables), plugin system (custom transforms, SQL rewrites, post-processing hooks), Python SDK & REST API, configurable rule engine (YAML/JSON rulesets), statistical validation (distribution comparison, SCD2 verification, null distribution, RI checks, A/B testing, business rules), and data catalog integration (Purview entities, Unity Catalog lineage, column-level lineage, impact analysis).
 
 ---
 
@@ -348,7 +348,7 @@ InformaticaToDBFabric/
 │   ├── pipeline_template.json           #   Fabric pipeline template
 │   ├── pipeline_template_databricks.json #  Databricks workflow template
 │   └── validation_template.py
-├── tests/                               # 🧪 1,111 tests
+├── tests/                               # 🧪 1,489 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests
@@ -362,10 +362,16 @@ InformaticaToDBFabric/
 │   ├── test_dbt_target.py              #   DBT target tests (Sprint 51)
 │   ├── test_autosys.py                 #   AutoSys JIL tests (Sprint 61)
 │   ├── test_phase3_5.py               #   Phase 3-5 tests (Sprints 47–65)
-│   └── test_artifact_validation.py   #   Artifact validation (pipeline/DBT/notebook)
+│   ├── test_artifact_validation.py   #   Artifact validation (pipeline/DBT/notebook)
+│   ├── test_sprint66.py              #   Gap closure & lineage reports (Sprint 66)
+│   ├── test_dbt_enhancements.py      #   DBT enhancements (Sprint 67)
+│   ├── test_sprint68_70.py           #   Phase 7 tests (DevOps, Platform-Native, Observability)
+│   ├── test_sprint71_73.py           #   Phase 8 tests (Query Opt, PL/SQL, Dynamic SQL)
+│   ├── test_sprint74_76.py           #   Phase 9 tests (Plugins, SDK, Rule Engine)
+│   └── test_sprint77_79.py           #   Phase 10 tests (Validation, Catalog)
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
-├── DEVELOPMENT_PLAN.md                  # 📝 65-sprint dev plan (Phase 1-5)
+├── DEVELOPMENT_PLAN.md                  # 📝 100-sprint dev plan (Phase 1-17)
 ├── GAP_ANALYSIS.md                      # 📊 Gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Migration strategy
 ├── README.md                            # 📖 Project overview

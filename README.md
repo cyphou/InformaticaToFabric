@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/41%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="41 sprints complete"/>
-  <img src="https://img.shields.io/badge/1111%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1111 tests"/>
+  <img src="https://img.shields.io/badge/79%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="70/100 sprints complete"/>
+  <img src="https://img.shields.io/badge/1489%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1336 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
   <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT"/>
   <img src="https://img.shields.io/badge/AutoSys-JIL%20support-9B59B6?style=flat-square&logo=clockify&logoColor=white" alt="AutoSys JIL"/>
@@ -546,12 +546,13 @@ InformaticaToDBFabric/
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
 ├── deploy_to_databricks.py              # 🚀 Databricks REST API deployment script
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
-├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration)
+├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration + lineage)
+├── deploy_dbt_project.py                # 🚀 DBT project deployment to Databricks Repos
 ├── migration.yaml                       # ⚙️ Configuration template (workspace, sources, logging)
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 1,111 tests
+├── tests/                               # 🧪 1,227 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -565,14 +566,17 @@ InformaticaToDBFabric/
 │   ├── test_sprint31_40.py              # Sprint 31–40: PL/SQL, DQ, multi-tenant, PII
 │   ├── test_databricks_target.py        # Sprint 40–41: Databricks target
 │   ├── test_dbt_target.py               # Sprint 51: DBT target
-│   └── test_autosys.py                  # Sprint 61: AutoSys JIL
+│   ├── test_autosys.py                  # Sprint 61: AutoSys JIL
+│   ├── test_sprint66.py                 # Sprint 66: Gap closure & lineage reports
+│   ├── test_dbt_enhancements.py         # Sprint 67: DBT enhancements
+│   └── test_sprint68_70.py              # Phase 7: DevOps, Platform-Native, Observability
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
 │   ├── TROUBLESHOOTING.md               # Common issues & solutions
 │   └── ADR/                             # Architecture Decision Records
 ├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (41/65 complete)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (61/67 complete)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -670,7 +674,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 1,111 tests
+# Run all 1,227 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -703,8 +707,12 @@ python run_artifact_validation.py --notebooks  # Notebooks only
 | `test_autosys.py` | 63 | Sprint 61: AutoSys JIL parsing, conditions, dependency DAG, cron conversion, pipeline generation, Informatica linkage |
 | `test_phase3_5.py` | 117 | Sprints 47–65: UC lineage, DLT notebooks, cluster policies, SQL dashboards, advanced workflows, DBU cost, dashboard v2, DBT models/macros/snapshots/incremental/CI/mixed workflows, AutoSys conditions/alarms/calendars/variables/coverage |
 | `test_artifact_validation.py` | 76 | Artifact validation: pipeline JSON schema, DBT SQL syntax, notebook structure, circular deps, batch validation, credential detection |
+| `test_sprint45.py` | 32 | Sprint 45: Cross-platform comparison report, dual-target generation, migration advisor |
+| `test_sprint66.py` | 42 | Sprint 66: ULKP promotion, TC template, Event Wait/Raise, session config, ADRs, SVG lineage, HTML lineage reports |
+| `test_dbt_enhancements.py` | 42 | Sprint 67: DECODE→CASE expansion, SCD2 snapshots, mixed workflows, enriched CTEs, Router split, deploy script |
+| `test_sprint68_70.py` | 109 | Phase 7: env configs, deployment pipelines, pre-deployment validation, promotion, DAB bundles, Lakehouse/Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring, CU cost estimator, Azure Monitor metrics, webhook alerting |
 
-**Overall:** 1,111 tests, all passing, ~18s on Python 3.14
+**Overall:** 1,336 tests, all passing, ~27s on Python 3.14
 
 ### Configuration
 
@@ -860,6 +868,32 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 - [ ] **Phase 5** — Execute validation notebooks in Fabric
 - [ ] **Phase 6** — Parallel run (Informatica + Fabric side-by-side)
 - [ ] **Phase 6** — Cutover and decommission Informatica
+
+---
+
+### Development Roadmap (100 Sprints)
+
+| Phase | Sprints | Theme | Status |
+|-------|---------|-------|--------|
+| **1** | 1–30 | Foundation, SQL, Notebooks, Pipelines, Validation, Hardening | ✅ Complete |
+| **2** | 31–40 | Enterprise & Fabric-Native | ✅ 7/10 Complete |
+| **3** | 41–50 | Multi-Platform Deployment | ✅ 5/10 Complete |
+| **4** | 51–60 | DBT Target Support | ✅ Complete |
+| **5** | 61–65 | AutoSys JIL Migration | ✅ Complete |
+| **6** | 66–67 | Gap Closure & DBT Enhancements | ✅ Complete |
+| **7** | 68–70 | DevOps, Platform-Native, Observability | ✅ Complete |
+| **8** | 71–73 | Performance & Advanced SQL | ⏳ Planned |
+| **9** | 74–76 | Extensibility & SDK | ⏳ Planned |
+| **10** | 77–79 | Validation Maturity & Data Catalog | ⏳ Planned |
+| **11** | 80–82 | Streaming & Real-Time | ⏳ Planned |
+| **12** | 83–85 | Governance & Compliance | ⏳ Planned |
+| **13** | 86–88 | AI-Assisted Migration | ⏳ Planned |
+| **14** | 89–91 | Web UI & Developer Experience | ⏳ Planned |
+| **15** | 92–94 | Cloud-Native & IaC | ⏳ Planned |
+| **16** | 95–97 | Scale & Performance Testing | ⏳ Planned |
+| **17** | 98–100 | GA Release & ML Pipelines | ⏳ Planned |
+
+See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for detailed sprint breakdowns.
 
 ---
 

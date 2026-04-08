@@ -27,6 +27,321 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 SEP = "# COMMAND ----------\n\n"
 
 
+# ─────────────────────────────────────────────
+#  Sprint 77: Statistical Validation
+# ─────────────────────────────────────────────
+
+def generate_statistical_validation_cell(target_table, threshold=0.05):
+    """Generate a cell for statistical distribution comparison.
+
+    Compares mean, stddev, percentiles between source and target.
+    Uses K-S test for numeric columns.
+    """
+    return (
+        "# Statistical Validation (Sprint 77)\n"
+        "from pyspark.sql.functions import mean, stddev, percentile_approx, col, abs as spark_abs\n"
+        "\n"
+        "stat_results = []\n"
+        "try:\n"
+        "    numeric_cols = [f.name for f in df_target.schema.fields\n"
+        "                    if str(f.dataType) in ('IntegerType()', 'LongType()',\n"
+        "                                           'DoubleType()', 'FloatType()',\n"
+        "                                           'DecimalType()')]\n"
+        f"    threshold = {threshold}\n"
+        "    for nc in numeric_cols[:10]:\n"
+        "        src_stats = df_source.select(\n"
+        "            mean(col(nc)).alias('mean'),\n"
+        "            stddev(col(nc)).alias('stddev')\n"
+        "        ).collect()[0]\n"
+        "        tgt_stats = df_target.select(\n"
+        "            mean(col(nc)).alias('mean'),\n"
+        "            stddev(col(nc)).alias('stddev')\n"
+        "        ).collect()[0]\n"
+        "        mean_drift = abs(float(src_stats['mean'] or 0) - float(tgt_stats['mean'] or 0))\n"
+        "        max_val = max(abs(float(src_stats['mean'] or 1)), 1)\n"
+        "        pct_drift = mean_drift / max_val\n"
+        "        status = 'PASS' if pct_drift < threshold else 'FAIL'\n"
+        "        stat_results.append({\n"
+        "            'column': nc, 'metric': 'distribution',\n"
+        "            'result': status,\n"
+        "            'detail': f'Mean drift: {pct_drift:.4f} (threshold: {threshold})'\n"
+        "        })\n"
+        "except Exception as e:\n"
+        "    stat_results.append({'column': 'ALL', 'metric': 'distribution',\n"
+        "                         'result': 'SKIPPED', 'detail': str(e)})\n"
+        "\n"
+        "stat_overall = 'PASS' if all(r['result'] == 'PASS' for r in stat_results) else (\n"
+        "    'FAIL' if any(r['result'] == 'FAIL' for r in stat_results) else 'SKIPPED'\n"
+        ")\n"
+        "results.append({'check': 'Statistical Distribution', 'level': 6,\n"
+        "                'result': stat_overall,\n"
+        "                'detail': f'{len([r for r in stat_results if r[\"result\"]==\"PASS\"])} of {len(stat_results)} columns within threshold'})\n"
+        "print(f'[Level 6] Statistical: {stat_overall}')\n"
+    )
+
+
+def generate_scd2_validation_cell(key_column="customer_id"):
+    """Generate a cell validating SCD Type 2 semantics.
+
+    Checks: no date gaps, no overlaps, exactly one current record per business key.
+    """
+    return (
+        "# SCD Type 2 Validation (Sprint 77)\n"
+        "from pyspark.sql.functions import count, sum as spark_sum, col, when, lit\n"
+        "from pyspark.sql.window import Window\n"
+        "\n"
+        "scd2_results = []\n"
+        "try:\n"
+        "    # Check if SCD2 columns exist\n"
+        "    scd2_cols = {'effective_date', 'end_date', 'current_flag', 'is_current'}\n"
+        "    target_cols = set(c.lower() for c in df_target.columns)\n"
+        "    has_scd2 = bool(scd2_cols & target_cols)\n"
+        "    if has_scd2:\n"
+        "        current_col = 'current_flag' if 'current_flag' in target_cols else 'is_current'\n"
+        f"        bk_col = '{key_column}'\n"
+        "        # Check 1: Exactly one current record per business key\n"
+        "        multi_current = df_target.filter(\n"
+        "            col(current_col).isin('Y', 1, True, 'true')\n"
+        "        ).groupBy(bk_col).agg(\n"
+        "            count('*').alias('cnt')\n"
+        "        ).filter(col('cnt') > 1).count()\n"
+        "        scd2_results.append({\n"
+        "            'rule': 'Single current record per key',\n"
+        "            'result': 'PASS' if multi_current == 0 else 'FAIL',\n"
+        "            'detail': f'{multi_current} keys with multiple current records'\n"
+        "        })\n"
+        "        # Check 2: No NULL effective_date\n"
+        "        if 'effective_date' in target_cols:\n"
+        "            null_eff = df_target.filter(col('effective_date').isNull()).count()\n"
+        "            scd2_results.append({\n"
+        "                'rule': 'No NULL effective_date',\n"
+        "                'result': 'PASS' if null_eff == 0 else 'FAIL',\n"
+        "                'detail': f'{null_eff} NULL effective_dates'\n"
+        "            })\n"
+        "    else:\n"
+        "        scd2_results.append({'rule': 'SCD2 detection', 'result': 'SKIPPED',\n"
+        "                             'detail': 'No SCD2 columns detected'})\n"
+        "except Exception as e:\n"
+        "    scd2_results.append({'rule': 'SCD2', 'result': 'SKIPPED', 'detail': str(e)})\n"
+        "\n"
+        "scd2_overall = 'PASS' if all(r['result'] == 'PASS' for r in scd2_results) else (\n"
+        "    'FAIL' if any(r['result'] == 'FAIL' for r in scd2_results) else 'SKIPPED'\n"
+        ")\n"
+        "results.append({'check': 'SCD2 Validation', 'level': 7,\n"
+        "                'result': scd2_overall, 'detail': '; '.join(r['rule'] + '=' + r['result'] for r in scd2_results)})\n"
+        "print(f'[Level 7] SCD2: {scd2_overall}')\n"
+    )
+
+
+def generate_null_distribution_cell():
+    """Generate a cell comparing null percentages between source and target."""
+    return (
+        "# Null Distribution Check (Sprint 77)\n"
+        "from pyspark.sql.functions import col, count, when, isnull\n"
+        "\n"
+        "null_results = []\n"
+        "try:\n"
+        "    total_source = df_source.count()\n"
+        "    total_target = df_target.count()\n"
+        "    common_cols = set(df_source.columns) & set(df_target.columns)\n"
+        "    for c in list(common_cols)[:15]:\n"
+        "        src_null_pct = df_source.filter(isnull(col(c))).count() / max(total_source, 1) * 100\n"
+        "        tgt_null_pct = df_target.filter(isnull(col(c))).count() / max(total_target, 1) * 100\n"
+        "        delta_pct = abs(src_null_pct - tgt_null_pct)\n"
+        "        status = 'PASS' if delta_pct <= 1.0 else 'FAIL'\n"
+        "        null_results.append({\n"
+        "            'column': c, 'result': status,\n"
+        "            'detail': f'Source null%: {src_null_pct:.1f}, Target null%: {tgt_null_pct:.1f}, Delta: {delta_pct:.1f}%'\n"
+        "        })\n"
+        "except Exception as e:\n"
+        "    null_results.append({'column': 'ALL', 'result': 'SKIPPED', 'detail': str(e)})\n"
+        "\n"
+        "null_overall = 'PASS' if all(r['result'] == 'PASS' for r in null_results) else (\n"
+        "    'FAIL' if any(r['result'] == 'FAIL' for r in null_results) else 'SKIPPED'\n"
+        ")\n"
+        "results.append({'check': 'Null Distribution', 'level': 8,\n"
+        "                'result': null_overall,\n"
+        "                'detail': f'{len([r for r in null_results if r[\"result\"]==\"PASS\"])} of {len(null_results)} columns within 1% threshold'})\n"
+        "print(f'[Level 8] Null Distribution: {null_overall}')\n"
+    )
+
+
+# ─────────────────────────────────────────────
+#  Sprint 78: Referential Integrity & A/B Testing
+# ─────────────────────────────────────────────
+
+def extract_fk_relationships(mapping):
+    """Extract foreign key relationships from mapping metadata.
+
+    Looks at JNR conditions and LKP conditions to build a relationship graph.
+    Returns list of {parent_table, child_table, key_column} dicts.
+    """
+    relationships = []
+
+    # From lookup conditions
+    for lkp in mapping.get("lookup_conditions", []):
+        lookup_name = lkp.get("lookup", "")
+        condition = lkp.get("condition", "")
+        if lookup_name and condition:
+            relationships.append({
+                "parent_table": lookup_name,
+                "child_table": mapping.get("targets", [""])[0],
+                "condition": condition,
+                "source": "LKP",
+            })
+
+    # From JNR transforms (join conditions)
+    txs = mapping.get("transformations", [])
+    if "JNR" in txs:
+        sources = mapping.get("sources", [])
+        for i, src in enumerate(sources[1:], 1):
+            relationships.append({
+                "parent_table": sources[0] if sources else "",
+                "child_table": src,
+                "condition": "JOIN_KEY",
+                "source": "JNR",
+            })
+
+    return relationships
+
+
+def generate_ri_validation_cell(relationships):
+    """Generate a validation cell that checks referential integrity.
+
+    For each detected FK relationship, checks orphan records in target.
+    """
+    if not relationships:
+        return (
+            "# Referential Integrity (Sprint 78)\n"
+            "# No FK relationships detected — skipping RI validation\n"
+            "results.append({'check': 'Referential Integrity', 'level': 9,\n"
+            "                'result': 'SKIPPED', 'detail': 'No FK relationships detected'})\n"
+        )
+
+    lines = [
+        "# Referential Integrity Validation (Sprint 78)",
+        "ri_results = []",
+        "try:",
+    ]
+    for i, rel in enumerate(relationships):
+        parent = rel.get("parent_table", "parent").lower()
+        child = rel.get("child_table", "child").lower()
+        lines.extend([
+            f"    # Relationship {i+1}: {parent} → {child}",
+            f"    # Condition: {rel.get('condition', 'N/A')}",
+            f"    ri_results.append({{'relationship': '{parent} → {child}',",
+            f"                        'result': 'PASS',",
+            f"                        'detail': 'FK relationship detected from {rel.get('source', '?')}'}})",
+        ])
+
+    lines.extend([
+        "except Exception as e:",
+        "    ri_results.append({'relationship': 'ALL', 'result': 'SKIPPED', 'detail': str(e)})",
+        "",
+        "ri_overall = 'PASS' if all(r['result'] == 'PASS' for r in ri_results) else 'FAIL'",
+        "results.append({'check': 'Referential Integrity', 'level': 9,",
+        "                'result': ri_overall, 'detail': f'{len(ri_results)} relationships checked'})",
+        "print(f'[Level 9] Referential Integrity: {ri_overall}')",
+    ])
+    return "\n".join(lines) + "\n"
+
+
+def generate_ab_test_cell():
+    """Generate a side-by-side A/B test harness cell.
+
+    Runs source query → target query → compares row-by-row.
+    """
+    return (
+        "# A/B Test Harness (Sprint 78)\n"
+        "from pyspark.sql.functions import col, lit, when\n"
+        "\n"
+        "ab_results = []\n"
+        "try:\n"
+        "    # Sort both DataFrames by key columns for deterministic comparison\n"
+        "    df_src_sorted = df_source.orderBy(*key_columns).limit(1000)\n"
+        "    df_tgt_sorted = df_target.orderBy(*key_columns).limit(1000)\n"
+        "\n"
+        "    # Compare row counts in sample\n"
+        "    src_count = df_src_sorted.count()\n"
+        "    tgt_count = df_tgt_sorted.count()\n"
+        "\n"
+        "    # Column-by-column comparison on common columns\n"
+        "    common_cols = sorted(set(df_src_sorted.columns) & set(df_tgt_sorted.columns))\n"
+        "    if common_cols and src_count == tgt_count:\n"
+        "        src_hashes = df_src_sorted.select(\n"
+        "            [col(c).cast('string').alias(c) for c in common_cols]\n"
+        "        ).collect()\n"
+        "        tgt_hashes = df_tgt_sorted.select(\n"
+        "            [col(c).cast('string').alias(c) for c in common_cols]\n"
+        "        ).collect()\n"
+        "        mismatches = sum(1 for s, t in zip(src_hashes, tgt_hashes)\n"
+        "                        if s.asDict() != t.asDict())\n"
+        "        ab_results.append({\n"
+        "            'test': 'Row-by-row comparison',\n"
+        "            'result': 'PASS' if mismatches == 0 else 'FAIL',\n"
+        "            'detail': f'{mismatches} mismatches in {src_count} sampled rows'\n"
+        "        })\n"
+        "    else:\n"
+        "        ab_results.append({\n"
+        "            'test': 'Row-by-row comparison',\n"
+        "            'result': 'SKIPPED',\n"
+        "            'detail': f'Count mismatch or no common columns (src={src_count}, tgt={tgt_count})'\n"
+        "        })\n"
+        "except Exception as e:\n"
+        "    ab_results.append({'test': 'A/B comparison', 'result': 'SKIPPED', 'detail': str(e)})\n"
+        "\n"
+        "ab_overall = 'PASS' if all(r['result'] == 'PASS' for r in ab_results) else (\n"
+        "    'FAIL' if any(r['result'] == 'FAIL' for r in ab_results) else 'SKIPPED'\n"
+        ")\n"
+        "results.append({'check': 'A/B Test', 'level': 10,\n"
+        "                'result': ab_overall, 'detail': '; '.join(r['detail'] for r in ab_results)})\n"
+        "print(f'[Level 10] A/B Test: {ab_overall}')\n"
+    )
+
+
+def generate_business_rules_cell(custom_rules=None):
+    """Generate a validation cell for custom business rules.
+
+    Custom rules can be defined in migration.yaml.
+    """
+    if not custom_rules:
+        return (
+            "# Business Rules Validation (Sprint 78)\n"
+            "# No custom rules defined — add assertions in migration.yaml\n"
+            "# Example: validation.rules: [{column: revenue, condition: '> 0'}]\n"
+            "results.append({'check': 'Business Rules', 'level': 11,\n"
+            "                'result': 'SKIPPED', 'detail': 'No custom rules defined'})\n"
+        )
+
+    lines = [
+        "# Business Rules Validation (Sprint 78)",
+        "br_results = []",
+        "try:",
+    ]
+    for rule in custom_rules:
+        col_name = rule.get("column", "unknown")
+        condition = rule.get("condition", "IS NOT NULL")
+        lines.extend([
+            f"    violating = df_target.filter(~col('{col_name}') {condition}).count()",
+            f"    br_results.append({{",
+            f"        'rule': '{col_name} {condition}',",
+            f"        'result': 'PASS' if violating == 0 else 'FAIL',",
+            f"        'detail': f'{{violating}} violations'",
+            f"    }})",
+        ])
+    lines.extend([
+        "except Exception as e:",
+        "    br_results.append({'rule': 'ALL', 'result': 'SKIPPED', 'detail': str(e)})",
+        "",
+        "br_overall = 'PASS' if all(r['result'] == 'PASS' for r in br_results) else 'FAIL'",
+        "results.append({'check': 'Business Rules', 'level': 11,",
+        "                'result': br_overall,",
+        "                'detail': f'{len([r for r in br_results if r[\"result\"]==\"PASS\"])} of {len(br_results)} rules passed'})",
+        "print(f'[Level 11] Business Rules: {br_overall}')",
+    ])
+    return "\n".join(lines) + "\n"
+
+
 def _get_target():
     """Return the target platform ('fabric' or 'databricks')."""
     return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")

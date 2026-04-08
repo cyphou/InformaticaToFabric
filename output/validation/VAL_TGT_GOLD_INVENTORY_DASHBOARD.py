@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_GOLD_INVENTORY_DASHBOARD
-# Source: src_sap_materials, src_sap_warehouse_bins, src_iot_sensors → Target: main.gold.tgt_gold_inventory_dashboard
+# Source: src_sap_materials, src_sap_warehouse_bins, src_iot_sensors → Target: gold.tgt_gold_inventory_dashboard
 # Mapping: m_realtime_inventory_scd2
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_realtime_inventory_scd2"
-target_table = "main.gold.tgt_gold_inventory_dashboard"
+target_table = "gold.tgt_gold_inventory_dashboard"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

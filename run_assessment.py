@@ -555,10 +555,10 @@ def parse_mapping_xml(filepath):
 AUTO_CONVERTIBLE_TX = {
     "SQ", "EXP", "FIL", "AGG", "JNR", "LKP", "RTR", "UPD",
     "RNK", "SRT", "UNI", "NRM", "SEQ", "SP", "SQLT", "DM",
-    "WSC", "MPLT",
+    "WSC", "MPLT", "ULKP",
 }
 # Placeholder-only (no real conversion logic yet)
-PLACEHOLDER_TX = {"JTX", "CT", "HTTP", "XMLG", "XMLP", "TC", "ULKP", "DQ"}
+PLACEHOLDER_TX = {"JTX", "CT", "HTTP", "XMLG", "XMLP", "TC", "DQ"}
 # Infrastructure types excluded from scoring (not actual transforms)
 _INFRA_TX = {"TGT", "SRC", "target", "source", "reader", "writer"}
 # XML tag names that leak into transformation lists (not real transforms)
@@ -893,6 +893,10 @@ def parse_workflow_xml(filepath):
         # Email tasks
         email_tasks = []
 
+        # Event Wait / Event Raise tasks (Sprint 66)
+        event_wait_tasks = []
+        event_raise_tasks = []
+
         # Task-instance-based type scanning
         for ti in wf_el.iter("TASKINSTANCE"):
             ti_type = ti.get("TASKTYPE", ti.get("TYPE", "")).upper()
@@ -906,6 +910,21 @@ def parse_workflow_xml(filepath):
             if "EMAIL" in ti_type:
                 if ti_name not in email_tasks:
                     email_tasks.append(ti_name)
+            if "EVENT_WAIT" in ti_type or "EVENTWAIT" in ti_type or "EVENT WAIT" in ti_type:
+                event_wait_tasks.append(ti_name)
+            if "EVENT_RAISE" in ti_type or "EVENTRAISE" in ti_type or "EVENT RAISE" in ti_type:
+                event_raise_tasks.append(ti_name)
+
+        # Also scan for EVENT elements directly (PowerCenter XML)
+        for ev in wf_el.iter("EVENT"):
+            ev_name = ev.get("NAME", "")
+            ev_type = ev.get("TYPE", "").upper()
+            if "WAIT" in ev_type:
+                if ev_name not in event_wait_tasks:
+                    event_wait_tasks.append(ev_name)
+            elif "RAISE" in ev_type:
+                if ev_name not in event_raise_tasks:
+                    event_raise_tasks.append(ev_name)
 
         # Dependencies / Links
         dependencies = {}
@@ -954,6 +973,8 @@ def parse_workflow_xml(filepath):
             "has_decision": has_decision,
             "decision_tasks": decision_tasks,
             "email_tasks": email_tasks,
+            "event_wait_tasks": event_wait_tasks,
+            "event_raise_tasks": event_raise_tasks,
             "pre_post_sql": pre_post_sql,
             "schedule": schedule,
         }
@@ -2284,6 +2305,7 @@ def parse_session_config(workflow_root):
         "Session Sort Order": {"spark": "spark.sql.shuffle.sortBased", "note": "Sort-based shuffle"},
         "Treat Source Rows As": {"spark": "merge_strategy", "note": "DD_INSERT/UPDATE/DELETE"},
         "Maximum Memory Allowed For Auto Memory Attributes": {"spark": "spark.executor.memory", "note": "Executor memory"},
+        "Maximum Memory Allowed": {"spark": "spark.executor.memory", "note": "Executor memory"},
     }
 
     configs = []
@@ -2312,6 +2334,56 @@ def parse_session_config(workflow_root):
                     "infa_value": cfg_name,
                     "spark_property": "spark.conf.set()",
                     "note": f"Resolve config object '{cfg_name}'",
+                })
+    return configs
+
+
+def parse_standalone_session_configs(root):
+    """Parse standalone CONFIG elements from session XML files (Sprint 66).
+
+    Standalone session config XML files contain <CONFIG> elements outside
+    of workflow/session context (e.g., shared reusable configurations in
+    the input/sessions/ directory).
+
+    Returns a list of config dicts with Spark property recommendations.
+    """
+    CONFIG_MAP = {
+        "DTM buffer size": {"spark": "spark.sql.shuffle.partitions", "note": "Adjust based on data volume"},
+        "Commit Interval": {"spark": "spark.databricks.delta.optimizeWrite.enabled", "note": "Use Delta auto-optimize"},
+        "Commit Type": {"spark": "write_mode", "note": "Source=process all rows; Target=commit per target batch"},
+        "Sorter Cache Size": {"spark": "spark.sql.execution.sortMergeJoinThreshold", "note": "Sorter memory"},
+        "Lookup Cache Size": {"spark": "spark.sql.autoBroadcastJoinThreshold", "note": "Broadcast threshold for lookup joins"},
+        "Lookup Data Cache Size": {"spark": "spark.sql.autoBroadcastJoinThreshold", "note": "Lookup data cache"},
+        "Lookup Index Cache Size": {"spark": "spark.sql.autoBroadcastJoinThreshold", "note": "Lookup index cache"},
+        "Aggregator Cache Size": {"spark": "spark.executor.memory", "note": "Aggregator cache → executor memory"},
+        "Joiner Cache Size": {"spark": "spark.sql.join.preferSortMergeJoin", "note": "Joiner cache → sort merge threshold"},
+        "Session Sort Order": {"spark": "spark.sql.shuffle.sortBased", "note": "Sort-based shuffle"},
+        "Treat source rows as": {"spark": "merge_strategy", "note": "DD_INSERT/UPDATE/DELETE"},
+        "Maximum Memory Allowed": {"spark": "spark.executor.memory", "note": "Executor memory"},
+        "Target Load Type": {"spark": "write_mode", "note": "Bulk=overwrite; Normal=append/merge"},
+        "Truncate Target Table Option": {"spark": "truncate_before_write", "note": "YES → mode('overwrite')"},
+        "Recovery Strategy": {"spark": "checkpoint", "note": "Resume → use Delta checkpointing"},
+        "Pushdown Optimization": {"spark": "spark.sql.adaptive.enabled", "note": "Full → enable AQE"},
+        "Error handling": {"spark": "error_handling", "note": "Stop on Errors → raise exception on failure"},
+    }
+
+    configs = []
+    for config_el in root.iter("CONFIG"):
+        config_name = config_el.get("NAME", "unnamed_config")
+        config_desc = config_el.get("DESCRIPTION", "")
+        for attr in config_el.iter("ATTRIBUTE"):
+            attr_name = attr.get("NAME", "")
+            attr_value = attr.get("VALUE", "")
+            if attr_name in CONFIG_MAP and attr_value:
+                mapping = CONFIG_MAP[attr_name]
+                configs.append({
+                    "config_name": config_name,
+                    "config_description": config_desc,
+                    "session": f"[shared config] {config_name}",
+                    "infa_property": attr_name,
+                    "infa_value": attr_value,
+                    "spark_property": mapping["spark"],
+                    "note": mapping["note"],
                 })
     return configs
 
@@ -2550,6 +2622,24 @@ def main():
                 if root is not None:
                     configs = parse_session_config(root)
                     all_session_configs.extend(configs)
+
+    # 3c. Parse standalone session config XMLs from input/sessions/ (Sprint 66)
+    sessions_dir = INPUT_DIR / "sessions"
+    if sessions_dir.exists():
+        for xml_file in sorted(sessions_dir.glob("*.xml")):
+            print(f"  Parsing standalone session config: {xml_file.name}")
+            try:
+                tree, root = safe_parse_xml(xml_file)
+                if root is not None:
+                    standalone_configs = parse_standalone_session_configs(root)
+                    all_session_configs.extend(standalone_configs)
+                    if standalone_configs:
+                        config_names = {c.get("config_name", "?") for c in standalone_configs}
+                        print(f"    Configs found: {', '.join(config_names)} ({len(standalone_configs)} properties)")
+            except Exception as e:
+                warnings.append(f"Error parsing session config {xml_file.name}: {e}")
+                print(f"    ERROR: {e}")
+
     if all_session_configs:
         print(f"  Session configs extracted: {len(all_session_configs)}")
         print()

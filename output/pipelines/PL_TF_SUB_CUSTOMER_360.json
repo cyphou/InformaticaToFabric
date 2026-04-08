@@ -1,42 +1,97 @@
 {
   "name": "PL_TF_SUB_CUSTOMER_360",
-  "description": "Migrated from Informatica workflow TF_SUB_CUSTOMER_360. ",
-  "tasks": [
-    {
-      "task_key": "NB_m_customer_360",
-      "description": "Migrated from Informatica session mt_build_customer_360.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_customer_360",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
+  "properties": {
+    "description": "Migrated from Informatica workflow TF_SUB_CUSTOMER_360. ",
+    "activities": [
+      {
+        "name": "NB_m_customer_360",
+        "description": "Migrated from Informatica session mt_build_customer_360.",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_customer_360",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
         }
       },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000
+      {
+        "name": "NB_m_customer_activity_log",
+        "description": "Migrated from Informatica session mt_activity_log.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_customer_360",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_customer_activity_log",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
     },
-    {
-      "task_key": "NB_m_customer_activity_log",
-      "description": "Migrated from Informatica session mt_activity_log.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_customer_activity_log",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_customer_360"
-        }
-      ]
-    }
-  ],
-  "tags": {
-    "migrated_from": "informatica",
-    "original_workflow": "TF_SUB_CUSTOMER_360"
-  },
-  "format": "MULTI_TASK"
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:TF_SUB_CUSTOMER_360"
+    ]
+  }
 }

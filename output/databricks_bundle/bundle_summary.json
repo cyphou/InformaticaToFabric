@@ -1,0 +1,10 @@
+{
+  "bundle_dir": "C:\\Users\\pidoudet\\OneDrive - Microsoft\\Boulot\\PBI SME\\OracleToPostgre\\InformaticaToDBFabric\\output\\databricks_bundle",
+  "notebooks": 16,
+  "workflows": 13,
+  "targets": [
+    "dev",
+    "staging",
+    "prod"
+  ]
+}

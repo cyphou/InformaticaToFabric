@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_GOLD_INVENTORY_HISTORY
-# Source: src_silver_inventory → Target: main.gold.tgt_gold_inventory_history
+# Source: src_silver_inventory → Target: gold.tgt_gold_inventory_history
 # Mapping: m_inventory_snapshot
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_inventory_snapshot"
-target_table = "main.gold.tgt_gold_inventory_history"
+target_table = "gold.tgt_gold_inventory_history"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

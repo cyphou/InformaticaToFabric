@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_BRONZE_EVENTS
-# Source: src_kafka_events → Target: main.silver.tgt_bronze_events
+# Source: src_kafka_events → Target: silver.tgt_bronze_events
 # Mapping: m_customer_activity_log
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_customer_activity_log"
-target_table = "main.silver.tgt_bronze_events"
+target_table = "silver.tgt_bronze_events"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

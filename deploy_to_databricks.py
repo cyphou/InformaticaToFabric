@@ -842,12 +842,121 @@ def estimate_dbu_cost(inventory_path=None):
 
 
 # ─────────────────────────────────────────────
+#  Sprint 68: Databricks Asset Bundles (DAB)
+# ─────────────────────────────────────────────
+
+def generate_dab_bundle(catalog="main", profile="DEFAULT"):
+    """Generate a Databricks Asset Bundle (databricks.yml + bundle structure).
+
+    Creates output/databricks_bundle/ with a valid DAB project that can be
+    deployed via `databricks bundle deploy`.
+    """
+    bundle_dir = OUTPUT_DIR / "databricks_bundle"
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+    (bundle_dir / "src").mkdir(exist_ok=True)
+    (bundle_dir / "resources").mkdir(exist_ok=True)
+
+    # Collect generated notebooks
+    nb_dir = OUTPUT_DIR / "notebooks"
+    notebooks = sorted(nb_dir.glob("NB_*.py")) if nb_dir.exists() else []
+
+    # Collect generated workflows
+    pl_dir = OUTPUT_DIR / "pipelines"
+    workflows = sorted(pl_dir.glob("PL_*.json")) if pl_dir.exists() else []
+
+    # Copy notebooks into bundle src/
+    for nb in notebooks:
+        (bundle_dir / "src" / nb.name).write_text(
+            nb.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+
+    # Generate databricks.yml
+    nb_resources = ""
+    for nb in notebooks:
+        nb_name = nb.stem
+        nb_resources += f"""
+  {nb_name}:
+    notebook:
+      path: src/{nb.name}
+      language: PYTHON"""
+
+    job_resources = ""
+    for wf in workflows:
+        try:
+            wf_data = json.loads(wf.read_text(encoding="utf-8"))
+            job_name = wf_data.get("name", wf.stem)
+            job_resources += f"""
+  {wf.stem}:
+    job:
+      name: "{job_name}"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/{job_name}" """
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    bundle_yml = f"""# Databricks Asset Bundle — Auto-generated
+# Deploy: databricks bundle deploy --target dev
+# Validate: databricks bundle validate
+
+bundle:
+  name: informatica_migration
+
+workspace:
+  profile: {profile}
+
+artifacts:{nb_resources if nb_resources else '''
+  # No notebooks found — run notebook migration first'''}
+
+resources:
+  jobs:{job_resources if job_resources else '''
+    # No workflows found — run pipeline migration first'''}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      catalog: {catalog}
+
+  staging:
+    mode: staging
+    workspace:
+      catalog: {catalog}
+
+  prod:
+    mode: production
+    workspace:
+      catalog: {catalog}
+"""
+    (bundle_dir / "databricks.yml").write_text(bundle_yml, encoding="utf-8")
+
+    result = {
+        "bundle_dir": str(bundle_dir),
+        "notebooks": len(notebooks),
+        "workflows": len(workflows),
+        "targets": ["dev", "staging", "prod"],
+    }
+
+    # Write summary
+    (bundle_dir / "bundle_summary.json").write_text(
+        json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+    print(f"  📦 DAB bundle → {bundle_dir}")
+    print(f"     {len(notebooks)} notebooks, {len(workflows)} workflows")
+    print(f"     Deploy: databricks bundle deploy --target dev")
+    return result
+
+
+# ─────────────────────────────────────────────
 #  Main
 # ─────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Deploy migration artifacts to Azure Databricks")
-    parser.add_argument("--workspace-url", required=True, help="Databricks workspace URL (e.g. https://adb-xxx.azuredatabricks.net)")
+    parser.add_argument("--workspace-url", required=False, help="Databricks workspace URL (e.g. https://adb-xxx.azuredatabricks.net)")
     parser.add_argument("--token", default=None, help="Databricks personal access token (or set DATABRICKS_TOKEN env var)")
     parser.add_argument("--notebook-path", default="/Shared/migration", help="Workspace path for notebooks (default: /Shared/migration)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without making API calls")
@@ -856,6 +965,8 @@ def main():
     parser.add_argument("--setup-secrets", action="store_true", help="Create secret scope from migration.yaml")
     parser.add_argument("--generate-permissions", action="store_true", help="Generate Unity Catalog GRANT statements")
     parser.add_argument("--recommend-cluster", action="store_true", help="Generate cluster configuration recommendation")
+    parser.add_argument("--generate-dab", action="store_true",
+                        help="Generate Databricks Asset Bundle (databricks.yml)")
     args = parser.parse_args()
 
     if _requests is None:
@@ -865,6 +976,15 @@ def main():
     # Resolve token
     import os
     token = args.token or os.environ.get("DATABRICKS_TOKEN", "")
+    # Handle DAB generation (no workspace needed)
+    if args.generate_dab:
+        generate_dab_bundle()
+        sys.exit(0)
+
+    # Standard deployment requires workspace-url
+    if not args.workspace_url:
+        parser.error("--workspace-url is required for deployment")
+
     if not token and not args.dry_run:
         print("ERROR: No token provided. Use --token or set DATABRICKS_TOKEN env var.")
         sys.exit(1)

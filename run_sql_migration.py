@@ -387,6 +387,454 @@ def convert_sql(sql_text, db_type="oracle"):
     return result
 
 
+# ─────────────────────────────────────────────
+#  Sprint 71: Query Plan Annotation
+# ─────────────────────────────────────────────
+
+def annotate_query_performance(sql_text):
+    """Add -- PERF: comments indicating expected cost for SQL operations.
+
+    Detects scan vs seek, shuffle, broadcast, and join patterns.
+    """
+    annotations = []
+
+    # Full table scan patterns
+    if re.search(r'\bSELECT\s+\*\s+FROM\b', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: SELECT * detected — full scan; consider column projection")
+
+    # Cross join / Cartesian product
+    if re.search(r'\bCROSS\s+JOIN\b', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: CROSS JOIN detected — Cartesian product; verify intent (expensive)")
+
+    # DISTINCT on large result sets
+    if re.search(r'\bSELECT\s+DISTINCT\b', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: DISTINCT requires shuffle; consider pre-filtering or groupBy")
+
+    # ORDER BY without LIMIT
+    if re.search(r'\bORDER\s+BY\b', sql_text, re.IGNORECASE) and not re.search(r'\bLIMIT\b', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: ORDER BY without LIMIT — full sort (expensive for large datasets)")
+
+    # Correlated subquery
+    if re.search(r'\bWHERE\s+EXISTS\s*\(', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: Correlated subquery — consider rewrite to JOIN for better parallelism")
+
+    # GROUP BY with many columns
+    group_match = re.search(r'\bGROUP\s+BY\s+(.+?)(?:\bHAVING\b|\bORDER\b|;|\Z)', sql_text, re.IGNORECASE | re.DOTALL)
+    if group_match:
+        group_cols = group_match.group(1).count(",") + 1
+        if group_cols > 5:
+            annotations.append(f"-- PERF: GROUP BY has {group_cols} columns — high cardinality shuffle expected")
+
+    # UNION (not UNION ALL)
+    if re.search(r'\bUNION\b(?!\s+ALL)', sql_text, re.IGNORECASE):
+        annotations.append("-- PERF: UNION requires dedup; use UNION ALL if duplicates are acceptable")
+
+    # Large IN list
+    in_match = re.search(r'\bIN\s*\(([^)]+)\)', sql_text, re.IGNORECASE)
+    if in_match:
+        item_count = in_match.group(1).count(",") + 1
+        if item_count > 20:
+            annotations.append(f"-- PERF: IN list has {item_count} items — consider JOIN to temp table")
+
+    if annotations:
+        header = "-- ═══ Performance Annotations (Sprint 71) ═══"
+        return header + "\n" + "\n".join(annotations) + "\n\n" + sql_text
+    return sql_text
+
+
+# ─────────────────────────────────────────────
+#  Sprint 72: Advanced PL/SQL Conversion Engine
+# ─────────────────────────────────────────────
+
+def convert_cursor_to_pyspark(plsql_text):
+    """Convert PL/SQL cursor declarations and loops to PySpark DataFrame code.
+
+    Handles: explicit cursors, implicit cursors, FOR...IN cursor loops.
+    """
+    result = plsql_text
+
+    # Pattern: CURSOR name IS SELECT ... ;
+    cursor_re = re.compile(
+        r'CURSOR\s+(\w+)\s+IS\s+(SELECT\s+.+?)\s*;',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in cursor_re.finditer(plsql_text):
+        cursor_name = m.group(1)
+        select_stmt = m.group(2).strip()
+        replacement = (
+            f"# Cursor '{cursor_name}' → DataFrame\n"
+            f'df_{cursor_name} = spark.sql("""{select_stmt}""")\n'
+        )
+        result = result.replace(m.group(0), replacement)
+
+    # Pattern: FOR rec IN cursor LOOP ... END LOOP;
+    for_cursor_re = re.compile(
+        r'FOR\s+(\w+)\s+IN\s+(\w+)\s+LOOP\s*(.+?)\s*END\s+LOOP\s*;',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in for_cursor_re.finditer(result):
+        rec_var = m.group(1)
+        cursor_name = m.group(2)
+        body = m.group(3).strip()
+        replacement = (
+            f"# Cursor FOR loop → DataFrame collect\n"
+            f"for {rec_var} in df_{cursor_name}.collect():\n"
+            f"    # Original body:\n"
+        )
+        for line in body.split("\n"):
+            replacement += f"    # {line.strip()}\n"
+        replacement += f"    pass  # TODO: Convert PL/SQL body to Python\n"
+        result = result.replace(m.group(0), replacement)
+
+    # Pattern: FOR rec IN (SELECT ... ) LOOP ... END LOOP;
+    for_inline_re = re.compile(
+        r'FOR\s+(\w+)\s+IN\s*\(\s*(SELECT\s+.+?)\s*\)\s+LOOP\s*(.+?)\s*END\s+LOOP\s*;',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in for_inline_re.finditer(result):
+        rec_var = m.group(1)
+        select_stmt = m.group(2).strip()
+        body = m.group(3).strip()
+        replacement = (
+            f"# Implicit cursor loop → DataFrame collect\n"
+            f'df_inline = spark.sql("""{select_stmt}""")\n'
+            f"for {rec_var} in df_inline.collect():\n"
+            f"    pass  # TODO: Convert loop body to Python\n"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_bulk_collect(plsql_text):
+    """Convert BULK COLLECT INTO to DataFrame operations."""
+    result = plsql_text
+
+    # SELECT ... BULK COLLECT INTO var FROM ...
+    bulk_re = re.compile(
+        r'(SELECT\s+.+?)\s+BULK\s+COLLECT\s+INTO\s+(\w+)\s+(FROM\s+.+?)\s*;',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in bulk_re.finditer(plsql_text):
+        select_part = m.group(1)
+        var_name = m.group(2)
+        from_part = m.group(3)
+        replacement = (
+            f"# BULK COLLECT → DataFrame\n"
+            f'df_{var_name} = spark.sql("""{select_part} {from_part}""")\n'
+            f"# For small datasets: {var_name}_list = df_{var_name}.collect()\n"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_forall(plsql_text):
+    """Convert FORALL batch DML to DataFrame write operations."""
+    result = plsql_text
+
+    # FORALL i IN 1..var.COUNT INSERT INTO table ...
+    forall_insert_re = re.compile(
+        r'FORALL\s+\w+\s+IN\s+\d+\s*\.\.\s*\w+\.COUNT\s+'
+        r'INSERT\s+INTO\s+(\w+)',
+        re.IGNORECASE
+    )
+    for m in forall_insert_re.finditer(plsql_text):
+        table_name = m.group(1)
+        replacement = (
+            f"# FORALL INSERT → DataFrame batch write\n"
+            f'df_batch.write.format("delta").mode("append").saveAsTable("{table_name}")\n'
+        )
+        result = result.replace(m.group(0), replacement)
+
+    # FORALL ... UPDATE
+    forall_update_re = re.compile(
+        r'FORALL\s+\w+\s+IN\s+\d+\s*\.\.\s*\w+\.COUNT\s+'
+        r'UPDATE\s+(\w+)',
+        re.IGNORECASE
+    )
+    for m in forall_update_re.finditer(plsql_text):
+        table_name = m.group(1)
+        replacement = (
+            f"# FORALL UPDATE → Delta MERGE\n"
+            f'delta_tbl = DeltaTable.forName(spark, "{table_name}")\n'
+            f"delta_tbl.alias('tgt').merge(\n"
+            f"    df_batch.alias('src'),\n"
+            f"    'tgt.ID = src.ID'  # TODO: Replace with actual merge key\n"
+            f").whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()\n"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_exception_blocks(plsql_text):
+    """Convert PL/SQL EXCEPTION WHEN blocks to Python try/except."""
+    result = plsql_text
+
+    # EXCEPTION WHEN name THEN ... (up to next WHEN or END)
+    except_re = re.compile(
+        r'EXCEPTION\s*\n((?:\s*WHEN\s+\w+\s+THEN\s*.+?\n)+)',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in except_re.finditer(plsql_text):
+        block = m.group(1)
+        when_parts = re.findall(r'WHEN\s+(\w+)\s+THEN\s*(.+?)(?=\s*WHEN\s|\Z)', block, re.IGNORECASE | re.DOTALL)
+        replacement = "# Exception handling converted from PL/SQL\n"
+        for i, (exc_name, body) in enumerate(when_parts):
+            py_exc = {
+                "NO_DATA_FOUND": "IndexError",
+                "TOO_MANY_ROWS": "ValueError",
+                "DUP_VAL_ON_INDEX": "ValueError",
+                "VALUE_ERROR": "ValueError",
+                "ZERO_DIVIDE": "ZeroDivisionError",
+                "OTHERS": "Exception",
+            }.get(exc_name.upper(), "Exception")
+            keyword = "except" if i == 0 else "except"
+            replacement += f"{keyword} {py_exc}:  # PL/SQL WHEN {exc_name}\n"
+            for line in body.strip().split("\n"):
+                replacement += f"    # {line.strip()}\n"
+            replacement += f"    pass  # TODO: Convert handler body\n"
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_package_state(plsql_text):
+    """Convert PL/SQL package-level variables to Python module state."""
+    result = plsql_text
+
+    # Package variable: var_name TYPE := value;
+    pkg_var_re = re.compile(
+        r'(\w+)\s+(?:CONSTANT\s+)?(\w+(?:\([^)]*\))?)\s*(?::=\s*([^;]+))?\s*;',
+        re.IGNORECASE
+    )
+    # Only convert lines that look like variable declarations (not SQL statements)
+    lines = plsql_text.split("\n")
+    converted_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r'^\w+\s+(?:VARCHAR2|NUMBER|DATE|BOOLEAN|INTEGER|PLS_INTEGER)', stripped, re.IGNORECASE):
+            m = pkg_var_re.match(stripped)
+            if m:
+                var_name = m.group(1).lower()
+                default_val = m.group(3).strip() if m.group(3) else "None"
+                converted_lines.append(f"{var_name} = {default_val}  # Package variable")
+                continue
+        converted_lines.append(line)
+
+    return "\n".join(converted_lines)
+
+
+# ─────────────────────────────────────────────
+#  Sprint 73: Dynamic SQL & Complex Patterns
+# ─────────────────────────────────────────────
+
+def convert_execute_immediate(sql_text):
+    """Convert EXECUTE IMMEDIATE with string concatenation to spark.sql().
+
+    Extracts the SQL string, handles variable substitution.
+    """
+    result = sql_text
+
+    # EXECUTE IMMEDIATE 'literal SQL'
+    exec_literal_re = re.compile(
+        r"EXECUTE\s+IMMEDIATE\s+'([^']+)'(?:\s+(?:USING|INTO)\s+(.+?))?;",
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in exec_literal_re.finditer(sql_text):
+        inner_sql = m.group(1)
+        using_vars = m.group(2)
+        if using_vars:
+            # Replace :bind variables with f-string placeholders
+            params = [v.strip() for v in using_vars.split(",")]
+            for i, p in enumerate(params, 1):
+                inner_sql = re.sub(f':{i}|:\\b{re.escape(p)}\\b', f'{{{p}}}', inner_sql)
+            replacement = f'spark.sql(f"""{inner_sql}""")\n'
+        else:
+            replacement = f'spark.sql("""{inner_sql}""")\n'
+        result = result.replace(m.group(0), replacement)
+
+    # EXECUTE IMMEDIATE variable_name
+    exec_var_re = re.compile(
+        r"EXECUTE\s+IMMEDIATE\s+(\w+)\s*;",
+        re.IGNORECASE
+    )
+    for m in exec_var_re.finditer(result):
+        var_name = m.group(1)
+        replacement = f"spark.sql({var_name})  # Dynamic SQL from variable\n"
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_connect_by(sql_text):
+    """Convert Oracle CONNECT BY PRIOR hierarchy to recursive CTE.
+
+    Handles START WITH + CONNECT BY PRIOR patterns.
+    """
+    result = sql_text
+
+    # Pattern: SELECT ... FROM table START WITH ... CONNECT BY PRIOR parent = child
+    connect_re = re.compile(
+        r'(SELECT\s+.+?\s+FROM\s+(\w+)(?:\s+\w+)?)\s+'
+        r'START\s+WITH\s+(.+?)\s+'
+        r'CONNECT\s+BY\s+(?:NOCYCLE\s+)?PRIOR\s+(\w+)\s*=\s*(\w+)',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in connect_re.finditer(sql_text):
+        select_part = m.group(1)
+        table_name = m.group(2)
+        start_cond = m.group(3).strip()
+        parent_col = m.group(4)
+        child_col = m.group(5)
+
+        # Extract column list from SELECT
+        col_match = re.search(r'SELECT\s+(.+?)\s+FROM', select_part, re.IGNORECASE | re.DOTALL)
+        columns = col_match.group(1).strip() if col_match else "*"
+
+        replacement = (
+            f"-- Recursive CTE (converted from CONNECT BY PRIOR)\n"
+            f"WITH RECURSIVE hierarchy AS (\n"
+            f"    -- Anchor: root nodes\n"
+            f"    SELECT {columns}, 1 AS hierarchy_level\n"
+            f"    FROM {table_name}\n"
+            f"    WHERE {start_cond}\n"
+            f"    UNION ALL\n"
+            f"    -- Recursive: child nodes\n"
+            f"    SELECT {columns}, h.hierarchy_level + 1\n"
+            f"    FROM {table_name} t\n"
+            f"    JOIN hierarchy h ON t.{child_col} = h.{parent_col}\n"
+            f")\n"
+            f"SELECT * FROM hierarchy"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_pivot_unpivot(sql_text):
+    """Convert Oracle PIVOT/UNPIVOT to Spark SQL equivalents."""
+    result = sql_text
+
+    # PIVOT (agg_func(value_col) FOR pivot_col IN (val1, val2, ...))
+    pivot_re = re.compile(
+        r'PIVOT\s*\(\s*(\w+)\s*\((\w+)\)\s+FOR\s+(\w+)\s+IN\s*\(([^)]+)\)\s*\)',
+        re.IGNORECASE
+    )
+    for m in pivot_re.finditer(sql_text):
+        agg_func = m.group(1)
+        value_col = m.group(2)
+        pivot_col = m.group(3)
+        values = m.group(4)
+        replacement = (
+            f"PIVOT (\n"
+            f"    {agg_func}({value_col})\n"
+            f"    FOR {pivot_col} IN ({values})\n"
+            f")\n"
+            f"-- Spark SQL native PIVOT (compatible)\n"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    # UNPIVOT (value_col FOR name_col IN (col1, col2, ...))
+    unpivot_re = re.compile(
+        r'UNPIVOT\s*\(\s*(\w+)\s+FOR\s+(\w+)\s+IN\s*\(([^)]+)\)\s*\)',
+        re.IGNORECASE
+    )
+    for m in unpivot_re.finditer(result):
+        value_col = m.group(1)
+        name_col = m.group(2)
+        columns = m.group(3)
+        col_list = [c.strip() for c in columns.split(",")]
+        stack_args = ", ".join(f"'{c}', {c}" for c in col_list)
+        replacement = (
+            f"-- UNPIVOT → stack()\n"
+            f"LATERAL VIEW stack({len(col_list)}, {stack_args}) AS {name_col}, {value_col}"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_correlated_subquery(sql_text):
+    """Rewrite correlated EXISTS subqueries to JOIN patterns."""
+    result = sql_text
+
+    # WHERE EXISTS (SELECT ... FROM table WHERE outer.col = inner.col)
+    exists_re = re.compile(
+        r'WHERE\s+EXISTS\s*\(\s*SELECT\s+.+?\s+FROM\s+(\w+)\s+(\w+)\s+'
+        r'WHERE\s+(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)\s*\)',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in exists_re.finditer(sql_text):
+        inner_table = m.group(1)
+        inner_alias = m.group(2)
+        left_alias = m.group(3)
+        left_col = m.group(4)
+        right_alias = m.group(5)
+        right_col = m.group(6)
+        replacement = (
+            f"-- Correlated subquery → LEFT SEMI JOIN\n"
+            f"LEFT SEMI JOIN {inner_table} {inner_alias} "
+            f"ON {left_alias}.{left_col} = {inner_alias}.{right_col}"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    # WHERE NOT EXISTS → LEFT ANTI JOIN
+    not_exists_re = re.compile(
+        r'WHERE\s+NOT\s+EXISTS\s*\(\s*SELECT\s+.+?\s+FROM\s+(\w+)\s+(\w+)\s+'
+        r'WHERE\s+(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)\s*\)',
+        re.IGNORECASE | re.DOTALL
+    )
+    for m in not_exists_re.finditer(result):
+        inner_table = m.group(1)
+        inner_alias = m.group(2)
+        left_alias = m.group(3)
+        left_col = m.group(4)
+        right_alias = m.group(5)
+        right_col = m.group(6)
+        replacement = (
+            f"-- NOT EXISTS → LEFT ANTI JOIN\n"
+            f"LEFT ANTI JOIN {inner_table} {inner_alias} "
+            f"ON {left_alias}.{left_col} = {inner_alias}.{right_col}"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
+def convert_temporal_tables(sql_text):
+    """Convert SQL Server temporal table queries to Delta time-travel."""
+    result = sql_text
+
+    # FOR SYSTEM_TIME AS OF 'timestamp'
+    system_time_re = re.compile(
+        r'FOR\s+SYSTEM_TIME\s+AS\s+OF\s+\'([^\']+)\'',
+        re.IGNORECASE
+    )
+    for m in system_time_re.finditer(sql_text):
+        timestamp = m.group(1)
+        replacement = f"TIMESTAMP AS OF '{timestamp}'  -- Delta time-travel"
+        result = result.replace(m.group(0), replacement)
+
+    # FOR SYSTEM_TIME BETWEEN ... AND ...
+    system_between_re = re.compile(
+        r'FOR\s+SYSTEM_TIME\s+BETWEEN\s+\'([^\']+)\'\s+AND\s+\'([^\']+)\'',
+        re.IGNORECASE
+    )
+    for m in system_between_re.finditer(result):
+        start = m.group(1)
+        end = m.group(2)
+        replacement = (
+            f"-- Temporal range query: use Delta DESCRIBE HISTORY + VERSION AS OF\n"
+            f"-- Start: {start}, End: {end}\n"
+            f"TIMESTAMP AS OF '{end}'  -- Delta time-travel (latest version in range)"
+        )
+        result = result.replace(m.group(0), replacement)
+
+    return result
+
+
 DB_TYPE_LABELS = {
     "oracle": "Oracle → Spark SQL",
     "sqlserver": "SQL Server → Spark SQL",

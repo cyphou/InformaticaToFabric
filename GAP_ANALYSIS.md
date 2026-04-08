@@ -3,13 +3,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/objects_covered-98%25-27AE60?style=for-the-badge" alt="98% covered"/>
   <img src="https://img.shields.io/badge/gaps_remaining-6-F39C12?style=for-the-badge" alt="6 gaps remaining"/>
-  <img src="https://img.shields.io/badge/status-sprint_61_complete-27AE60?style=for-the-badge" alt="Sprint 61 complete"/>
-  <img src="https://img.shields.io/badge/tests-918-2980B9?style=for-the-badge" alt="918 tests"/>
+  <img src="https://img.shields.io/badge/status-sprint_65_complete-27AE60?style=for-the-badge" alt="Sprint 65 complete"/>
+  <img src="https://img.shields.io/badge/tests-1111-2980B9?style=for-the-badge" alt="1111 tests"/>
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
 </p>
 
 **Generated:** 2026-03-23  
-**Last Updated:** 2026-08-15 (Sprint 61 — Phase 2 + Databricks + DBT + AutoSys JIL)  
+**Last Updated:** 2026-04-07 (Sprint 65 — Phase 1-5 complete + Databricks + DBT + AutoSys JIL)  
 **Scope:** Informatica PowerCenter 9.x/10.x + IICS → **Microsoft Fabric** or **Azure Databricks** or **DBT**  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
@@ -34,8 +34,8 @@
 ## Executive Summary
 
 ```mermaid
-pie title Informatica Object Migration Coverage (Sprint 40)
-    "Fully Covered" : 75
+pie title Informatica Object Migration Coverage (Sprint 66)
+    "Fully Covered" : 76
     "Partially Covered" : 1
     "Placeholder Only" : 6
     "Not Covered (Gap)" : 0
@@ -44,13 +44,13 @@ pie title Informatica Object Migration Coverage (Sprint 40)
 
 | Category | Total Objects | Covered | Partial | Placeholder | Gap |
 |----------|:------------:|:-------:|:-------:|:-----------:|:---:|
-| **Transformations** | 30 | 23 | 1 | 6 | 0 |
+| **Transformations** | 30 | 24 | 0 | 6 | 0 |
 | **Workflow Elements** | 14 | 14 | 0 | 0 | 0 |
 | **Repository Objects** | 8 | 7 | 1 | 0 | 0 |
 | **SQL Constructs** | 30 | 30 | 0 | 0 | 0 |
 | **IICS Objects** | 8 | 8 | 0 | 0 | 0 |
 | **Infrastructure** | 6 | 0 | 0 | 0 | 6 |
-| **Total** | **96** | **82** | **2** | **6** | **6** |
+| **Total** | **96** | **83** | **1** | **6** | **6** |
 
 > **Phase 2 changes (Sprints 31–40):** EP, AEP, Association, Key Generator, Address Validator now detected with PySpark templates (Sprint 31). Oracle Object Types detected with StructType mapping (Sprint 31). Roles & permissions script generator added (Sprint 31). Advanced PL/SQL converted (Sprint 33). Multi-tenant + Key Vault (Sprint 35). DQ rules + PII detection (Sprint 39). **Azure Databricks** added as second target platform with Unity Catalog, Databricks Workflows, and `dbutils` integration.
 
@@ -81,13 +81,11 @@ These have complete PySpark conversion rules in the notebook-migration agent and
 | 9 | Rank | RNK | `Window` + `row_number()` / `rank()` | ⭐⭐⭐ Full |
 | 10 | Stored Procedure | SP | `%%sql` cell / PySpark logic | ⭐⭐½ Good (simple SP covered; complex SP handed to sql-migration) |
 
-### 1.2 Partially Covered Transformations (1)
+### 1.2 Partially Covered Transformations (0)
 
-Detected and abbreviated, but missing complete PySpark conversion templates.
+All previously partial transformations have been promoted to fully covered.
 
-| # | Informatica Type | Abbrev | What's Missing | Fabric Approach |
-|---|---|---|---|---|
-| 13 | Unconnected Lookup | ULKP | Only mentioned; no detailed conversion | Wrap in function or `when().otherwise()` with join |
+> **Promoted to Fully Covered (Sprint 66):** Unconnected Lookup (ULKP → broadcast join + `coalesce()` with default value)
 
 > **Promoted to Fully Covered (Sprint 6):** Sorter (SRT → `.orderBy()`), Union (UNI → `.unionByName()`), Normalizer (NRM → `.explode()`), Sequence Generator (SEQ)
 

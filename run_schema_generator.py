@@ -366,6 +366,386 @@ def generate_setup_notebook(tables):
     return "\n\n".join(cells)
 
 
+# ─────────────────────────────────────────────
+#  Sprint 69: Platform-Native Features
+# ─────────────────────────────────────────────
+
+def recommend_storage_target(mapping):
+    """Recommend Lakehouse vs Warehouse for a mapping based on its characteristics.
+
+    Lakehouse (Spark ETL): complex transforms, PySpark-heavy, multi-source, unstructured
+    Warehouse (T-SQL): simple SQL, aggregation-heavy, BI-facing, structured
+    """
+    transforms = set(mapping.get("transformations", []))
+    complexity = mapping.get("complexity", "Simple")
+    has_sql = mapping.get("has_sql_override", False)
+    sources = mapping.get("sources", [])
+
+    warehouse_score = 0
+    lakehouse_score = 0
+
+    # SQL-heavy? → Warehouse
+    if has_sql:
+        warehouse_score += 2
+    if mapping.get("has_stored_proc", False):
+        warehouse_score += 3
+
+    # Simple aggregation? → Warehouse
+    if transforms <= {"SQ", "AGG", "FIL", "SRT", "EXP"}:
+        warehouse_score += 2
+
+    # Complex transforms? → Lakehouse
+    complex_tx = {"JNR", "LKP", "MPLT", "NRM", "RTR", "SP", "UPD", "DM", "SQLT"}
+    if transforms & complex_tx:
+        lakehouse_score += len(transforms & complex_tx)
+
+    # Multi-source? → Lakehouse
+    if len(sources) > 2:
+        lakehouse_score += 2
+
+    # High complexity? → Lakehouse
+    if complexity in ("Complex", "Custom"):
+        lakehouse_score += 2
+    elif complexity == "Simple":
+        warehouse_score += 1
+
+    recommendation = "warehouse" if warehouse_score > lakehouse_score else "lakehouse"
+    return {
+        "mapping": mapping.get("name", ""),
+        "recommendation": recommendation,
+        "lakehouse_score": lakehouse_score,
+        "warehouse_score": warehouse_score,
+        "reason": (
+            "SQL-heavy / aggregation / BI-facing → Warehouse"
+            if recommendation == "warehouse"
+            else "Complex transforms / multi-source / PySpark → Lakehouse"
+        ),
+    }
+
+
+def generate_warehouse_ddl(table):
+    """Generate Fabric Warehouse DDL (T-SQL CREATE TABLE) for a table."""
+    tier = table["tier"]
+    name = table["name"].lower()
+    fqn = f"[{tier}].[{name}]"
+
+    lines = [f"-- Table: {fqn} (from mapping {table['mapping']})"]
+    lines.append(f"IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '{name}' AND schema_id = SCHEMA_ID('{tier}'))")
+    lines.append(f"CREATE TABLE {fqn} (")
+
+    col_defs = []
+    for col in table["columns"]:
+        tsql_type = _map_type_to_tsql(col["type"])
+        comment = f"  -- from {col['source']}" if col["source"] else ""
+        col_defs.append(f"    [{col['name'].lower()}] {tsql_type}{comment}")
+
+    col_defs.append("    [_etl_load_timestamp] DATETIME2")
+    col_defs.append("    [_etl_source_mapping] NVARCHAR(255)")
+
+    lines.append(",\n".join(col_defs))
+    lines.append(");")
+    lines.append(f"-- Migrated from Informatica mapping {table.get('mapping', 'unknown')}")
+
+    return "\n".join(lines)
+
+
+def _map_type_to_tsql(source_type):
+    """Map a source type to T-SQL type for Fabric Warehouse."""
+    tsql_map = {
+        "STRING": "NVARCHAR(4000)",
+        "BIGINT": "BIGINT",
+        "INT": "INT",
+        "SMALLINT": "SMALLINT",
+        "TINYINT": "TINYINT",
+        "BOOLEAN": "BIT",
+        "FLOAT": "FLOAT",
+        "DOUBLE": "FLOAT",
+        "DECIMAL(38,10)": "DECIMAL(38,10)",
+        "DECIMAL(19,4)": "DECIMAL(19,4)",
+        "DECIMAL(10,4)": "DECIMAL(10,4)",
+        "TIMESTAMP": "DATETIME2",
+        "DATE": "DATE",
+        "BINARY": "VARBINARY(MAX)",
+    }
+    return tsql_map.get(source_type.upper(), "NVARCHAR(4000)")
+
+
+def generate_sql_warehouse_ddl(table, catalog="main"):
+    """Generate Databricks SQL Warehouse DDL with optimization hints.
+
+    Adds CLUSTER BY and Z-ORDER recommendations.
+    """
+    tier = table["tier"]
+    name = table["name"].lower()
+    fqn = f"{catalog}.{tier}.{name}"
+
+    lines = [f"-- SQL Warehouse optimized: {fqn} (from mapping {table['mapping']})"]
+    lines.append(f"CREATE TABLE IF NOT EXISTS {fqn} (")
+
+    col_defs = []
+    for col in table["columns"]:
+        delta_type = map_type_to_delta(col["type"])
+        col_defs.append(f"    {col['name'].lower()} {delta_type}")
+
+    col_defs.append("    _etl_load_timestamp TIMESTAMP")
+    col_defs.append("    _etl_source_mapping STRING")
+
+    lines.append(",\n".join(col_defs))
+    lines.append(")")
+    lines.append("USING DELTA")
+
+    if table.get("partition_key"):
+        lines.append(f"PARTITIONED BY ({table['partition_key']})")
+
+    # CLUSTER BY recommendation for SQL Warehouse
+    id_cols = [c["name"] for c in table["columns"]
+               if any(k in c["name"].lower() for k in ("_id", "_key", "_code"))]
+    if id_cols:
+        cluster_cols = ", ".join(c.lower() for c in id_cols[:4])
+        lines.append(f"CLUSTER BY ({cluster_cols})")
+
+    # Z-ORDER annotation
+    date_cols = [c["name"] for c in table["columns"]
+                 if any(k in c["name"].lower() for k in ("date", "timestamp", "time"))]
+    if date_cols:
+        zorder_cols = ", ".join(c.lower() for c in date_cols[:2])
+        lines.append(f"-- OPTIMIZE {fqn} ZORDER BY ({zorder_cols})")
+
+    lines.append(f"COMMENT 'Migrated from Informatica mapping {table.get('mapping', 'unknown')}'")
+    lines.append(";")
+
+    return "\n".join(lines)
+
+
+def generate_onelake_shortcuts(inventory):
+    """Generate OneLake shortcut definitions for cross-workspace table references.
+
+    Detects DB link patterns (Sprint 33 GTT/MV/DB link detection) and generates
+    shortcut JSON for replacing them with OneLake shortcuts.
+    """
+    shortcuts = []
+    for mapping in inventory.get("mappings", []):
+        for source in mapping.get("sources", []):
+            # DB link pattern: schema.table@dblink → shortcut
+            if "@" in source:
+                parts = source.split("@")
+                table_ref = parts[0]
+                db_link = parts[1] if len(parts) > 1 else ""
+                shortcuts.append({
+                    "name": table_ref.replace(".", "_").lower(),
+                    "type": "onelake_shortcut",
+                    "source_database_link": db_link,
+                    "source_table": table_ref,
+                    "target_lakehouse": "migration_lakehouse",
+                    "target_path": f"Tables/{table_ref.replace('.', '_').lower()}",
+                    "mapping": mapping["name"],
+                })
+
+        # Cross-database references
+        for source in mapping.get("sources", []):
+            parts = source.split(".")
+            if len(parts) >= 3:  # e.g., Oracle.SCHEMA.TABLE or DB.SCHEMA.TABLE
+                shortcuts.append({
+                    "name": parts[-1].lower(),
+                    "type": "onelake_shortcut",
+                    "source_system": parts[0],
+                    "source_schema": parts[1] if len(parts) > 2 else "",
+                    "source_table": parts[-1],
+                    "target_lakehouse": "migration_lakehouse",
+                    "target_path": f"Tables/{parts[-1].lower()}",
+                    "mapping": mapping["name"],
+                })
+
+    return shortcuts
+
+
+def generate_delta_sharing_config(inventory, provider_name="migration_provider"):
+    """Generate Delta Sharing provider + recipient configuration.
+
+    Creates sharing definitions for tables that need cross-workspace access.
+    """
+    catalog = _get_catalog()
+    tables = extract_target_schemas(inventory)
+    gold_tables = [t for t in tables if t["tier"] == "gold"]
+
+    config = {
+        "provider": {
+            "name": provider_name,
+            "catalog": catalog,
+        },
+        "shares": [
+            {
+                "name": "migration_gold_share",
+                "description": "Gold-tier tables from Informatica migration",
+                "tables": [
+                    {
+                        "schema": "gold",
+                        "table": t["name"].lower(),
+                        "history_sharing": False,
+                    }
+                    for t in gold_tables
+                ],
+            },
+        ],
+        "recipients": [
+            {
+                "name": "downstream_consumer",
+                "comment": "Add recipient workspace/account details",
+                "sharing_code": "{{ SHARING_CODE }}",
+            },
+        ],
+        "grant_sql": [
+            f"CREATE SHARE IF NOT EXISTS migration_gold_share;",
+        ] + [
+            f"ALTER SHARE migration_gold_share ADD TABLE {catalog}.gold.{t['name'].lower()};"
+            for t in gold_tables
+        ] + [
+            "CREATE RECIPIENT IF NOT EXISTS downstream_consumer;",
+            "GRANT SELECT ON SHARE migration_gold_share TO RECIPIENT downstream_consumer;",
+        ],
+    }
+    return config
+
+
+def generate_mirroring_config(inventory):
+    """Generate Fabric Mirroring configuration for on-prem source databases.
+
+    Detects source database types and generates mirroring setup recommendations.
+    """
+    sources_by_db = {}
+    for mapping in inventory.get("mappings", []):
+        for source in mapping.get("sources", []):
+            parts = source.split(".")
+            if parts:
+                db_type = parts[0] if len(parts) > 1 else "Unknown"
+                sources_by_db.setdefault(db_type, set()).add(source)
+
+    configs = []
+    supported_mirrors = {"Oracle", "SQL Server", "PostgreSQL", "Azure SQL", "Cosmos DB"}
+    for db_type, tables in sources_by_db.items():
+        # Normalize
+        db_norm = db_type
+        for s in supported_mirrors:
+            if s.lower().replace(" ", "") in db_type.lower().replace(" ", ""):
+                db_norm = s
+                break
+        is_supported = db_norm in supported_mirrors
+        configs.append({
+            "source_database": db_norm,
+            "supported": is_supported,
+            "table_count": len(tables),
+            "tables": sorted(tables),
+            "recommendation": (
+                f"Enable Fabric Mirroring for {db_norm} — near-real-time replication to OneLake"
+                if is_supported
+                else f"{db_norm} not supported for Mirroring — use Dataflow Gen2 or gateway"
+            ),
+        })
+
+    return {
+        "mirroring_candidates": configs,
+        "total_source_tables": sum(len(t) for t in sources_by_db.values()),
+    }
+
+
+# ─────────────────────────────────────────────
+#  Sprint 71: Partition Strategy Recommender
+# ─────────────────────────────────────────────
+
+def recommend_partition_strategy(table):
+    """Recommend optimal partition strategy for a Delta table.
+
+    Analyzes column names and types to suggest hash/range partitioning
+    and PARTITIONED BY column selection.
+    """
+    columns = table.get("columns", [])
+    name_lower = table.get("name", "").lower()
+    col_names = {c["name"].lower(): c for c in columns}
+
+    # Priority 1: Date columns for range partitioning (time-series data)
+    date_candidates = []
+    for cn in col_names:
+        if any(k in cn for k in ("load_date", "etl_date", "created_date", "event_date",
+                                  "transaction_date", "order_date", "effective_date",
+                                  "updated_date", "modified_date", "process_date")):
+            date_candidates.append(cn)
+
+    # Priority 2: High-cardinality ID columns for hash partitioning
+    id_candidates = []
+    for cn in col_names:
+        if cn.endswith("_id") or cn.endswith("_key") or cn.endswith("_code"):
+            id_candidates.append(cn)
+
+    # Priority 3: Category columns for list partitioning
+    category_candidates = []
+    for cn in col_names:
+        if any(k in cn for k in ("region", "country", "category", "type", "status",
+                                  "department", "tenant")):
+            category_candidates.append(cn)
+
+    strategy = {
+        "table": table.get("name", ""),
+        "tier": table.get("tier", "silver"),
+        "partition_type": "none",
+        "partition_columns": [],
+        "zorder_columns": [],
+        "estimated_benefit": "low",
+    }
+
+    if date_candidates:
+        strategy["partition_type"] = "range"
+        strategy["partition_columns"] = date_candidates[:1]
+        strategy["estimated_benefit"] = "high"
+    elif category_candidates and id_candidates:
+        strategy["partition_type"] = "hash"
+        strategy["partition_columns"] = category_candidates[:1]
+        strategy["estimated_benefit"] = "medium"
+    elif id_candidates:
+        strategy["partition_type"] = "hash"
+        strategy["partition_columns"] = id_candidates[:1]
+        strategy["estimated_benefit"] = "medium"
+
+    # Z-ORDER: best for filter/join columns that aren't partition keys
+    zorder_candidates = []
+    partition_set = set(strategy["partition_columns"])
+    for cn in id_candidates + date_candidates:
+        if cn not in partition_set and cn not in zorder_candidates:
+            zorder_candidates.append(cn)
+    strategy["zorder_columns"] = zorder_candidates[:4]
+
+    return strategy
+
+
+def generate_optimize_statements(tables):
+    """Generate OPTIMIZE and ZORDER SQL statements for all tables.
+
+    Returns a list of SQL strings for post-load optimization.
+    """
+    target = _get_target()
+    catalog = _get_catalog() if target == "databricks" else None
+    statements = []
+
+    for table in tables:
+        strategy = recommend_partition_strategy(table)
+        tier = table.get("tier", "silver")
+        name = table.get("name", "").lower()
+        if target == "databricks":
+            fqn = f"{catalog}.{tier}.{name}"
+        else:
+            fqn = f"{tier}.{name}"
+
+        if strategy["zorder_columns"]:
+            zorder_cols = ", ".join(strategy["zorder_columns"])
+            statements.append(f"OPTIMIZE {fqn} ZORDER BY ({zorder_cols});")
+        else:
+            statements.append(f"OPTIMIZE {fqn};")
+
+        # ANALYZE TABLE for statistics
+        statements.append(f"ANALYZE TABLE {fqn} COMPUTE STATISTICS FOR ALL COLUMNS;")
+
+    return statements
+
+
 def main():
     inv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else INVENTORY_PATH
     if not inv_path.exists():

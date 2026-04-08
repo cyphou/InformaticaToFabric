@@ -1,0 +1,12 @@
+{
+  "environment": "prod",
+  "fabric": {
+    "workspace_id": "{{ PROD_WORKSPACE_ID }}"
+  },
+  "logging": {
+    "level": "WARNING"
+  },
+  "sources": {
+    "connection_string": "{{ PROD_CONNECTION_STRING }}"
+  }
+}

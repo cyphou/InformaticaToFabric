@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_FACT_TXN_HIGH
-# Source: Oracle.FINANCE.TRANSACTIONS, Oracle.FINANCE.ACCOUNTS → Target: main.silver.fact_txn_high
+# Source: Oracle.FINANCE.TRANSACTIONS, Oracle.FINANCE.ACCOUNTS → Target: silver.fact_txn_high
 # Mapping: M_COMPLEX_MULTI_SOURCE
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "M_COMPLEX_MULTI_SOURCE"
-target_table = "main.silver.fact_txn_high"
+target_table = "silver.fact_txn_high"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

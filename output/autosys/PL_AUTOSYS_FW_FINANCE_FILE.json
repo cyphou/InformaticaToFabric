@@ -1,18 +1,39 @@
 {
-  "name": "AUTOSYS_FW_FINANCE_FILE",
-  "tasks": [
-    {
-      "task_key": "FW_FINANCE_FILE",
-      "description": "AutoSys FW → file sensor. Watch: /data/incoming/finance/gl_extract_*.csv. TODO: Use Databricks file arrival trigger.",
-      "depends_on": [],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/FW_FW_FINANCE_FILE",
-        "source": "WORKSPACE"
+  "name": "PL_AUTOSYS_FW_FINANCE_FILE",
+  "properties": {
+    "description": "Migrated from AutoSys BOX/chain FW_FINANCE_FILE.",
+    "activities": [
+      {
+        "name": "FW_FINANCE_FILE",
+        "type": "GetMetadata",
+        "dependsOn": [],
+        "description": "AutoSys FW: Wait for GL extract file from Oracle EBS. Watch: /data/incoming/finance/gl_extract_*.csv",
+        "typeProperties": {
+          "fieldList": [
+            "exists",
+            "lastModified"
+          ],
+          "dataset": {
+            "type": "DatasetReference",
+            "referenceName": "DS_FW_FINANCE_FILE"
+          }
+        },
+        "annotations": [
+          "AutoSysFileWatcher:/data/incoming/finance/gl_extract_*.csv",
+          "AlarmIfFail"
+        ]
       }
-    }
-  ],
-  "tags": {
-    "source": "autosys",
-    "migrated": "true"
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
+    },
+    "variables": {},
+    "annotations": [
+      "MigratedFromAutoSys",
+      "OriginalBox:FW_FINANCE_FILE"
+    ]
   }
 }

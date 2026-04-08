@@ -1,0 +1,81 @@
+{
+  "source": "dev",
+  "target": "test",
+  "dry_run": true,
+  "timestamp": "2026-04-07T16:45:47.726262+00:00",
+  "actions": [
+    {
+      "artifact": "NB_m_load_contacts",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "NB_M_LOAD_CUSTOMERS",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "NB_M_LOAD_EMPLOYEES",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "NB_M_LOAD_ORDERS",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "NB_m_sync_accounts",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "NB_M_UPSERT_INVENTORY",
+      "type": "Notebook",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "PL_WF_DAILY_SALES_LOAD",
+      "type": "DataPipeline",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "SQL_SQL_OVERRIDES_M_LOAD_EMPLOYEES",
+      "type": "Notebook (SQL)",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "SQL_SQL_OVERRIDES_M_LOAD_ORDERS",
+      "type": "Notebook (SQL)",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "SQL_SQL_SP_CALC_RANKINGS",
+      "type": "Notebook (SQL)",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "SQL_SQL_SP_REFRESH_DASHBOARD",
+      "type": "Notebook (SQL)",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    },
+    {
+      "artifact": "SQL_SQL_SP_UPDATE_ORDER_STATS",
+      "type": "Notebook (SQL)",
+      "action": "promote dev→test",
+      "status": "would-promote"
+    }
+  ],
+  "artifact_count": 12
+}

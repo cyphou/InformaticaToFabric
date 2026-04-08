@@ -1,14 +1,19 @@
 # Development Plan — Informatica to Fabric / Databricks Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-59%2F65%20complete-27AE60?style=for-the-badge" alt="59/65 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-79%2F100%20complete-F39C12?style=for-the-badge" alt="70/100 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
   <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
-  <img src="https://img.shields.io/badge/tests-1111-27AE60?style=for-the-badge" alt="1111 Tests"/>
+  <img src="https://img.shields.io/badge/tests-1489-27AE60?style=for-the-badge" alt="1336 Tests"/>
   <img src="https://img.shields.io/badge/phase_3-5%2F10_complete-F39C12?style=for-the-badge" alt="Phase 3 5/10 Complete"/>
   <img src="https://img.shields.io/badge/phase_4-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 4 Complete"/>
   <img src="https://img.shields.io/badge/phase_5-5%2F5_complete-27AE60?style=for-the-badge" alt="Phase 5 Complete"/>
+  <img src="https://img.shields.io/badge/phase_6-2%2F2_complete-27AE60?style=for-the-badge" alt="Phase 6 Complete"/>
+  <img src="https://img.shields.io/badge/phase_7-3%2F3_complete-27AE60?style=for-the-badge" alt="Phase 7 Complete"/>
+  <img src="https://img.shields.io/badge/phase_8-3%2F3_complete-27AE60?style=for-the-badge" alt="Phase 8 Complete"/>
+  <img src="https://img.shields.io/badge/phase_9-3%2F3_complete-27AE60?style=for-the-badge" alt="Phase 9 Complete"/>
+  <img src="https://img.shields.io/badge/phase_10-3%2F3_complete-27AE60?style=for-the-badge" alt="Phase 10 Complete"/>
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
 </p>
 
@@ -79,6 +84,53 @@
 - [Sprint 63 — Calendar, Profile & Machine Mapping](#sprint-63--calendar-profile--machine-mapping)
 - [Sprint 64 — Integration & End-to-End Validation](#sprint-64--integration--end-to-end-validation)
 - [Sprint 65 — Documentation & Release](#sprint-65--documentation--release)
+- **Phase 6 — Gap Closure & DBT Enhancements (Sprints 66–67)**
+- [Sprint 66 — Gap Closure & Lineage Reports](#sprint-66--gap-closure--lineage-reports)
+- [Sprint 67 — DBT Enhancements](#sprint-67--dbt-enhancements)
+- **Phase 7 — DevOps, Platform-Native & Observability (Sprints 68–70)**
+- [Sprint 68 — DevOps & CI/CD](#sprint-68--devops--cicd)
+- [Sprint 69 — Platform-Native Features](#sprint-69--platform-native-features)
+- [Sprint 70 — Observability & Cost Estimation](#sprint-70--observability--cost-estimation)
+- **Phase 8 — Performance & Advanced SQL (Sprints 71–73)**
+- [Sprint 71 — Query Optimization & Partition Strategy](#sprint-71--query-optimization--partition-strategy)
+- [Sprint 72 — Advanced PL/SQL Conversion Engine](#sprint-72--advanced-plsql-conversion-engine)
+- [Sprint 73 — Dynamic SQL & Complex SQL Patterns](#sprint-73--dynamic-sql--complex-sql-patterns)
+- **Phase 9 — Extensibility & SDK (Sprints 74–76)**
+- [Sprint 74 — Plugin System & Custom Rules](#sprint-74--plugin-system--custom-rules)
+- [Sprint 75 — Python SDK & REST API](#sprint-75--python-sdk--rest-api)
+- [Sprint 76 — Configurable Rule Engine & Enterprise Rulesets](#sprint-76--configurable-rule-engine--enterprise-rulesets)
+- **Phase 10 — Validation Maturity & Data Catalog (Sprints 77–79)**
+- [Sprint 77 — Statistical Validation & SCD Testing](#sprint-77--statistical-validation--scd-testing)
+- [Sprint 78 — Referential Integrity & A/B Testing](#sprint-78--referential-integrity--ab-testing)
+- [Sprint 79 — Data Catalog Integration (Purview / Unity Catalog)](#sprint-79--data-catalog-integration-purview--unity-catalog)
+- **Phase 11 — Streaming & Real-Time (Sprints 80–82)**
+- [Sprint 80 — Structured Streaming Templates](#sprint-80--structured-streaming-templates)
+- [Sprint 81 — CDC & Change Feed Support](#sprint-81--cdc--change-feed-support)
+- [Sprint 82 — Watermark, Late Arrival & Exactly-Once](#sprint-82--watermark-late-arrival--exactly-once)
+- **Phase 12 — Governance & Compliance (Sprints 83–85)**
+- [Sprint 83 — RLS/CLS Policy Generation](#sprint-83--rlscls-policy-generation)
+- [Sprint 84 — GDPR/CCPA Compliance & Data Residency](#sprint-84--gdprccpa-compliance--data-residency)
+- [Sprint 85 — Certification Workflow & Audit Trail](#sprint-85--certification-workflow--audit-trail)
+- **Phase 13 — AI-Assisted Migration (Sprints 86–88)**
+- [Sprint 86 — LLM-Powered SQL Conversion](#sprint-86--llm-powered-sql-conversion)
+- [Sprint 87 — Intelligent Gap Resolution](#sprint-87--intelligent-gap-resolution)
+- [Sprint 88 — Chat-Based Migration Assistant](#sprint-88--chat-based-migration-assistant)
+- **Phase 14 — Web UI & Developer Experience (Sprints 89–91)**
+- [Sprint 89 — Interactive Web Dashboard v2](#sprint-89--interactive-web-dashboard-v2)
+- [Sprint 90 — Visual Lineage Explorer](#sprint-90--visual-lineage-explorer)
+- [Sprint 91 — Migration Diff & Side-by-Side Review](#sprint-91--migration-diff--side-by-side-review)
+- **Phase 15 — Cloud-Native & IaC (Sprints 92–94)**
+- [Sprint 92 — Terraform & Bicep Output](#sprint-92--terraform--bicep-output)
+- [Sprint 93 — Container & Kubernetes Deployment](#sprint-93--container--kubernetes-deployment)
+- [Sprint 94 — Azure DevOps & GitHub Actions Pipelines](#sprint-94--azure-devops--github-actions-pipelines)
+- **Phase 16 — Scale & Performance Testing (Sprints 95–97)**
+- [Sprint 95 — 500+ Mapping Benchmark Suite](#sprint-95--500-mapping-benchmark-suite)
+- [Sprint 96 — Parallel Generation & Memory Optimization](#sprint-96--parallel-generation--memory-optimization)
+- [Sprint 97 — Regression Suite & Golden Dataset](#sprint-97--regression-suite--golden-dataset)
+- **Phase 17 — Enterprise Release & ML Pipelines (Sprints 98–100)**
+- [Sprint 98 — ML Pipeline Template Generation](#sprint-98--ml-pipeline-template-generation)
+- [Sprint 99 — Cost Optimization Advisor](#sprint-99--cost-optimization-advisor)
+- [Sprint 100 — GA Release, Docs & Certification](#sprint-100--ga-release-docs--certification)
 - [Agent Development Plans](#agent-development-plans)
 - [Risk Register](#risk-register)
 - [Definition of Done](#definition-of-done)
@@ -1183,7 +1235,7 @@ gantt
 
 ---
 
-## Sprint 32 — Fabric DevOps & Environment Promotion
+## Sprint 32 — Fabric DevOps & Environment Promotion ➜ Consolidated into Sprint 68
 
 **Goal:** Integrate with Fabric Deployment Pipelines and Git-based CI/CD for environment promotion (Dev → Test → Prod).
 
@@ -1226,7 +1278,7 @@ gantt
 
 ---
 
-## Sprint 34 — Fabric-Native Features (OneLake, Warehouse, Shortcuts)
+## Sprint 34 — Fabric-Native Features (OneLake, Warehouse, Shortcuts) ➜ Consolidated into Sprint 69
 
 **Goal:** Generate Fabric-native artifacts beyond notebooks and pipelines — OneLake shortcuts, Warehouse objects, mirroring configurations, and Eventstream definitions.
 
@@ -1270,7 +1322,7 @@ gantt
 
 ---
 
-## Sprint 36 — Observability & Azure Monitor Integration
+## Sprint 36 — Observability & Azure Monitor Integration ➜ Consolidated into Sprint 70
 
 **Goal:** Production-grade observability — emit migration metrics to Azure Monitor, build cost estimation models, and generate operational alerting.
 
@@ -1451,26 +1503,26 @@ flowchart LR
 
 ### Per-Target Gap Closure Summary
 
-**Microsoft Fabric** (95% complete):
+**Microsoft Fabric** (100% complete):
 - ✅ Notebook generation with `notebookutils`
 - ✅ Pipeline JSON generation
 - ✅ Schema DDL (Delta Lake)
 - ✅ Deployment script (`deploy_to_fabric.py`)
-- ⏳ Deployment Pipelines / CI/CD (Sprint 42)
-- ⏳ Lakehouse vs Warehouse decision (Sprint 43)
-- ⏳ OneLake shortcuts / Mirroring (Sprint 43)
-- ⏳ CU cost estimator (Sprint 44)
+- ✅ Deployment Pipelines / CI/CD (Sprint 68)
+- ✅ Lakehouse vs Warehouse decision (Sprint 69)
+- ✅ OneLake shortcuts / Mirroring (Sprint 69)
+- ✅ CU cost estimator (Sprint 70)
 
-**Azure Databricks** (80% complete):
+**Azure Databricks** (100% complete):
 - ✅ Notebook generation with `dbutils` + Unity Catalog 3-level namespace
 - ✅ Workflow JSON (Jobs API) generation
 - ✅ Schema DDL (Delta Lake on Unity Catalog)
 - ✅ **Deployment script** (`deploy_to_databricks.py`) — Sprint 41
 - ✅ **Unity Catalog permissions** scripts — Sprint 41
-- ⏳ Asset Bundles (DAB) for CI/CD (Sprint 42)
-- ⏳ SQL Warehouse DDL (Sprint 43)
-- ⏳ Delta Sharing (Sprint 43)
-- ⏳ DBU cost estimator (Sprint 44)
+- ✅ Asset Bundles (DAB) for CI/CD (Sprint 68)
+- ✅ SQL Warehouse DDL (Sprint 69)
+- ✅ Delta Sharing (Sprint 69)
+- ✅ DBU cost estimator (Sprint 48)
 - ⏳ DLT pipeline generation (Sprint 47)
 
 ---
@@ -1768,11 +1820,11 @@ pie title Phase 3 Sprint Effort Distribution
 
 | Sprint | Primary Agents | Outputs | Status |
 |--------|---------------|---------|--------|
-| **41** | Orchestrator, Assessment, Validation | **Databricks:** `deploy_to_databricks.py`, UC permissions, cluster config | ⏳ Planned |
+| **41** | Orchestrator, Assessment, Validation | **Databricks:** `deploy_to_databricks.py`, UC permissions, cluster config | ✅ Complete |
 | **42** | Orchestrator, Validation | **Fabric:** Deployment Pipelines • **Databricks:** Asset Bundles (DAB) • **Both:** env promotion | ⏳ Planned |
 | **43** | Assessment, SQL, Orchestrator | **Fabric:** OneLake shortcuts, Mirroring • **Databricks:** SQL Warehouse DDL, Delta Sharing | ⏳ Planned |
 | **44** | Orchestrator, Assessment | **Fabric:** CU estimator • **Databricks:** DBU estimator, cluster policies • **Both:** Azure Monitor | ⏳ Planned |
-| **45** | Orchestrator, Assessment | **Both:** comparison report, `--target all`, migration advisor (Fabric vs Databricks) | ⏳ Planned |
+| **45** | Orchestrator, Assessment | **Both:** comparison report, `--target all`, migration advisor (Fabric vs Databricks) | ✅ Complete |
 | **46** | SQL, Pipeline, Orchestrator | **New target:** Synapse Dedicated Pools DDL, Pipelines, `deploy_to_synapse.py` | ⏳ Planned |
 | **47** | Notebook, Assessment, Pipeline | **Databricks:** DLT notebooks, UC lineage, SQL dashboards, advanced Workflows | ✅ Complete |
 | **48** | Validation, Orchestrator | **Both:** E2E multi-target tests, benchmarks, cost estimator | ✅ Complete |
@@ -2421,3 +2473,966 @@ Many enterprise environments schedule Informatica workflows through **CA AutoSys
 | **63** | Assessment, Pipeline | Calendar parsing, machine→cluster mapping, global variable extraction | ✅ Complete |
 | **64** | Orchestrator, Validation | Coverage report, linkage rate, schedule coverage, conversion rate | ✅ Complete |
 | **65** | All | Docs, test updates, DEVELOPMENT_PLAN, CONTRIBUTING, AGENTS update | ✅ Complete |
+
+---
+---
+
+# Phase 6 — Gap Closure & DBT Enhancements (Sprints 66–67)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_6-Gap_Closure_%26_DBT-27AE60?style=for-the-badge" alt="Phase 6"/>
+  <img src="https://img.shields.io/badge/sprints-66--67-2980B9?style=for-the-badge" alt="Sprints 66-67"/>
+  <img src="https://img.shields.io/badge/tests-1227-27AE60?style=for-the-badge" alt="1227 Tests"/>
+</p>
+
+Phase 6 addresses remaining gaps identified during post-Phase 5 audit: missing transformation promotions, XML parsing gaps, lineage HTML reports, and DBT model enrichment using field-level lineage metadata.
+
+## Sprint 66 — Gap Closure & Lineage Reports
+
+**Goal:** Close 6 remaining transformation/parsing gaps and add visual lineage HTML reports.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 66.1 | **ULKP → AUTO_CONVERTIBLE** | Assessment | `run_assessment.py` | Unconnected Lookup promoted from manual to auto-convertible (same as LKP) |
+| 66.2 | **TC Transaction Control template** | Notebook | `run_notebook_migration.py` | TC generates `notebookutils.notebook.run()` with try/except commit/rollback |
+| 66.3 | **Event Wait/Raise XML parsing** | Assessment | `run_assessment.py` | Parse `<EVENT>` elements from workflow XML with space-separated type matching |
+| 66.4 | **Event Wait/Raise pipeline activities** | Pipeline | `run_pipeline_migration.py` | `_event_wait_activity()` → Until loop, `_event_raise_activity()` → Web activity |
+| 66.5 | **Standalone session config parser** | Assessment | `run_assessment.py` | Parse `<SESSION>` config XML → structured dict (buffer size, error handling, recovery) |
+| 66.6 | **ADR documentation** | All | `docs/ADR/` | ADR 004 (Databricks), ADR 005 (DBT), ADR 006 (AutoSys) created |
+| 66.7 | **SVG lineage flow diagrams** | Orchestrator | `generate_html_reports.py` | `_svg_lineage_flow()` renders inline SVG with source→transform→target arrows |
+| 66.8 | **Cross-mapping lineage table** | Orchestrator | `generate_html_reports.py` | `_build_cross_mapping_lineage()` builds HTML table (source→mapping→target) |
+| 66.9 | **Standalone lineage report** | Orchestrator | `generate_html_reports.py` | `generate_lineage_report()` outputs `lineage_report.html` with KPIs + field-level tables |
+
+**Sprint 66 Exit Criteria:** ✅ ALL MET
+- ✅ ULKP included in auto-convertible transforms
+- ✅ TC, Event Wait/Raise, session config all operational
+- ✅ 3 ADRs created (004-databricks, 005-dbt, 006-autosys)
+- ✅ Lineage HTML reports with SVG flow diagrams
+- ✅ 42 tests in `test_sprint66.py` — all passing
+
+---
+
+## Sprint 67 — DBT Enhancements
+
+**Goal:** Close 6 DBT implementation gaps: DECODE expansion, SCD2 snapshot detection, mixed workflow wiring, enriched CTEs from field lineage, Router auto-split, and standalone deploy script.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 67.1 | **DECODE → CASE expansion** | SQL, Notebook | `run_dbt_migration.py` | `_expand_decode()` recursively converts `_DECODE_(expr, v1, r1, ..., default)` → `CASE expr WHEN v1 THEN r1 ... ELSE default END` with paren-depth-aware arg splitting |
+| 67.2 | **SCD2 snapshot detection** | Notebook | `run_dbt_migration.py` | `_is_scd2_candidate()` detects UPD transform, target names containing 'history'/'snapshot'/'scd'/'archive', or mapping names with SCD keywords |
+| 67.3 | **Mixed workflow wiring** | Pipeline | `run_pipeline_migration.py` | `main()` detects `INFORMATICA_DBT_MODE` env var; when `auto|dbt`, imports `classify_mappings()` + `generate_mixed_workflow()` from `run_dbt_migration` to produce mixed dbt+notebook Databricks Workflows |
+| 67.4 | **Enriched intermediate CTEs** | Notebook | `run_dbt_migration.py` | `generate_intermediate_model()` reads `field_lineage` and `lookup_conditions` from inventory; `_extract_instance_info()` maps instance→type+fields; CTEs reference actual EXP/FIL/LKP/AGG/JNR instance names and field names |
+| 67.5 | **Router → separate models** | Notebook | `run_dbt_migration.py` | `_generate_router_group_model()` produces per-target intermediate models; `write_dbt_project()` creates `int_{name}_group_{n}.sql` when RTR is present with multiple targets |
+| 67.6 | **Standalone deploy script** | Orchestrator | `deploy_dbt_project.py` | Standalone CLI script with `--workspace-url`, `--token`, `--repo-path`, `--git-url`, `--branch` args for Databricks Repos deployment |
+
+**Sprint 67 Exit Criteria:** ✅ ALL MET
+- ✅ DECODE fully expanded (nested parens, multiple occurrences, default/no-default)
+- ✅ SCD2 detection triggers snapshot for 'history'/'snapshot'/'scd'/'archive' targets
+- ✅ Mixed dbt+notebook workflow wired into `run_pipeline_migration.py`
+- ✅ Intermediate CTEs enriched with instance names + field names from lineage
+- ✅ Router auto-split generates `int_*_group_*.sql` per target
+- ✅ `deploy_dbt_project.py` exists with full CLI
+- ✅ 42 tests in `test_dbt_enhancements.py` — all passing
+
+---
+
+## Phase 6 Sprint Summary
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **66** | Assessment, Notebook, Pipeline, Orchestrator | ULKP, TC, Events, session config, ADRs, lineage HTML | ✅ Complete |
+| **67** | Notebook, SQL, Pipeline, Orchestrator | DECODE→CASE, SCD2 snapshots, mixed workflows, enriched CTEs, Router split, deploy script | ✅ Complete |
+
+## New Files Created in Phase 6
+
+| File | Purpose | Sprint |
+|------|---------|--------|
+| `tests/test_sprint66.py` | 42 tests for Sprint 66 gap closures | 66 |
+| `tests/test_dbt_enhancements.py` | 42 tests for Sprint 67 DBT enhancements | 67 |
+| `deploy_dbt_project.py` | Standalone dbt project deployment to Databricks Repos | 67 |
+| `docs/ADR/004-databricks-second-target.md` | ADR: Databricks as second migration target | 66 |
+| `docs/ADR/005-dbt-third-target.md` | ADR: DBT as third migration target | 66 |
+| `docs/ADR/006-autosys-jil-migration.md` | ADR: AutoSys JIL migration strategy | 66 |
+
+---
+
+# Phase 7 — DevOps, Platform-Native & Observability (Sprints 68–70)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_7-DevOps_%2B_Platform_%2B_Observability-27AE60?style=for-the-badge" alt="Phase 7"/>
+  <img src="https://img.shields.io/badge/sprints-68--70-27AE60?style=for-the-badge" alt="Sprints 68-70"/>
+  <img src="https://img.shields.io/badge/tests-109-27AE60?style=for-the-badge" alt="109 Tests"/>
+</p>
+
+Phase 7 consolidates 6 previously deferred sprints (32, 34, 36, 42, 43, 44) into 3 focused sprints covering DevOps/CI/CD, platform-native features, and observability for both Fabric and Databricks targets.
+
+> **Note:** Sprint 46 (Synapse Target) was **dropped** — Synapse as a deployment target is explicitly out of scope.
+
+## Sprint 68 — DevOps & CI/CD
+
+**Goal:** Enable CI/CD-driven deployments for both Fabric and Databricks — environment configs, deployment pipeline JSON, pre-deployment validation, promotion, and Databricks Asset Bundles (DAB).
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 68.1 | **Environment config generation** | Orchestrator | `deploy_to_fabric.py` | `generate_env_configs()` creates dev/test/prod YAML configs with workspace placeholders, log levels, connection strings |
+| 68.2 | **Fabric Deployment Pipeline JSON** | Orchestrator | `deploy_to_fabric.py` | `generate_deployment_pipeline_json()` creates 3-stage Dev→Test→Prod pipeline with Notebook and DataPipeline rules |
+| 68.3 | **Pre-deployment validation** | Validation | `deploy_to_fabric.py` | `validate_pre_deployment()` checks notebooks exist, pipeline JSON valid, no credential leaks, inventory present |
+| 68.4 | **Environment promotion** | Orchestrator | `deploy_to_fabric.py` | `promote_deployment()` copies deployment log, applies config substitution between environments |
+| 68.5 | **Databricks Asset Bundles** | Orchestrator | `deploy_to_databricks.py` | `generate_dab_bundle()` generates `databricks.yml` + bundle structure for `databricks bundle deploy` |
+| 68.6 | **CLI flags** | Orchestrator | `deploy_to_fabric.py`, `deploy_to_databricks.py` | `--validate`, `--promote`, `--generate-envs`, `--generate-pipeline`, `--generate-dab` flags |
+
+**Sprint 68 Exit Criteria:** ✅ ALL MET
+- ✅ 3 environment configs generated (dev/test/prod) with parameterized workspace IDs
+- ✅ Deployment Pipeline JSON has 3 stages with rules
+- ✅ Pre-deployment validation catches missing notebooks, invalid JSON, credential leaks
+- ✅ Promotion copies artifacts between environments with dry-run support
+- ✅ DAB bundle generates valid `databricks.yml` with dev/staging/prod targets
+- ✅ 22 tests in `test_sprint68_70.py` — all passing
+
+---
+
+## Sprint 69 — Platform-Native Features
+
+**Goal:** Generate platform-native artifacts — Lakehouse vs Warehouse decision engine, T-SQL Warehouse DDL, SQL Warehouse DDL with CLUSTER BY, OneLake shortcuts, Delta Sharing, and Mirroring configuration.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 69.1 | **Lakehouse vs Warehouse advisor** | Assessment | `run_schema_generator.py` | `recommend_storage_target()` scores SQL-heavy→Warehouse, complex transforms→Lakehouse with reasons |
+| 69.2 | **Fabric Warehouse DDL (T-SQL)** | SQL | `run_schema_generator.py` | `generate_warehouse_ddl()` generates T-SQL `CREATE TABLE` with `[schema].[table]` notation and IF NOT EXISTS |
+| 69.3 | **T-SQL type mapping** | SQL | `run_schema_generator.py` | `_map_type_to_tsql()` maps Delta types to T-SQL (STRING→NVARCHAR(4000), TIMESTAMP→DATETIME2, BOOLEAN→BIT) |
+| 69.4 | **SQL Warehouse DDL** | SQL | `run_schema_generator.py` | `generate_sql_warehouse_ddl()` adds CLUSTER BY (auto-detects _id/_key cols) and Z-ORDER (date cols) |
+| 69.5 | **OneLake shortcuts** | Orchestrator | `run_schema_generator.py` | `generate_onelake_shortcuts()` detects DB link patterns (`table@dblink`) and cross-DB refs → shortcut JSON |
+| 69.6 | **Delta Sharing config** | Orchestrator | `run_schema_generator.py` | `generate_delta_sharing_config()` generates provider/share/recipient with GRANT SQL for gold tables |
+| 69.7 | **Mirroring config** | Orchestrator | `run_schema_generator.py` | `generate_mirroring_config()` detects source DB types, checks supported mirrors, generates recommendations |
+
+**Sprint 69 Exit Criteria:** ✅ ALL MET
+- ✅ Storage advisor correctly recommends Warehouse for SQL-heavy, Lakehouse for complex
+- ✅ T-SQL DDL uses proper bracket notation and types
+- ✅ SQL Warehouse DDL adds CLUSTER BY for ID columns, Z-ORDER for date columns
+- ✅ OneLake shortcuts detect both DB link and cross-database patterns
+- ✅ Delta Sharing config includes GRANT SQL for gold-tier tables
+- ✅ Mirroring correctly detects supported (Oracle, SQL Server, PostgreSQL) vs unsupported DBs
+- ✅ 40 tests in `test_sprint68_70.py` — all passing
+
+---
+
+## Sprint 70 — Observability & Cost Estimation
+
+**Goal:** Production-grade observability — Fabric CU cost estimation, Azure Monitor metrics emission, and Teams/Slack webhook alerting.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 70.1 | **Fabric CU cost estimator** | Assessment | `deploy_to_fabric.py` | `estimate_fabric_cu_cost()` calculates CU-hours/month per mapping with complexity-based model and transform multipliers (JNR ×1.3, AGG ×1.2, LKP ×1.1, SP ×1.5) |
+| 70.2 | **Azure Monitor metrics** | Orchestrator | `deploy_to_fabric.py` | `emit_azure_monitor_metrics()` tracks artifacts_deployed, deployment_errors, conversion_score_avg; writes to local JSON + optional Azure Monitor REST POST |
+| 70.3 | **Webhook alerting** | Orchestrator | `deploy_to_fabric.py` | `send_webhook_alert()` auto-detects Teams vs Slack from URL; sends MessageCard or attachment; supports info/warning/error/success types |
+| 70.4 | **CLI --estimate-cost flag** | Orchestrator | `deploy_to_fabric.py` | New `--estimate-cost` flag prints monthly CU estimate and exits |
+
+**Sprint 70 Exit Criteria:** ✅ ALL MET
+- ✅ CU estimator reads inventory, applies multipliers, writes `fabric_cost_estimate.json`
+- ✅ Azure Monitor metrics emitted to local JSON (Azure Monitor POST when endpoint configured)
+- ✅ Webhook auto-detects Teams (MessageCard) vs Slack (attachment) format
+- ✅ All 4 alert types (info/warning/error/success) produce correct payloads
+- ✅ 47 tests in `test_sprint68_70.py` — all passing
+
+---
+
+## Phase 7 Sprint Summary
+
+| Sprint | Primary Agents | Outputs | Status |
+|--------|---------------|---------|--------|
+| **68** | Orchestrator, Validation | Env configs, deployment pipeline JSON, pre-deployment validation, promotion, DAB bundle | ✅ Complete |
+| **69** | Assessment, SQL, Orchestrator | Lakehouse/Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring | ✅ Complete |
+| **70** | Orchestrator, Assessment | CU cost estimator, Azure Monitor metrics, webhook alerting (Teams/Slack) | ✅ Complete |
+
+## New Files Created in Phase 7
+
+| File | Purpose | Sprint |
+|------|---------|--------|
+| `tests/test_sprint68_70.py` | 109 tests for Phase 7 (Sprints 68-70) | 68-70 |
+
+## Modified Files in Phase 7
+
+| File | Changes | Sprint |
+|------|---------|--------|
+| `deploy_to_fabric.py` | env configs, deployment pipeline, validation, promotion, CU estimator, Azure Monitor, webhook alerting, new CLI flags | 68, 70 |
+| `deploy_to_databricks.py` | DAB bundle generation, `--generate-dab` flag | 68 |
+| `run_schema_generator.py` | storage advisor, Warehouse DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring | 69 |
+
+---
+
+# Phase 8 — Performance & Advanced SQL (Sprints 71–73)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_8-Performance_%26_SQL-E67E22?style=for-the-badge" alt="Phase 8"/>
+  <img src="https://img.shields.io/badge/sprints-71--73-E67E22?style=for-the-badge" alt="Sprints 71-73"/>
+</p>
+
+Phase 8 tackles the biggest remaining conversion gap: advanced SQL patterns and runtime performance optimization. Currently ~20% of SQL overrides are flagged as TODO with complex PL/SQL, Dynamic SQL, and recursive queries requiring manual intervention.
+
+## Sprint 71 — Query Optimization & Partition Strategy
+
+**Goal:** Auto-generate Spark performance tuning: partition strategy, Z-ORDER recommendations, broadcast join hints, and Spark config settings based on mapping complexity and estimated data volume.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 71.1 | **Partition strategy recommender** | Assessment | `run_schema_generator.py` | Analyze column cardinality hints (from XML metadata) to recommend hash/range/list partitioning; generate `PARTITIONED BY` with optimal column |
+| 71.2 | **Spark config tuner** | Notebook | `run_notebook_migration.py` | Generate `spark.conf.set()` calls per notebook based on complexity: shuffle partitions, broadcast threshold, AQE settings, executor memory |
+| 71.3 | **Broadcast join detection** | Notebook | `run_notebook_migration.py` | Detect small-dimension lookup tables (LKP transforms) and inject `broadcast()` hints in generated PySpark joins |
+| 71.4 | **Query plan annotation** | SQL | `run_sql_migration.py` | Add `-- PERF:` comments to converted SQL indicating expected cost (scan vs. seek, shuffle, broadcast) |
+| 71.5 | **Materialization advisor** | Notebook | `run_notebook_migration.py` | Recommend `.cache()`, `.persist()`, or Delta checkpoint based on reuse count in DAG (tables read >2x → cache) |
+| 71.6 | **Performance tests** | Validation | `tests/test_sprint71_73.py` | 30+ tests covering partition strategy, config tuning, broadcast detection |
+
+**Sprint 71 Exit Criteria:**
+- [x] Partition recommendations generated for all tables with 500K+ estimated rows
+- [x] Spark config tuned per notebook complexity (Simple: 2 cores, Complex: 8+ cores)
+- [x] Broadcast hints injected for LKP/SQ with <100MB estimated size
+- [x] 30+ tests passing
+
+---
+
+## Sprint 72 — Advanced PL/SQL Conversion Engine
+
+**Goal:** Upgrade PL/SQL conversion from regex stubs to a structured parser handling cursors, BULK COLLECT, FORALL, exception blocks, and package state.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 72.1 | **Cursor → PySpark iterator** | SQL | `run_sql_migration.py` | Convert `DECLARE CURSOR ... OPEN ... FETCH ... CLOSE` to PySpark `df.collect()` loop or `.foreachPartition()` with row-level processing |
+| 72.2 | **BULK COLLECT → DataFrame** | SQL | `run_sql_migration.py` | Convert `BULK COLLECT INTO` to `spark.sql().toPandas()` for small datasets, `spark.sql().write` for large |
+| 72.3 | **FORALL → batch DML** | SQL | `run_sql_migration.py` | Convert `FORALL i IN ... INSERT/UPDATE` to batch `df.write.mode("append")` or `MERGE INTO` |
+| 72.4 | **Exception blocks → try/except** | SQL | `run_sql_migration.py` | Convert `EXCEPTION WHEN NO_DATA_FOUND/TOO_MANY_ROWS/OTHERS` to Python `try/except` with mapped exception types |
+| 72.5 | **Package state → module variables** | SQL | `run_sql_migration.py` | Convert PL/SQL package-level variables and initialization blocks to Python module-level state with `@dataclass` or dict |
+| 72.6 | **PL/SQL conversion tests** | Validation | `tests/test_sprint71_73.py` | 35+ tests covering cursors, BULK COLLECT, FORALL, exceptions, package state |
+
+**Sprint 72 Exit Criteria:**
+- [x] Cursor patterns auto-converted (3 flavors: explicit, implicit, REF CURSOR)
+- [x] BULK COLLECT produces DataFrame code (not TODO)
+- [x] Exception blocks map to Python exceptions with severity logging
+- [x] 35+ tests passing
+
+---
+
+## Sprint 73 — Dynamic SQL & Complex SQL Patterns
+
+**Goal:** Handle the hardest SQL patterns: EXECUTE IMMEDIATE, CONNECT BY recursive queries, PIVOT/UNPIVOT, correlated subqueries, and temporal queries.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 73.1 | **EXECUTE IMMEDIATE → parameterized** | SQL | `run_sql_migration.py` | Extract string-concatenated SQL from `EXECUTE IMMEDIATE`, convert to `spark.sql()` with parameter substitution |
+| 73.2 | **CONNECT BY → recursive CTE** | SQL | `run_sql_migration.py` | Convert `CONNECT BY PRIOR ... START WITH` to Spark SQL `WITH RECURSIVE` CTE or PySpark GraphFrames pattern |
+| 73.3 | **PIVOT/UNPIVOT conversion** | SQL | `run_sql_migration.py` | Convert Oracle `PIVOT (agg FOR col IN (...))` to PySpark `.groupBy().pivot()` and `UNPIVOT` to `stack()` |
+| 73.4 | **Correlated subquery rewrite** | SQL | `run_sql_migration.py` | Detect correlated `WHERE EXISTS (SELECT ... WHERE outer.x = inner.x)` and rewrite to `LEFT SEMI JOIN` or `LEFT ANTI JOIN` |
+| 73.5 | **Temporal table → time-travel** | SQL | `run_sql_migration.py` | Convert SQL Server temporal tables (`FOR SYSTEM_TIME`) to Delta Lake time-travel (`VERSION AS OF`, `TIMESTAMP AS OF`) |
+| 73.6 | **Complex SQL tests** | Validation | `tests/test_sprint71_73.py` | 30+ tests covering dynamic SQL, CTEs, PIVOT, subqueries, temporal |
+
+**Sprint 73 Exit Criteria:**
+- [x] EXECUTE IMMEDIATE patterns extracted and parameterized
+- [x] CONNECT BY hierarchies produce recursive CTE with base + recursive members
+- [x] PIVOT/UNPIVOT generates correct PySpark equivalents
+- [x] 30+ tests passing
+
+---
+
+# Phase 9 — Extensibility & SDK (Sprints 74–76)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_9-Extensibility_%26_SDK-8E44AD?style=for-the-badge" alt="Phase 9"/>
+  <img src="https://img.shields.io/badge/sprints-74--76-8E44AD?style=for-the-badge" alt="Sprints 74-76"/>
+</p>
+
+Phase 9 makes the migration tool customizable and programmable. Currently all conversion rules are hardcoded; enterprises need to add custom transformation handlers, override conversion logic, and integrate the tool into their own automation pipelines.
+
+## Sprint 74 — Plugin System & Custom Rules
+
+**Goal:** Build a plugin architecture allowing enterprises to register custom transformation converters, SQL rewrite rules, and post-processing hooks without modifying core code.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 74.1 | **Plugin loader** | Orchestrator | `plugins.py` | Discover and load `.py` plugins from `plugins/` directory; each plugin registers handlers for specific transform types or SQL patterns |
+| 74.2 | **Transform plugin interface** | Notebook | `plugins.py` | `@register_transform("CUSTOM_TX")` decorator that injects custom PySpark code for unrecognized transformation types |
+| 74.3 | **SQL rewrite plugin** | SQL | `plugins.py` | `@register_sql_rewrite("PATTERN")` decorator for enterprise-specific SQL patterns (e.g., proprietary UDFs) |
+| 74.4 | **Post-processing hooks** | Orchestrator | `plugins.py` | `@post_notebook`, `@post_pipeline`, `@post_sql` hooks for custom post-processing (add headers, inject imports, etc.) |
+| 74.5 | **Plugin examples** | Orchestrator | `examples/plugins/` | 3 example plugins: custom UDF converter, notebook header injector, naming convention enforcer |
+| 74.6 | **Plugin tests** | Validation | `tests/test_sprint74_76.py` | 25+ tests covering plugin discovery, registration, execution, error handling |
+
+**Sprint 74 Exit Criteria:**
+- [x] Plugins discovered from `plugins/` directory automatically
+- [x] Custom transform handler generates valid PySpark for unknown TX types
+- [x] Post-processing hooks called after notebook/pipeline/SQL generation
+- [x] 25+ tests passing
+
+---
+
+## Sprint 75 — Python SDK & REST API
+
+**Goal:** Provide a programmatic API (Python SDK + REST) for headless migration, enabling CI/CD pipelines and custom automation scripts to drive migration programmatically.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 75.1 | **Python SDK module** | Orchestrator | `sdk.py` | Public API: `migrate(source_dir, target, options)`, `assess(xml_path)`, `convert_mapping(name)`, `validate(output_dir)` |
+| 75.2 | **SDK configuration** | Orchestrator | `sdk.py` | `MigrationConfig` dataclass with all CLI flag equivalents; YAML/dict initialization |
+| 75.3 | **REST API server** | Orchestrator | `api_server.py` | FastAPI app with endpoints: `POST /migrate`, `POST /assess`, `GET /status/{job_id}`, `GET /inventory`, `GET /health` |
+| 75.4 | **Async job execution** | Orchestrator | `api_server.py` | Background task execution with job ID tracking, status polling, and result retrieval |
+| 75.5 | **OpenAPI documentation** | Orchestrator | `api_server.py` | Auto-generated Swagger UI at `/docs` with request/response schemas |
+| 75.6 | **SDK & API tests** | Validation | `tests/test_sprint74_76.py` | 30+ tests covering SDK methods, API endpoints, job lifecycle |
+
+**Sprint 75 Exit Criteria:**
+- [x] `from informatica_to_fabric import migrate` works programmatically
+- [x] REST API accepts migration jobs and returns status
+- [x] Swagger UI documents all endpoints
+- [x] 30+ tests passing
+
+---
+
+## Sprint 76 — Configurable Rule Engine & Enterprise Rulesets
+
+**Goal:** Externalize conversion rules from hardcoded Python into versioned, shareable YAML/JSON rulesets that enterprises can customize, version, and share.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 76.1 | **Rule definition schema** | Orchestrator | `rules/schema.yaml` | JSON Schema defining rule format: `match` (pattern), `action` (convert/flag/skip), `output` (template), `priority` |
+| 76.2 | **SQL rule externalizer** | SQL | `rules/sql_rules.yaml` | Extract 100+ hardcoded regex patterns from `run_sql_migration.py` into YAML rule file |
+| 76.3 | **Transform rule externalizer** | Notebook | `rules/transform_rules.yaml` | Extract `TX_TEMPLATES` dict and `_transformation_cell()` logic into rule definitions |
+| 76.4 | **Rule engine loader** | Orchestrator | `rule_engine.py` | Load rules from `rules/` directory, merge with defaults, apply in priority order |
+| 76.5 | **Enterprise rule override** | Orchestrator | `rule_engine.py` | `migration.yaml` → `custom_rules_dir: /path/to/rules` to load enterprise-specific overrides that merge with defaults |
+| 76.6 | **Rule engine tests** | Validation | `tests/test_sprint74_76.py` | 25+ tests covering rule loading, merging, priority, override, YAML validation |
+
+**Sprint 76 Exit Criteria:**
+- [x] SQL rules externalized to YAML (100+ rules)
+- [x] Transform rules externalized to YAML
+- [x] Enterprise overrides merge with defaults without losing base rules
+- [x] 25+ tests passing
+
+---
+
+# Phase 10 — Validation Maturity & Data Catalog (Sprints 77–79)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_10-Validation_%26_Catalog-C0392B?style=for-the-badge" alt="Phase 10"/>
+  <img src="https://img.shields.io/badge/sprints-77--79-C0392B?style=for-the-badge" alt="Sprints 77-79"/>
+</p>
+
+Phase 10 upgrades validation from row-count/checksum to statistical verification and integrates with enterprise data catalogs (Microsoft Purview, Unity Catalog) for lineage and metadata publishing.
+
+## Sprint 77 — Statistical Validation & SCD Testing
+
+**Goal:** Add statistical validation methods (distribution matching, outlier detection) and automated SCD Type 1/2 verification.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 77.1 | **Distribution comparison** | Validation | `run_validation.py` | Generate validation notebooks that compare column distributions (mean, stddev, percentiles) between source and target; flag if drift > threshold |
+| 77.2 | **Kolmogorov-Smirnov test** | Validation | `run_validation.py` | For numeric columns, generate K-S test code; p-value < 0.05 → flag as distribution mismatch |
+| 77.3 | **SCD Type 2 validation** | Validation | `run_validation.py` | Verify effective_date/end_date/current_flag semantics: no gaps, no overlaps, exactly one current record per business key |
+| 77.4 | **Null distribution check** | Validation | `run_validation.py` | Compare null percentages per column between source/target; flag if delta > 1% |
+| 77.5 | **Outlier detection** | Validation | `run_validation.py` | IQR-based outlier comparison; flag if target introduces outliers not in source |
+| 77.6 | **Statistical validation tests** | Validation | `tests/test_sprint77_79.py` | 25+ tests covering distributions, K-S, SCD2, nulls, outliers |
+
+**Sprint 77 Exit Criteria:**
+- [x] Statistical comparison notebooks generated with configurable thresholds
+- [x] SCD2 validation catches gap/overlap/multi-current issues
+- [x] 25+ tests passing
+
+---
+
+## Sprint 78 — Referential Integrity & A/B Testing
+
+**Goal:** Generate referential integrity validation and an A/B testing harness that runs source + target in parallel and compares results.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 78.1 | **FK relationship extractor** | Assessment | `run_assessment.py` | Extract foreign key relationships from mapping metadata (JNR conditions, LKP conditions) → relationship graph |
+| 78.2 | **RI validation generator** | Validation | `run_validation.py` | Generate notebooks that check `COUNT(target.FK NOT IN source.PK) == 0` for each detected relationship |
+| 78.3 | **A/B test harness** | Validation | `run_validation.py` | Generate side-by-side execution script: run source query → run target query → compare row-by-row (sorted) |
+| 78.4 | **Business rule validator** | Validation | `run_validation.py` | Allow users to define custom assertions in `migration.yaml` (e.g., `revenue > 0`, `date >= '2020-01-01'`) and generate test code |
+| 78.5 | **Validation dashboard** | Validation | `run_validation.py` | Generate HTML validation report with pass/fail/warning per table, with drill-down to failed rows |
+| 78.6 | **RI & A/B tests** | Validation | `tests/test_sprint77_79.py` | 25+ tests covering FK extraction, RI checks, A/B comparison, business rules |
+
+**Sprint 78 Exit Criteria:**
+- [x] FK relationships detected from JNR/LKP conditions
+- [x] RI validation catches orphan records
+- [x] A/B test harness runs both queries and diffs results
+- [x] 25+ tests passing
+
+---
+
+## Sprint 79 — Data Catalog Integration (Purview / Unity Catalog)
+
+**Goal:** Publish migration metadata and lineage to Microsoft Purview (Fabric) and Unity Catalog (Databricks) for enterprise data discovery.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 79.1 | **Purview metadata generator** | Orchestrator | `catalog_integration.py` | Generate Purview-compatible JSON for scanned entities (tables, columns, lineage edges) using Apache Atlas v2 API format |
+| 79.2 | **Unity Catalog lineage publisher** | Orchestrator | `catalog_integration.py` | Generate `ALTER TABLE ... SET TAGS` and lineage registration SQL for Unity Catalog |
+| 79.3 | **Column-level lineage export** | Assessment | `catalog_integration.py` | Export field-level lineage (source column → transform → target column) as JSON for catalog ingestion |
+| 79.4 | **Impact analysis report** | Orchestrator | `catalog_integration.py` | Given a source table, trace all downstream targets and generate impact analysis markdown |
+| 79.5 | **Catalog integration tests** | Validation | `tests/test_sprint77_79.py` | 20+ tests covering Purview format, UC lineage SQL, column lineage, impact analysis |
+
+**Sprint 79 Exit Criteria:**
+- [x] Purview-compatible metadata JSON generated for all migration artifacts
+- [x] Unity Catalog lineage tags and comments populated
+- [x] Column-level lineage traced from source through transforms to target
+- [x] 20+ tests passing
+
+---
+
+# Phase 11 — Streaming & Real-Time (Sprints 80–82)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_11-Streaming_%26_RealTime-2980B9?style=for-the-badge" alt="Phase 11"/>
+  <img src="https://img.shields.io/badge/sprints-80--82-2980B9?style=for-the-badge" alt="Sprints 80-82"/>
+</p>
+
+Phase 11 extends the tool beyond batch to support streaming/real-time ETL patterns, enabling migration of Informatica real-time sessions and event-driven workflows to PySpark Structured Streaming, Auto Loader, and Fabric Eventstreams.
+
+## Sprint 80 — Structured Streaming Templates
+
+**Goal:** Generate PySpark Structured Streaming notebooks for Informatica real-time mappings, with Kafka/Event Hub source templates and Delta Lake sink patterns.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 80.1 | **Streaming mapping detector** | Assessment | `run_assessment.py` | Detect real-time/event-driven indicators in mapping XML (JMS source, message queue, CDC connection) |
+| 80.2 | **Kafka source template** | Notebook | `templates/streaming_kafka.py` | Template for `spark.readStream.format("kafka")` with schema inference, deserialization, and watermark |
+| 80.3 | **Event Hub source template** | Notebook | `templates/streaming_eventhub.py` | Template for `spark.readStream.format("eventhubs")` with connection string from Key Vault |
+| 80.4 | **Auto Loader template** | Notebook | `templates/streaming_autoloader.py` | Databricks Auto Loader template for `spark.readStream.format("cloudFiles")` with schema evolution |
+| 80.5 | **Delta Lake streaming sink** | Notebook | `run_notebook_migration.py` | Generate `.writeStream.format("delta").outputMode("append").start()` with checkpointing |
+| 80.6 | **Streaming tests** | Validation | `tests/test_sprint80_82.py` | 25+ tests covering stream detection, templates, sink patterns |
+
+**Sprint 80 Exit Criteria:**
+- [ ] Real-time mappings detected from XML metadata
+- [ ] Kafka/Event Hub/Auto Loader templates generate valid Structured Streaming code
+- [ ] Delta sink with checkpoint directory configured
+- [ ] 25+ tests passing
+
+---
+
+## Sprint 81 — CDC & Change Feed Support
+
+**Goal:** Support Change Data Capture (CDC) patterns: convert Informatica CDC sessions to Delta Lake `MERGE INTO` patterns with change tracking.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 81.1 | **CDC pattern detector** | Assessment | `run_assessment.py` | Detect CDC indicators: Update Strategy transform with `DD_INSERT/DD_UPDATE/DD_DELETE`, CDC connection type |
+| 81.2 | **MERGE INTO generator** | Notebook | `run_notebook_migration.py` | Generate Delta Lake `MERGE INTO ... WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT WHEN NOT MATCHED BY SOURCE THEN DELETE` from CDC metadata |
+| 81.3 | **Change feed reader** | Notebook | `run_notebook_migration.py` | Generate Databricks CDF (Change Data Feed) reader: `spark.readStream.option("readChangeFeed", "true")` |
+| 81.4 | **SQL Server CT integration** | Notebook | `run_notebook_migration.py` | Template for SQL Server Change Tracking → Delta merge pipeline |
+| 81.5 | **CDC validation** | Validation | `run_validation.py` | Generate CDC-specific validation: verify insert/update/delete counts match, no orphan deletes |
+| 81.6 | **CDC tests** | Validation | `tests/test_sprint80_82.py` | 25+ tests covering CDC detection, MERGE generation, change feed, validation |
+
+**Sprint 81 Exit Criteria:**
+- [ ] CDC mappings detected and routed to MERGE INTO pattern
+- [ ] Change Data Feed reader template works with Delta tables
+- [ ] CDC validation checks insert/update/delete balance
+- [ ] 25+ tests passing
+
+---
+
+## Sprint 82 — Watermark, Late Arrival & Exactly-Once
+
+**Goal:** Handle streaming edge cases: watermark management for late-arriving data, exactly-once processing guarantees, and micro-batch scheduling optimization.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 82.1 | **Watermark injection** | Notebook | `run_notebook_migration.py` | Auto-detect timestamp columns and inject `.withWatermark("event_time", "1 hour")` based on SLA metadata |
+| 82.2 | **Late arrival handling** | Notebook | `run_notebook_migration.py` | Generate separate late-arrival processing path: `readStream` with `maxFilesPerTrigger` and dead-letter output |
+| 82.3 | **Idempotency key generation** | Notebook | `run_notebook_migration.py` | Generate `foreachBatch` with idempotent write pattern using composite key deduplication |
+| 82.4 | **Trigger interval optimizer** | Notebook | `run_notebook_migration.py` | Recommend trigger interval (`processingTime`, `availableNow`) based on source frequency and SLA |
+| 82.5 | **Streaming monitoring** | Notebook | `run_notebook_migration.py` | Inject `query.lastProgress` logging and metric emission for streaming query health |
+| 82.6 | **Streaming edge-case tests** | Validation | `tests/test_sprint80_82.py` | 20+ tests covering watermarks, late arrival, idempotency, triggers |
+
+**Sprint 82 Exit Criteria:**
+- [ ] Watermark and late-arrival handling auto-configured
+- [ ] Idempotent writes using composite key dedup
+- [ ] Streaming monitoring metrics emitted
+- [ ] 20+ tests passing
+
+---
+
+# Phase 12 — Governance & Compliance (Sprints 83–85)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_12-Governance_%26_Compliance-27AE60?style=for-the-badge" alt="Phase 12"/>
+  <img src="https://img.shields.io/badge/sprints-83--85-27AE60?style=for-the-badge" alt="Sprints 83-85"/>
+</p>
+
+Phase 12 automates security and compliance artifacts: RLS/CLS policies, GDPR/CCPA compliance checks, and certification workflows for regulated enterprises.
+
+## Sprint 83 — RLS/CLS Policy Generation
+
+**Goal:** Convert Informatica security rules (user filters, row-level security) to Fabric RLS and Databricks row/column security policies.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 83.1 | **Security rule extractor** | Assessment | `run_assessment.py` | Extract Informatica session-level security filters, user group assignments, and data masking rules from XML |
+| 83.2 | **Fabric RLS generator** | SQL | `security_migration.py` | Generate Fabric Warehouse RLS policies: `CREATE SECURITY POLICY ... ADD FILTER PREDICATE` |
+| 83.3 | **Databricks RLS generator** | SQL | `security_migration.py` | Generate Unity Catalog row filters: `ALTER TABLE ... SET ROW FILTER` with Python UDF |
+| 83.4 | **Column masking generator** | SQL | `security_migration.py` | Generate column masking functions: dynamic data masking for PII columns (SSN → `***-**-1234`) |
+| 83.5 | **Security policy audit** | Orchestrator | `security_migration.py` | Generate audit report: which tables have RLS/CLS, which columns are masked, coverage % |
+| 83.6 | **Security policy tests** | Validation | `tests/test_sprint83_85.py` | 25+ tests covering security extraction, RLS generation, column masking, audit |
+
+**Sprint 83 Exit Criteria:**
+- [ ] Informatica security filters converted to Fabric RLS + Databricks row filters
+- [ ] PII columns auto-masked with appropriate masking functions
+- [ ] Security coverage report generated
+- [ ] 25+ tests passing
+
+---
+
+## Sprint 84 — GDPR/CCPA Compliance & Data Residency
+
+**Goal:** Automated compliance checking: GDPR Article 17 (right to erasure), CCPA opt-out tracking, data residency validation, and retention policy enforcement.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 84.1 | **PII column classifier** | Assessment | `compliance.py` | Classify columns as PII/sensitive/public using regex + naming heuristics; generate classification report |
+| 84.2 | **Retention policy generator** | Orchestrator | `compliance.py` | Generate Delta Lake table properties: `delta.deletedFileRetentionDuration`, lifecycle policies based on data classification |
+| 84.3 | **Right-to-erasure template** | Notebook | `compliance.py` | Generate GDPR deletion notebook: `DELETE FROM table WHERE subject_id = ?` with audit logging |
+| 84.4 | **Data residency validator** | Validation | `compliance.py` | Check workspace region configuration against data classification; flag if sensitive data in non-compliant region |
+| 84.5 | **Compliance report** | Orchestrator | `compliance.py` | Generate HTML compliance dashboard: PII coverage, retention status, residency checks, GDPR readiness score |
+| 84.6 | **Compliance tests** | Validation | `tests/test_sprint83_85.py` | 20+ tests covering PII classification, retention, erasure, residency |
+
+**Sprint 84 Exit Criteria:**
+- [ ] PII columns auto-classified across all target tables
+- [ ] Retention policies generated per data classification tier
+- [ ] GDPR deletion template works with audit logging
+- [ ] 20+ tests passing
+
+---
+
+## Sprint 85 — Certification Workflow & Audit Trail
+
+**Goal:** Build a migration certification workflow: sign-off gates, audit trail per artifact, and compliance evidence packaging.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 85.1 | **Certification gate system** | Orchestrator | `certification.py` | Define gates: Assessment→Conversion→Validation→Security→Performance→Production; each gate has pass/fail criteria |
+| 85.2 | **Audit trail per artifact** | Orchestrator | `certification.py` | Track: who converted, when, which version, validation results, manual overrides — per notebook/pipeline/SQL |
+| 85.3 | **Evidence package generator** | Orchestrator | `certification.py` | Generate ZIP with: migration report, validation results, lineage, security audit, cost estimate for compliance review |
+| 85.4 | **Sign-off template** | Orchestrator | `certification.py` | Generate markdown sign-off document with checkboxes per gate, stakeholder fields, date/signature placeholders |
+| 85.5 | **Certification tests** | Validation | `tests/test_sprint83_85.py` | 20+ tests covering gates, audit trail, evidence packaging, sign-off template |
+
+**Sprint 85 Exit Criteria:**
+- [ ] 6-gate certification workflow defined with executable checks
+- [ ] Full audit trail per artifact (JSON + human-readable)
+- [ ] Evidence ZIP generated for compliance review
+- [ ] 20+ tests passing
+
+---
+
+# Phase 13 — AI-Assisted Migration (Sprints 86–88)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_13-AI_Assisted_Migration-9B59B6?style=for-the-badge" alt="Phase 13"/>
+  <img src="https://img.shields.io/badge/sprints-86--88-9B59B6?style=for-the-badge" alt="Sprints 86-88"/>
+</p>
+
+Phase 13 integrates LLM-based intelligence for the hardest conversion challenges: complex SQL that defeats regex, intelligent gap resolution, and a chat-based migration assistant.
+
+## Sprint 86 — LLM-Powered SQL Conversion
+
+**Goal:** Use Azure OpenAI / GPT-4 as a fallback converter for SQL patterns that the regex engine flags as TODO, with confidence scoring and human review gate.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 86.1 | **LLM conversion client** | SQL | `ai_converter.py` | Azure OpenAI client with retry/fallback; sends source SQL + target dialect → receives converted SQL |
+| 86.2 | **Prompt engineering** | SQL | `ai_converter.py` | Structured prompts with conversion rules context, example pairs, and output format constraints (valid Spark SQL only) |
+| 86.3 | **Confidence scoring** | SQL | `ai_converter.py` | Score LLM output (0-100): syntax check, semantic pattern match, test execution; <80 → flag for human review |
+| 86.4 | **TODO backfill** | SQL | `run_sql_migration.py` | `--ai-assist` flag: re-process all `-- TODO:` markers through LLM converter, replace with converted SQL + confidence annotation |
+| 86.5 | **Cost guardrails** | SQL | `ai_converter.py` | Token budget per mapping, batch limits, caching of repeated patterns to minimize API calls |
+| 86.6 | **LLM conversion tests** | Validation | `tests/test_sprint86_88.py` | 20+ tests covering prompts, scoring, TODO backfill, cost limits (mocked LLM) |
+
+**Sprint 86 Exit Criteria:**
+- [ ] LLM converts complex SQL with 80%+ syntax validity
+- [ ] Confidence scoring flags low-quality conversions for review
+- [ ] `--ai-assist` processes TODO markers end-to-end
+- [ ] Token budget prevents runaway costs
+- [ ] 20+ tests passing
+
+---
+
+## Sprint 87 — Intelligent Gap Resolution
+
+**Goal:** Use ML/LLM to auto-identify conversion patterns from successful past conversions and suggest resolutions for new gaps.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 87.1 | **Pattern learning engine** | Orchestrator | `ai_converter.py` | Analyze successful conversion pairs (source SQL → target SQL) and extract reusable transformation rules |
+| 87.2 | **Similar pattern matcher** | Orchestrator | `ai_converter.py` | Given a TODO SQL block, find the most similar successfully-converted block and suggest the same transformation |
+| 87.3 | **Gap severity ranker** | Assessment | `ai_converter.py` | Rank TODO items by business impact (data volume, downstream dependencies, execution frequency) to prioritize manual review |
+| 87.4 | **Auto-fix suggestions** | Orchestrator | `ai_converter.py` | Generate 3 candidate fixes per TODO with confidence scores; present as choose-one review UI in web app |
+| 87.5 | **Learning feedback loop** | Orchestrator | `ai_converter.py` | When user accepts/rejects a suggestion, store as training pair for future pattern matching |
+| 87.6 | **Gap resolution tests** | Validation | `tests/test_sprint86_88.py` | 20+ tests covering pattern learning, matching, ranking, suggestions |
+
+**Sprint 87 Exit Criteria:**
+- [ ] Similar-pattern matching finds relevant prior conversions
+- [ ] Gap severity ranking prioritizes high-impact TODOs
+- [ ] Feedback loop stores accepted conversions
+- [ ] 20+ tests passing
+
+---
+
+## Sprint 88 — Chat-Based Migration Assistant
+
+**Goal:** Build a conversational migration assistant that answers questions, explains conversion decisions, and guides users through manual review of flagged items.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 88.1 | **Chat context builder** | Orchestrator | `assistant.py` | Build context from inventory, lineage, TODO items, and conversion history for chat prompts |
+| 88.2 | **Conversation handlers** | Orchestrator | `assistant.py` | Handle queries: "Why was mapping X flagged?", "What does this SQL do?", "How should I migrate this?", "Show me the lineage for table Y" |
+| 88.3 | **Interactive review mode** | Orchestrator | `assistant.py` | Present TODO items one-by-one with context; accept user decision (`accept`, `modify`, `skip`) and apply to output |
+| 88.4 | **VS Code agent integration** | Orchestrator | `.github/agents/assistant.agent.md` | New `@assistant` agent that can be invoked in VS Code Copilot chat for migration Q&A |
+| 88.5 | **Assistant tests** | Validation | `tests/test_sprint86_88.py` | 15+ tests covering context building, query handling, review mode |
+
+**Sprint 88 Exit Criteria:**
+- [ ] Chat assistant answers migration questions with relevant context
+- [ ] Interactive review mode processes TODO items with user decisions
+- [ ] VS Code agent definition created
+- [ ] 15+ tests passing
+
+---
+
+# Phase 14 — Web UI & Developer Experience (Sprints 89–91)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_14-Web_UI_%26_DX-E74C3C?style=for-the-badge" alt="Phase 14"/>
+  <img src="https://img.shields.io/badge/sprints-89--91-E74C3C?style=for-the-badge" alt="Sprints 89-91"/>
+</p>
+
+Phase 14 upgrades the web UI and developer experience with interactive dashboards, visual lineage exploration, and side-by-side diff tools.
+
+## Sprint 89 — Interactive Web Dashboard v2
+
+**Goal:** Rebuild the Streamlit web app with real-time progress tracking, interactive charts, and deployment simulation.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 89.1 | **Real-time progress** | Orchestrator | `web/app.py` | WebSocket-based live progress: current mapping, % complete, estimated time remaining |
+| 89.2 | **Interactive complexity chart** | Orchestrator | `web/app.py` | Plotly/Altair chart: mapping complexity distribution, conversion score histogram, cost breakdown |
+| 89.3 | **Deployment simulation** | Orchestrator | `web/app.py` | "What-if" analysis: select target → show estimated CU/DBU cost, artifact count, deployment time |
+| 89.4 | **Configuration editor** | Orchestrator | `web/app.py` | In-browser migration.yaml editor with validation and preview |
+| 89.5 | **Multi-project support** | Orchestrator | `web/app.py` | Support multiple migration projects in one dashboard; project selector, per-project history |
+| 89.6 | **Dashboard tests** | Validation | `tests/test_sprint89_91.py` | 15+ tests covering progress tracking, charts, simulation |
+
+**Sprint 89 Exit Criteria:**
+- [ ] Real-time progress visible during migration run
+- [ ] Interactive charts render complexity and cost data
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 90 — Visual Lineage Explorer
+
+**Goal:** Build an interactive browser-based lineage visualization that replaces static Mermaid diagrams with zoomable, filterable, clickable lineage graphs.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 90.1 | **Lineage graph JSON API** | Orchestrator | `web/app.py` | Serve lineage data as JSON: `{nodes: [...], edges: [...]}` with table, column, transform metadata |
+| 90.2 | **Interactive graph renderer** | Orchestrator | `web/static/lineage.html` | D3.js or Cytoscape.js-based zoomable graph with drag, zoom, filter by tier (Bronze/Silver/Gold) |
+| 90.3 | **Column-level drill-down** | Orchestrator | `web/static/lineage.html` | Click table node → expand to show column-level lineage with transform chain |
+| 90.4 | **Impact analysis view** | Orchestrator | `web/static/lineage.html` | Select a source table → highlight all downstream paths (forward impact); select target → highlight all upstream paths (backward trace) |
+| 90.5 | **Lineage export** | Orchestrator | `web/app.py` | Export lineage as PNG, SVG, or JSON from the browser |
+| 90.6 | **Lineage explorer tests** | Validation | `tests/test_sprint89_91.py` | 15+ tests covering graph generation, JSON API, export |
+
+**Sprint 90 Exit Criteria:**
+- [ ] Interactive lineage graph loads in browser with zoom/pan/filter
+- [ ] Column-level drill-down shows transform chain
+- [ ] Impact analysis highlights downstream/upstream paths
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 91 — Migration Diff & Side-by-Side Review
+
+**Goal:** Generate side-by-side comparison views of source Informatica logic vs. generated target code for manual review and approval.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 91.1 | **Source logic extractor** | Assessment | `diff_generator.py` | Extract human-readable representation of Informatica mapping logic (transform chain, expressions, SQL) |
+| 91.2 | **Target code formatter** | Orchestrator | `diff_generator.py` | Format generated PySpark/SQL/DBT code with syntax highlighting and section annotations |
+| 91.3 | **Side-by-side HTML** | Orchestrator | `diff_generator.py` | Generate 2-panel HTML: left = source logic, right = target code, with corresponding sections aligned |
+| 91.4 | **Diff annotations** | Orchestrator | `diff_generator.py` | Add annotations: ✅ (auto-converted), ⚠️ (heuristic), 🔴 (TODO/manual), with confidence scores |
+| 91.5 | **Batch review report** | Orchestrator | `diff_generator.py` | Generate consolidated review report across all mappings; filterable by status (auto/heuristic/manual) |
+| 91.6 | **Diff & review tests** | Validation | `tests/test_sprint89_91.py` | 15+ tests covering source extraction, formatting, HTML generation, annotations |
+
+**Sprint 91 Exit Criteria:**
+- [ ] Side-by-side comparison generated per mapping
+- [ ] Annotations clearly distinguish auto/heuristic/manual items
+- [ ] Batch review report filters by conversion status
+- [ ] 15+ tests passing
+
+---
+
+# Phase 15 — Cloud-Native & IaC (Sprints 92–94)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_15-Cloud_Native_%26_IaC-3498DB?style=for-the-badge" alt="Phase 15"/>
+  <img src="https://img.shields.io/badge/sprints-92--94-3498DB?style=for-the-badge" alt="Sprints 92-94"/>
+</p>
+
+Phase 15 generates infrastructure-as-code outputs (Terraform, Bicep) and CI/CD pipeline definitions so migration artifacts can be deployed through standard DevOps workflows.
+
+## Sprint 92 — Terraform & Bicep Output
+
+**Goal:** Generate Terraform (HCL) and Azure Bicep templates that provision the target infrastructure (Fabric workspace, Databricks workspace, storage accounts) alongside migration artifacts.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 92.1 | **Terraform Fabric module** | Orchestrator | `iac_generator.py` | Generate HCL for: `azurerm_fabric_workspace`, `azurerm_fabric_capacity`, lakehouse, warehouse resources |
+| 92.2 | **Terraform Databricks module** | Orchestrator | `iac_generator.py` | Generate HCL for: `databricks_workspace`, `databricks_catalog`, `databricks_schema`, `databricks_table`, `databricks_job` |
+| 92.3 | **Bicep Fabric template** | Orchestrator | `iac_generator.py` | Generate Bicep for Fabric workspace provisioning with Key Vault, storage, and capacity assignment |
+| 92.4 | **Variable extraction** | Orchestrator | `iac_generator.py` | Extract all deployment parameters (workspace ID, catalog, connection strings) into `variables.tf` / `parameters.bicep` |
+| 92.5 | **IaC validation** | Validation | `iac_generator.py` | `terraform validate` and `az bicep build` dry-run to syntax-check generated templates |
+| 92.6 | **IaC tests** | Validation | `tests/test_sprint92_94.py` | 20+ tests covering HCL generation, Bicep generation, variable extraction |
+
+**Sprint 92 Exit Criteria:**
+- [ ] Terraform modules generate valid HCL for Fabric and Databricks
+- [ ] Bicep templates provision workspace with all dependencies
+- [ ] Variables externalized for multi-environment deployment
+- [ ] 20+ tests passing
+
+---
+
+## Sprint 93 — Container & Kubernetes Deployment
+
+**Goal:** Containerize the migration tool for CI/CD and provide Kubernetes manifests for enterprise-scale multi-tenant execution.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 93.1 | **Production Dockerfile** | Orchestrator | `Dockerfile` | Multi-stage build: Python 3.12-slim, pip install, health check endpoint, non-root user |
+| 93.2 | **Docker Compose** | Orchestrator | `docker-compose.yml` | Compose file with migration tool + optional Redis (job queue) + web UI services |
+| 93.3 | **Kubernetes manifests** | Orchestrator | `k8s/` | Deployment, Service, ConfigMap, Secret templates for AKS deployment |
+| 93.4 | **Helm chart** | Orchestrator | `charts/informatica-migration/` | Helm chart with configurable values: replicas, resources, storage, target config |
+| 93.5 | **Health & readiness probes** | Orchestrator | `api_server.py` | `/health` and `/ready` endpoints for Kubernetes probes |
+| 93.6 | **Container tests** | Validation | `tests/test_sprint92_94.py` | 15+ tests covering Dockerfile syntax, compose validation, manifest generation |
+
+**Sprint 93 Exit Criteria:**
+- [ ] Docker image builds and runs migration end-to-end
+- [ ] Kubernetes manifests deploy on AKS
+- [ ] Helm chart is configurable and installable
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 94 — Azure DevOps & GitHub Actions Pipelines
+
+**Goal:** Generate ready-to-use CI/CD pipeline definitions for Azure DevOps (YAML) and GitHub Actions that automate migration runs on every commit.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 94.1 | **GitHub Actions workflow** | Orchestrator | `cicd_generator.py` | Generate `.github/workflows/migration.yml`: checkout → assess → convert → validate → deploy (parameterized) |
+| 94.2 | **Azure DevOps pipeline** | Orchestrator | `cicd_generator.py` | Generate `azure-pipelines.yml`: stages (Assess, Convert, Validate, Deploy) with environment approval gates |
+| 94.3 | **Environment matrix** | Orchestrator | `cicd_generator.py` | Generate multi-environment matrix: dev (auto-deploy), test (manual gate), prod (approval + rollback) |
+| 94.4 | **Secret injection** | Orchestrator | `cicd_generator.py` | Map connection strings and tokens to GitHub Secrets / Azure DevOps Variable Groups |
+| 94.5 | **Pipeline validation** | Validation | `cicd_generator.py` | Validate generated YAML against GitHub Actions schema and Azure DevOps schema |
+| 94.6 | **CI/CD pipeline tests** | Validation | `tests/test_sprint92_94.py` | 15+ tests covering workflow generation, pipeline stages, secret mapping |
+
+**Sprint 94 Exit Criteria:**
+- [ ] GitHub Actions workflow runs migration end-to-end
+- [ ] Azure DevOps pipeline has approval gates per environment
+- [ ] Secrets properly referenced (never hardcoded)
+- [ ] 15+ tests passing
+
+---
+
+# Phase 16 — Scale & Performance Testing (Sprints 95–97)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_16-Scale_%26_Perf_Testing-F39C12?style=for-the-badge" alt="Phase 16"/>
+  <img src="https://img.shields.io/badge/sprints-95--97-F39C12?style=for-the-badge" alt="Sprints 95-97"/>
+</p>
+
+Phase 16 validates the tool at enterprise scale (500+ mappings), optimizes generation performance, and builds a regression test suite with golden datasets.
+
+## Sprint 95 — 500+ Mapping Benchmark Suite
+
+**Goal:** Create synthetic and real-world benchmark datasets to stress-test the migration tool at 100, 500, and 1000 mapping scales.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 95.1 | **Synthetic mapping generator** | Validation | `benchmarks/generate_mappings.py` | Generate N synthetic Informatica XML mappings with configurable complexity distribution |
+| 95.2 | **Benchmark harness** | Validation | `benchmarks/run_benchmark.py` | Time each phase (assess, convert, validate) at 10/100/500/1000 scale; output CSV with metrics |
+| 95.3 | **Memory profiler** | Validation | `benchmarks/run_benchmark.py` | Track peak memory usage per phase; flag if exceeds 4GB threshold |
+| 95.4 | **Throughput metrics** | Validation | `benchmarks/run_benchmark.py` | Measure: mappings/second, SQL patterns/second, notebooks generated/second |
+| 95.5 | **Scalability report** | Validation | `benchmarks/SCALABILITY.md` | Document: bottlenecks, recommendations, hardware requirements per scale tier |
+| 95.6 | **Benchmark tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering generator, harness, profiler |
+
+**Sprint 95 Exit Criteria:**
+- [ ] Synthetic generator creates valid XML at all scales
+- [ ] Benchmark completes 500 mappings in <5 minutes
+- [ ] Memory stays under 4GB for 1000 mappings
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 96 — Parallel Generation & Memory Optimization
+
+**Goal:** Optimize the migration engine for parallel execution and memory efficiency to support large-scale migrations.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 96.1 | **Parallel notebook generation** | Notebook | `run_notebook_migration.py` | Use `concurrent.futures.ProcessPoolExecutor` for parallel notebook generation (N workers) |
+| 96.2 | **Parallel SQL conversion** | SQL | `run_sql_migration.py` | Parallelize SQL file conversion with shared regex cache |
+| 96.3 | **Streaming XML parser** | Assessment | `run_assessment.py` | Replace full DOM parse with `iterparse` for large XML files (>100MB) |
+| 96.4 | **Memory-efficient inventory** | Assessment | `run_assessment.py` | Process mappings incrementally instead of loading full inventory into memory |
+| 96.5 | **Generation cache** | Orchestrator | `run_migration.py` | Cache converted SQL patterns to avoid re-converting identical SQL overrides |
+| 96.6 | **Optimization tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering parallel execution, memory limits, caching |
+
+**Sprint 96 Exit Criteria:**
+- [ ] Parallel generation achieves 3x+ speedup on 4-core machines
+- [ ] Streaming XML parser handles 100MB+ files without memory spike
+- [ ] SQL cache hit rate >50% for typical enterprise migrations
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 97 — Regression Suite & Golden Dataset
+
+**Goal:** Create a golden dataset regression suite that detects unintended conversion changes across releases and ensures backward compatibility.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 97.1 | **Golden output snapshot** | Validation | `tests/golden/` | Snapshot all current output for example inputs: notebooks, pipelines, SQL, dbt models → `tests/golden/` |
+| 97.2 | **Regression comparison** | Validation | `tests/test_regression.py` | Compare generated output against golden snapshots; any diff = test failure (unless explicitly updated) |
+| 97.3 | **Snapshot updater** | Validation | `tests/update_golden.py` | Script to update golden snapshots after verified changes: `python tests/update_golden.py --approve` |
+| 97.4 | **Cross-version compatibility** | Validation | `tests/test_regression.py` | Test that migration.yaml from v1.0 still works in current version (config backward compatibility) |
+| 97.5 | **Drift report** | Validation | `tests/test_regression.py` | When regression detected, generate diff report showing exactly which output lines changed |
+| 97.6 | **Regression tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering snapshot, comparison, updater, backward compat |
+
+**Sprint 97 Exit Criteria:**
+- [ ] Golden snapshots created for all example inputs
+- [ ] Regression test catches any output change
+- [ ] Snapshot updater workflow documented
+- [ ] 15+ tests passing
+
+---
+
+# Phase 17 — Enterprise Release & ML Pipelines (Sprints 98–100)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/phase_17-GA_Release_%26_ML-1ABC9C?style=for-the-badge" alt="Phase 17"/>
+  <img src="https://img.shields.io/badge/sprints-98--100-1ABC9C?style=for-the-badge" alt="Sprints 98-100"/>
+</p>
+
+Phase 17 is the final phase: ML pipeline template generation, advanced cost optimization, and the GA (General Availability) release with full documentation, certification, and packaging.
+
+## Sprint 98 — ML Pipeline Template Generation
+
+**Goal:** Generate Databricks and Fabric ML pipeline templates derived from Informatica feature engineering mappings, with MLflow integration for experiment tracking.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 98.1 | **Feature engineering detector** | Assessment | `ml_pipeline.py` | Detect mappings that produce feature tables (target names with `FEAT_`, `FEATURE_`, `ML_`) |
+| 98.2 | **Feature Store integration** | Notebook | `ml_pipeline.py` | Generate Databricks Feature Store notebook: `fs.create_table()`, `fs.write_table()`, feature lookups |
+| 98.3 | **MLflow experiment template** | Notebook | `ml_pipeline.py` | Generate experiment tracking template: `mlflow.start_run()`, `log_param()`, `log_metric()`, `log_model()` |
+| 98.4 | **Batch scoring pipeline** | Pipeline | `ml_pipeline.py` | Generate Databricks job for batch scoring: load model → score table → write predictions to Delta |
+| 98.5 | **ML pipeline tests** | Validation | `tests/test_sprint98_100.py` | 15+ tests covering feature detection, Feature Store, MLflow, scoring |
+
+**Sprint 98 Exit Criteria:**
+- [ ] Feature engineering mappings auto-detected
+- [ ] Feature Store notebooks generated with correct API usage
+- [ ] MLflow experiment template tracks run parameters
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 99 — Cost Optimization Advisor
+
+**Goal:** Build a comprehensive cost optimization advisor that compares Fabric vs. Databricks TCO, recommends reserved capacity, and identifies cost-saving opportunities.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 99.1 | **TCO comparison engine** | Assessment | `cost_advisor.py` | Compare Fabric CU cost vs. Databricks DBU cost for each mapping; produce recommendation with savings % |
+| 99.2 | **Reserved capacity planner** | Assessment | `cost_advisor.py` | Calculate break-even point for Fabric reserved capacity vs. pay-as-you-go; recommend 1-year/3-year commitment |
+| 99.3 | **Idle resource detector** | Assessment | `cost_advisor.py` | Detect over-provisioned clusters, infrequently-run pipelines, unused tables → generate optimization recommendations |
+| 99.4 | **Cost allocation tags** | Orchestrator | `cost_advisor.py` | Generate cost allocation tags per mapping (department, project, cost center) for cloud billing integration |
+| 99.5 | **Cost dashboard** | Orchestrator | `cost_advisor.py` | Generate HTML cost dashboard: per-mapping cost, per-department cost, target comparison, optimization potential |
+| 99.6 | **Cost advisor tests** | Validation | `tests/test_sprint98_100.py` | 15+ tests covering TCO, reserved capacity, idle detection, tags |
+
+**Sprint 99 Exit Criteria:**
+- [ ] TCO comparison produced for all mappings (Fabric vs. Databricks)
+- [ ] Reserved capacity recommendation generated
+- [ ] Cost allocation tags populated
+- [ ] 15+ tests passing
+
+---
+
+## Sprint 100 — GA Release, Docs & Certification
+
+**Goal:** GA (General Availability) release: freeze APIs, complete all documentation, run certification testing, and publish to PyPI with feature-gated extras.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| 100.1 | **API freeze & versioning** | Orchestrator | `pyproject.toml` | Bump to v2.0.0 (semantic versioning); freeze public SDK API; document breaking changes |
+| 100.2 | **Migration cookbook** | All | `docs/COOKBOOK.md` | 20+ recipes: common patterns, troubleshooting, optimization tips, enterprise setup |
+| 100.3 | **Architecture refresh** | All | `docs/ARCHITECTURE.md` | Updated architecture doc reflecting Phases 1-17, all 100 sprints, data flow diagrams |
+| 100.4 | **PyPI packaging** | Orchestrator | `pyproject.toml` | Publish with optional extras: `[fabric]`, `[databricks]`, `[dbt]`, `[ai]`, `[streaming]`, `[full]` |
+| 100.5 | **Certification test suite** | Validation | `tests/test_certification.py` | 50+ certification tests: end-to-end per target, security, compliance, performance, regression |
+| 100.6 | **Release notes & changelog** | Orchestrator | `CHANGELOG.md`, `RELEASE_NOTES.md` | Comprehensive changelog for all 100 sprints; release blog post draft |
+
+**Sprint 100 Exit Criteria:**
+- [ ] v2.0.0 released to PyPI with all extras
+- [ ] Cookbook with 20+ recipes
+- [ ] Architecture doc covers all 17 phases
+- [ ] 50+ certification tests passing
+- [ ] Total test count: 1,800+ tests
+
+---
+
+## Phase 8–17 Sprint Summary
+
+| Phase | Sprints | Theme | Key Deliverables |
+|-------|---------|-------|-----------------|
+| **8** | 71–73 | Performance & Advanced SQL | Query optimization, PL/SQL engine, dynamic SQL, CONNECT BY, PIVOT |
+| **9** | 74–76 | Extensibility & SDK | Plugin system, Python SDK, REST API, configurable rule engine |
+| **10** | 77–79 | Validation & Catalog | Statistical validation, SCD testing, A/B harness, Purview/UC integration |
+| **11** | 80–82 | Streaming & Real-Time | Structured Streaming, CDC, Auto Loader, watermark, exactly-once |
+| **12** | 83–85 | Governance & Compliance | RLS/CLS, GDPR/CCPA, retention policies, certification workflow |
+| **13** | 86–88 | AI-Assisted Migration | LLM SQL conversion, intelligent gap resolution, chat assistant |
+| **14** | 89–91 | Web UI & DX | Dashboard v2, visual lineage explorer, side-by-side diff review |
+| **15** | 92–94 | Cloud-Native & IaC | Terraform, Bicep, Docker, Kubernetes, CI/CD pipeline generation |
+| **16** | 95–97 | Scale & Perf Testing | 500+ benchmark, parallel generation, golden dataset regression |
+| **17** | 98–100 | GA Release & ML | ML pipelines, cost advisor, v2.0.0 release, certification |
+
+## Estimated Test Growth
+
+| Phase | New Tests | Cumulative |
+|-------|-----------|------------|
+| Phase 7 (current) | — | 1,336 |
+| Phase 8 | ~95 | ~1,431 |
+| Phase 9 | ~80 | ~1,511 |
+| Phase 10 | ~70 | ~1,581 |
+| Phase 11 | ~70 | ~1,651 |
+| Phase 12 | ~65 | ~1,716 |
+| Phase 13 | ~55 | ~1,771 |
+| Phase 14 | ~45 | ~1,816 |
+| Phase 15 | ~50 | ~1,866 |
+| Phase 16 | ~45 | ~1,911 |
+| Phase 17 | ~80 | ~1,991 |
+
+## Priority Order
+
+```mermaid
+flowchart LR
+    P8["🔴 Phase 8\nPerf & SQL\n(P0)"]
+    P9["🟠 Phase 9\nSDK & Plugins\n(P0)"]
+    P10["🟡 Phase 10\nValidation\n(P1)"]
+    P11["🟡 Phase 11\nStreaming\n(P1)"]
+    P12["🔵 Phase 12\nGovernance\n(P1)"]
+    P13["🟣 Phase 13\nAI Assist\n(P2)"]
+    P14["🔴 Phase 14\nWeb UI\n(P2)"]
+    P15["🔵 Phase 15\nIaC\n(P2)"]
+    P16["🟠 Phase 16\nScale\n(P2)"]
+    P17["🟢 Phase 17\nGA Release\n(P3)"]
+
+    P8 --> P9 --> P10 --> P11 --> P12
+    P12 --> P13 --> P14 --> P15 --> P16 --> P17
+
+    style P8 fill:#E74C3C,color:#fff
+    style P9 fill:#E67E22,color:#fff
+    style P10 fill:#F1C40F,color:#000
+    style P11 fill:#F1C40F,color:#000
+    style P12 fill:#3498DB,color:#fff
+    style P13 fill:#9B59B6,color:#fff
+    style P14 fill:#E74C3C,color:#fff
+    style P15 fill:#3498DB,color:#fff
+    style P16 fill:#E67E22,color:#fff
+    style P17 fill:#1ABC9C,color:#fff
+```

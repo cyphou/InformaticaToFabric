@@ -1,0 +1,186 @@
+# Databricks Asset Bundle — Auto-generated
+# Deploy: databricks bundle deploy --target dev
+# Validate: databricks bundle validate
+
+bundle:
+  name: informatica_migration
+
+workspace:
+  profile: MY_PROFILE
+
+artifacts:
+  NB_DQ_STANDARDIZE_ADDRESSES:
+    notebook:
+      path: src/NB_DQ_STANDARDIZE_ADDRESSES.py
+      language: PYTHON
+  NB_DQ_VALIDATE_EMAILS:
+    notebook:
+      path: src/NB_DQ_VALIDATE_EMAILS.py
+      language: PYTHON
+  NB_m_cdc_order_pipeline:
+    notebook:
+      path: src/NB_m_cdc_order_pipeline.py
+      language: PYTHON
+  NB_M_COMPLEX_MULTI_SOURCE:
+    notebook:
+      path: src/NB_M_COMPLEX_MULTI_SOURCE.py
+      language: PYTHON
+  NB_m_customer_360:
+    notebook:
+      path: src/NB_m_customer_360.py
+      language: PYTHON
+  NB_m_customer_activity_log:
+    notebook:
+      path: src/NB_m_customer_activity_log.py
+      language: PYTHON
+  NB_m_inventory_snapshot:
+    notebook:
+      path: src/NB_m_inventory_snapshot.py
+      language: PYTHON
+  NB_m_load_contacts:
+    notebook:
+      path: src/NB_m_load_contacts.py
+      language: PYTHON
+  NB_M_LOAD_CUSTOMERS:
+    notebook:
+      path: src/NB_M_LOAD_CUSTOMERS.py
+      language: PYTHON
+  NB_M_LOAD_EMPLOYEES:
+    notebook:
+      path: src/NB_M_LOAD_EMPLOYEES.py
+      language: PYTHON
+  NB_M_LOAD_ORDERS:
+    notebook:
+      path: src/NB_M_LOAD_ORDERS.py
+      language: PYTHON
+  NB_m_realtime_inventory_scd2:
+    notebook:
+      path: src/NB_m_realtime_inventory_scd2.py
+      language: PYTHON
+  NB_m_sync_accounts:
+    notebook:
+      path: src/NB_m_sync_accounts.py
+      language: PYTHON
+  NB_M_UPSERT_INVENTORY:
+    notebook:
+      path: src/NB_M_UPSERT_INVENTORY.py
+      language: PYTHON
+  NB_MI_BULK_LOAD_PRODUCTS:
+    notebook:
+      path: src/NB_MI_BULK_LOAD_PRODUCTS.py
+      language: PYTHON
+  NB_SYNC_CUSTOMER_DATA:
+    notebook:
+      path: src/NB_SYNC_CUSTOMER_DATA.py
+      language: PYTHON
+
+resources:
+  jobs:
+  PL_AI_PROCESS_ORDER_EVENTS:
+    job:
+      name: "PL_AI_PROCESS_ORDER_EVENTS"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_AI_PROCESS_ORDER_EVENTS" 
+  PL_AI_WATCH_ORDER_FILES:
+    job:
+      name: "PL_AI_WATCH_ORDER_FILES"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_AI_WATCH_ORDER_FILES" 
+  PL_svc_create_case:
+    job:
+      name: "PL_svc_create_case"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_svc_create_case" 
+  PL_svc_lookup_customer:
+    job:
+      name: "PL_svc_lookup_customer"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_svc_lookup_customer" 
+  PL_svc_publish_event:
+    job:
+      name: "PL_svc_publish_event"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_svc_publish_event" 
+  PL_TF_DAILY_CONTACTS_ETL:
+    job:
+      name: "PL_TF_DAILY_CONTACTS_ETL"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_DAILY_CONTACTS_ETL" 
+  PL_TF_DATA_QUALITY_PIPELINE:
+    job:
+      name: "PL_TF_DATA_QUALITY_PIPELINE"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_DATA_QUALITY_PIPELINE" 
+  PL_TF_NIGHTLY_ENTERPRISE_ETL:
+    job:
+      name: "PL_TF_NIGHTLY_ENTERPRISE_ETL"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_NIGHTLY_ENTERPRISE_ETL" 
+  PL_TF_SUB_CUSTOMER_360:
+    job:
+      name: "PL_TF_SUB_CUSTOMER_360"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_SUB_CUSTOMER_360" 
+  PL_TF_SUB_KPI_COMPUTATION:
+    job:
+      name: "PL_TF_SUB_KPI_COMPUTATION"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_SUB_KPI_COMPUTATION" 
+  PL_TF_SUB_REVENUE_AGGREGATION:
+    job:
+      name: "PL_TF_SUB_REVENUE_AGGREGATION"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_TF_SUB_REVENUE_AGGREGATION" 
+  PL_WF_COMPLEX_FINANCE_ETL:
+    job:
+      name: "PL_WF_COMPLEX_FINANCE_ETL"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_WF_COMPLEX_FINANCE_ETL" 
+  PL_WF_DAILY_SALES_LOAD:
+    job:
+      name: "PL_WF_DAILY_SALES_LOAD"
+      tasks:
+        - task_key: "main"
+          notebook_task:
+            notebook_path: "/Shared/migration/PL_WF_DAILY_SALES_LOAD" 
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      catalog: main
+
+  staging:
+    mode: staging
+    workspace:
+      catalog: main
+
+  prod:
+    mode: production
+    workspace:
+      catalog: main

@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_DIM_INVENTORY
-# Source: Oracle.SALES.STG_INVENTORY → Target: main.silver.dim_inventory
+# Source: Oracle.SALES.STG_INVENTORY → Target: silver.dim_inventory
 # Mapping: M_UPSERT_INVENTORY
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "M_UPSERT_INVENTORY"
-target_table = "main.silver.dim_inventory"
+target_table = "silver.dim_inventory"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

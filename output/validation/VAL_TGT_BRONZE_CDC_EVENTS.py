@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_BRONZE_CDC_EVENTS
-# Source: src_ods_orders, src_ods_order_lines, src_pg_products → Target: main.silver.tgt_bronze_cdc_events
+# Source: src_ods_orders, src_ods_order_lines, src_pg_products → Target: silver.tgt_bronze_cdc_events
 # Mapping: m_cdc_order_pipeline
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_cdc_order_pipeline"
-target_table = "main.silver.tgt_bronze_cdc_events"
+target_table = "silver.tgt_bronze_cdc_events"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

@@ -101,6 +101,131 @@ def _cell_sep():
     return "\n# COMMAND ----------\n\n"
 
 
+# ─────────────────────────────────────────────
+#  Sprint 71: Spark Config Tuner
+# ─────────────────────────────────────────────
+
+def recommend_spark_config(mapping):
+    """Generate spark.conf.set() calls tuned to mapping complexity.
+
+    Simple:  2 cores, 200 shuffle partitions, AQE enabled
+    Medium:  4 cores, 400 shuffle partitions, AQE enabled, broadcast 50MB
+    Complex: 8 cores, 800 shuffle partitions, AQE enabled, broadcast 100MB
+    Custom:  16 cores, auto-tuned, broadcast 256MB
+    """
+    complexity = mapping.get("complexity", "Simple")
+    tx_count = len(mapping.get("transformations", []))
+    source_count = len(mapping.get("sources", []))
+
+    configs = {
+        "spark.sql.adaptive.enabled": "true",
+        "spark.sql.adaptive.coalescePartitions.enabled": "true",
+    }
+
+    if complexity == "Custom" or tx_count > 15:
+        configs.update({
+            "spark.sql.shuffle.partitions": "800",
+            "spark.sql.autoBroadcastJoinThreshold": "268435456",
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": "4",
+        })
+    elif complexity == "Complex" or tx_count > 10:
+        configs.update({
+            "spark.sql.shuffle.partitions": "800",
+            "spark.sql.autoBroadcastJoinThreshold": "104857600",
+            "spark.executor.memory": "4g",
+            "spark.executor.cores": "4",
+        })
+    elif complexity == "Medium" or tx_count > 5:
+        configs.update({
+            "spark.sql.shuffle.partitions": "400",
+            "spark.sql.autoBroadcastJoinThreshold": "52428800",
+            "spark.executor.memory": "2g",
+            "spark.executor.cores": "2",
+        })
+    else:
+        configs.update({
+            "spark.sql.shuffle.partitions": "200",
+            "spark.sql.autoBroadcastJoinThreshold": "10485760",
+        })
+
+    if source_count > 3:
+        configs["spark.sql.shuffle.partitions"] = str(
+            max(int(configs.get("spark.sql.shuffle.partitions", "200")), 600)
+        )
+
+    return configs
+
+
+def detect_broadcast_candidates(mapping):
+    """Detect lookup tables that should use broadcast() hints.
+
+    LKP transforms with small-dimension tables (< 100MB estimated) → broadcast.
+    Returns list of lookup table references.
+    """
+    candidates = []
+    lookups = mapping.get("lookup_conditions", [])
+    txs = mapping.get("transformations", [])
+
+    if "LKP" in txs or "ULKP" in txs:
+        for lkp in lookups:
+            candidates.append({
+                "lookup": lkp.get("lookup", "unknown"),
+                "condition": lkp.get("condition", ""),
+                "hint": "broadcast",
+                "reason": "Lookup table — typically < 100MB; use broadcast join",
+            })
+
+    if not lookups and ("LKP" in txs or "ULKP" in txs):
+        candidates.append({
+            "lookup": "lookup_table",
+            "condition": "",
+            "hint": "broadcast",
+            "reason": "LKP transform detected — add broadcast() around lookup DataFrame",
+        })
+
+    return candidates
+
+
+def recommend_materialization(mapping, dag_info=None):
+    """Recommend .cache(), .persist(), or Delta checkpoint based on DAG reuse.
+
+    If a table is read >2 times in the DAG → cache it.
+    If a mapping has >10 transforms → persist intermediate results.
+    """
+    recommendations = []
+    txs = mapping.get("transformations", [])
+    targets = mapping.get("targets", [])
+
+    # Multi-target mappings: intermediate results reused across targets
+    if len(targets) > 1:
+        recommendations.append({
+            "action": "cache",
+            "target": "df (intermediate)",
+            "reason": f"Multi-target mapping ({len(targets)} targets) — cache intermediate DataFrame",
+        })
+
+    # Complex pipelines: persist after expensive operations
+    expensive_ops = {"JNR", "AGG", "RNK", "UNI", "NRM"}
+    expense_count = sum(1 for t in txs if t in expensive_ops)
+    if expense_count >= 3:
+        recommendations.append({
+            "action": "persist",
+            "target": "df (post-join/agg)",
+            "reason": f"{expense_count} expensive operations — persist after joins/aggregations",
+        })
+
+    # Long pipelines: checkpoint to break lineage
+    if len(txs) > 10:
+        recommendations.append({
+            "action": "checkpoint",
+            "target": "df (mid-pipeline)",
+            "reason": f"Long pipeline ({len(txs)} transforms) — Delta checkpoint to break lineage",
+        })
+
+    return recommendations
+
+
 def _metadata_cell(mapping):
     """Generate the metadata + imports cell."""
     name = mapping["name"]
@@ -145,6 +270,14 @@ def _metadata_cell(mapping):
         for p in params:
             safe_name = p.replace("$$", "").lower()
             lines.append(f'{safe_name} = {_widget_get(safe_name)}')
+
+    # Sprint 71: Spark config tuning
+    spark_configs = recommend_spark_config(mapping)
+    if spark_configs:
+        lines.append("")
+        lines.append("# Performance tuning (auto-generated based on mapping complexity)")
+        for key, value in spark_configs.items():
+            lines.append(f'spark.conf.set("{key}", "{value}")')
 
     return "\n".join(lines)
 
@@ -496,18 +629,37 @@ def _transformation_cell(tx_type, idx, mapping, cell_num):
         lines.extend([
             "# --- Transaction Control → Delta ACID pattern ---",
             "# Informatica TC_COMMIT / TC_ROLLBACK → Delta Lake atomic writes",
+            "# Delta Lake provides ACID guarantees on every write operation.",
+            "#",
+            "# Migration checklist:",
+            "#   1. TC_COMMIT_BEFORE  → write previous batch, then continue",
+            "#   2. TC_COMMIT_AFTER   → write current batch after processing",
+            "#   3. TC_ROLLBACK       → no write; Delta auto-rolls back on failure",
+            "#   4. Effective commit  → every .write / .save / MERGE is atomic",
+            "#   5. Batch size        → use foreachBatch for micro-commits",
+            "#",
             "from delta.tables import DeltaTable",
             "",
-            "# Delta Lake provides ACID guarantees on every write.",
-            "# Pattern: Write in a single atomic operation with error handling.",
             f"target_table = '{_table_ref('silver', 'target_table')}'  # TODO: Replace with actual table",
             "",
+            "# Pattern A — single atomic write (most common, replaces TC_COMMIT_AFTER):",
             "try:",
             f"    {prev_df}.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(target_table)",
             f'    print(f"Transaction committed: {{target_table}}")',
             "except Exception as e:",
             f'    print(f"Transaction failed — Delta automatically rolled back: {{e}}")',
             "    raise",
+            "",
+            "# Pattern B — batch micro-commits (replaces TC_COMMIT_BEFORE with row intervals):",
+            "# batch_size = 10000  # TODO: Match original Informatica commit interval",
+            f"# for i in range(0, {prev_df}.count(), batch_size):",
+            f"#     batch = {prev_df}.limit(batch_size).offset(i)  # pseudo-code; use repartition",
+            "#     batch.write.format('delta').mode('append').saveAsTable(target_table)",
+            "",
+            "# Pattern C — merge with retry (replaces TC_ROLLBACK on conflict):",
+            "# delta_tbl = DeltaTable.forName(spark, target_table)",
+            f"# delta_tbl.alias('tgt').merge({prev_df}.alias('src'), 'tgt.ID = src.ID')",
+            "#     .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()",
             "",
             f"df = {prev_df}",
         ])

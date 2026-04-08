@@ -148,6 +148,147 @@ def _badge(text, color):
     )
 
 
+def _svg_lineage_flow(mapping_name, field_lineage):
+    """Render a mapping's field-level lineage as an inline SVG flow diagram.
+
+    Groups by unique instance chain and draws source → transformations → target.
+    Returns an HTML string with an embedded SVG.
+    """
+    if not field_lineage:
+        return '<p style="color:#6C757D;font-size:13px;">No field-level lineage extracted.</p>'
+
+    # Collect unique instances in order and their types
+    instance_order = []
+    instance_labels = {}
+    seen = set()
+    for entry in field_lineage:
+        src = entry["source_instance"]
+        if src not in seen:
+            instance_order.append(src)
+            seen.add(src)
+            instance_labels[src] = "SQ"
+        for tx in entry.get("transformations", []):
+            inst = tx["instance"]
+            if inst not in seen:
+                instance_order.append(inst)
+                seen.add(inst)
+                instance_labels[inst] = tx.get("type", "?")[:12]
+        tgt = entry["target_instance"]
+        if tgt not in seen:
+            instance_order.append(tgt)
+            seen.add(tgt)
+            instance_labels[tgt] = "TGT"
+
+    # Unique edges
+    edges = set()
+    for entry in field_lineage:
+        chain = [entry["source_instance"]]
+        for tx in entry.get("transformations", []):
+            chain.append(tx["instance"])
+        chain.append(entry["target_instance"])
+        for i in range(len(chain) - 1):
+            edges.add((chain[i], chain[i + 1]))
+
+    n = len(instance_order)
+    if n == 0:
+        return ""
+
+    # Layout: boxes in a single horizontal row
+    box_w, box_h = 130, 50
+    gap_x = 50
+    padding = 20
+    total_w = padding * 2 + n * box_w + (n - 1) * gap_x
+    total_h = padding * 2 + box_h + 30  # extra space for labels below
+
+    # Build position map
+    positions = {}
+    for i, inst in enumerate(instance_order):
+        x = padding + i * (box_w + gap_x)
+        y = padding
+        positions[inst] = (x, y)
+
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {total_w} {total_h}" '
+             f'style="max-width:100%;height:auto;font-family:Segoe UI,sans-serif;">']
+
+    # Draw edges (arrows)
+    idx_map = {inst: i for i, inst in enumerate(instance_order)}
+    for src, dst in sorted(edges):
+        sx = positions[src][0] + box_w
+        sy = positions[src][1] + box_h // 2
+        dx = positions[dst][0]
+        dy = positions[dst][1] + box_h // 2
+        parts.append(f'<line x1="{sx}" y1="{sy}" x2="{dx - 6}" y2="{dy}" '
+                     f'stroke="#0078D4" stroke-width="2" marker-end="url(#arrow)"/>')
+
+    # Arrow marker definition
+    parts.insert(1, '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" '
+                    'markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
+                    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#0078D4"/></marker></defs>')
+
+    # Draw boxes
+    for inst in instance_order:
+        x, y = positions[inst]
+        lbl = instance_labels.get(inst, "?")
+        if lbl == "SQ":
+            fill, stroke = "#E8F4FD", "#0078D4"
+        elif lbl == "TGT":
+            fill, stroke = "#E8F8E8", "#27AE60"
+        else:
+            fill, stroke = "#FFF8E1", "#F39C12"
+
+        parts.append(f'<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" '
+                     f'rx="6" fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>')
+        # Instance name (truncated)
+        display_name = inst if len(inst) <= 16 else inst[:14] + ".."
+        parts.append(f'<text x="{x + box_w // 2}" y="{y + 20}" text-anchor="middle" '
+                     f'font-size="11" font-weight="600" fill="#212529">{escape(display_name)}</text>')
+        # Type label
+        parts.append(f'<text x="{x + box_w // 2}" y="{y + 36}" text-anchor="middle" '
+                     f'font-size="10" fill="#6C757D">{escape(lbl)}</text>')
+
+    parts.append('</svg>')
+    return "".join(parts)
+
+
+def _build_cross_mapping_lineage(mappings):
+    """Build a cross-mapping lineage summary: source tables → mappings → target tables.
+
+    Returns a list of dicts: [{source, mappings: [name, ...], targets: [name, ...]}]
+    suitable for rendering as a table.
+    """
+    # source_table -> set of mappings, target_table -> set of mappings
+    source_to_mappings = {}
+    target_to_mappings = {}
+    mapping_sources = {}  # mapping_name -> set of source tables
+    mapping_targets = {}  # mapping_name -> set of target tables
+
+    for m in mappings:
+        name = m["name"]
+        srcs = set(m.get("sources", []))
+        tgts = set(m.get("targets", []))
+        mapping_sources[name] = srcs
+        mapping_targets[name] = tgts
+        for s in srcs:
+            source_to_mappings.setdefault(s, set()).add(name)
+        for t in tgts:
+            target_to_mappings.setdefault(t, set()).add(name)
+
+    # Build rows: one per unique source table
+    rows = []
+    for src in sorted(source_to_mappings.keys()):
+        m_names = sorted(source_to_mappings[src])
+        # All targets reachable from these mappings
+        all_targets = set()
+        for mn in m_names:
+            all_targets.update(mapping_targets.get(mn, set()))
+        rows.append({
+            "source": src,
+            "mappings": m_names,
+            "targets": sorted(all_targets),
+        })
+    return rows
+
+
 CSS = """
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -182,6 +323,15 @@ CSS = """
   .tag { display: inline-block; padding: 2px 8px; border-radius: 4px;
          font-size: 11px; font-weight: 600; margin: 1px 2px; }
   .footer { text-align: center; padding: 20px; font-size: 12px; color: #6C757D; }
+  .lineage-flow { overflow-x: auto; margin: 12px 0; padding: 8px;
+                  background: #FAFBFC; border-radius: 8px; border: 1px solid #EDEFF2; }
+  .lineage-mapping-title { font-size: 14px; font-weight: 600; color: #0078D4;
+                           margin: 16px 0 4px; cursor: pointer; }
+  .lineage-mapping-title:hover { text-decoration: underline; }
+  .lineage-stats { font-size: 12px; color: #6C757D; margin-bottom: 8px; }
+  .lineage-toggle { display: none; }
+  .lineage-toggle:checked + .lineage-detail { display: block; }
+  .lineage-detail { display: none; }
   @media print {
     body { background: #fff; }
     .header { background: #0078D4 !important; -webkit-print-color-adjust: exact; }
@@ -331,6 +481,62 @@ def generate_assessment_report(inv, out_path):
             "🧩"
         )
 
+    # ----- Cross-mapping lineage summary -----
+    cross_lineage = _build_cross_mapping_lineage(mappings)
+    cross_rows = []
+    for cl in cross_lineage:
+        cross_rows.append([
+            cl["source"],
+            ", ".join(cl["mappings"]),
+            ", ".join(cl["targets"]),
+            len(cl["mappings"]),
+        ])
+    cross_table = _table(["Source Table", "Used By Mappings", "Feeds Targets", "# Mappings"], cross_rows)
+    cross_card = _card(f"Source → Mapping → Target Lineage ({len(cross_lineage)} sources)", cross_table, "🔗")
+
+    # ----- Per-mapping lineage flow diagrams -----
+    lineage_items = []
+    mappings_with_lineage = 0
+    total_field_paths = 0
+    for m in mappings:
+        fl = m.get("field_lineage", [])
+        total_field_paths += len(fl)
+        if fl:
+            mappings_with_lineage += 1
+        flow_svg = _svg_lineage_flow(m["name"], fl)
+        field_count = len(fl)
+        toggle_id = f"lin_{escape(m['name']).replace(' ', '_')}"
+        lineage_items.append(
+            f'<div>'
+            f'<label class="lineage-mapping-title" for="{toggle_id}">'
+            f'▸ {escape(m["name"])} '
+            f'{_badge(m.get("complexity", "?"), COLORS.get(m.get("complexity", ""), COLORS["muted"]))}'
+            f'</label>'
+            f'<span class="lineage-stats"> — {field_count} field paths, '
+            f'score {m.get("conversion_score", 0)}/100</span>'
+            f'<input type="checkbox" class="lineage-toggle" id="{toggle_id}"/>'
+            f'<div class="lineage-detail">'
+            f'<div class="lineage-flow">{flow_svg}</div>'
+            f'</div></div>'
+        )
+    lineage_body = "".join(lineage_items)
+    lineage_kpi = (
+        f'<div style="display:flex;gap:24px;margin-bottom:16px;">'
+        f'<div class="kpi" style="flex:1;"><div class="number">{mappings_with_lineage}</div>'
+        f'<div class="label">Mappings with Lineage</div></div>'
+        f'<div class="kpi" style="flex:1;"><div class="number">{total_field_paths}</div>'
+        f'<div class="label">Total Field Paths</div></div>'
+        f'<div class="kpi" style="flex:1;"><div class="number">{len(cross_lineage)}</div>'
+        f'<div class="label">Source Tables</div></div>'
+        f'</div>'
+    )
+    lineage_card = _card(
+        f"Per-Mapping Lineage ({mappings_with_lineage}/{len(mappings)} have field-level lineage)",
+        lineage_kpi + '<p style="font-size:12px;color:#6C757D;margin-bottom:12px;">'
+        'Click a mapping name to expand its data flow diagram.</p>' + lineage_body,
+        "🔍"
+    )
+
     # ----- Assemble -----
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -364,6 +570,9 @@ def generate_assessment_report(inv, out_path):
   {conn_card}
   {param_html}
   {mapplet_html}
+  <h2 class="section-title">Data Lineage</h2>
+  {cross_card}
+  {lineage_card}
 </div>
 <div class="footer">
   Informatica-to-Fabric Assessment Report &bull; {escape(now)} &bull; Source: inventory.json
@@ -604,6 +813,136 @@ def generate_migration_report(inv, out_path):
 
 
 # ─────────────────────────────────────────────
+#  Lineage Report
+# ─────────────────────────────────────────────
+
+def generate_lineage_report(inv, out_path):
+    """Generate a standalone lineage_report.html with cross-mapping and per-mapping lineage."""
+    mappings = inv.get("mappings", [])
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    # Cross-mapping lineage
+    cross_lineage = _build_cross_mapping_lineage(mappings)
+    cross_rows = []
+    for cl in cross_lineage:
+        cross_rows.append([
+            cl["source"],
+            ", ".join(cl["mappings"]),
+            ", ".join(cl["targets"]),
+            len(cl["mappings"]),
+        ])
+    cross_table = _table(["Source Table", "Used By Mappings", "Feeds Targets", "# Mappings"], cross_rows)
+    cross_card = _card(f"Source → Target Lineage ({len(cross_lineage)} source tables)", cross_table, "🔗")
+
+    # Target-centric view
+    target_to_mappings = {}
+    for m in mappings:
+        for t in m.get("targets", []):
+            target_to_mappings.setdefault(t, set()).add(m["name"])
+    target_rows = [[t, ", ".join(sorted(ms)), len(ms)] for t, ms in sorted(target_to_mappings.items())]
+    target_table = _table(["Target Table", "Fed By Mappings", "# Mappings"], target_rows)
+    target_card = _card(f"Target Tables ({len(target_rows)})", target_table, "🎯")
+
+    # Per-mapping detail
+    lineage_items = []
+    mappings_with_lineage = 0
+    total_field_paths = 0
+    for m in mappings:
+        fl = m.get("field_lineage", [])
+        total_field_paths += len(fl)
+        if fl:
+            mappings_with_lineage += 1
+        flow_svg = _svg_lineage_flow(m["name"], fl)
+        field_count = len(fl)
+        toggle_id = f"lr_{escape(m['name']).replace(' ', '_')}"
+
+        # Field-level detail table (collapsed)
+        field_rows = []
+        for entry in fl[:50]:  # Cap at 50 to keep report size reasonable
+            tx_chain = " → ".join(tx["type"][:10] for tx in entry.get("transformations", []))
+            field_rows.append([
+                entry.get("source_field", ""),
+                entry.get("source_instance", ""),
+                tx_chain or "-",
+                entry.get("target_field", ""),
+                entry.get("target_instance", ""),
+            ])
+        field_table = ""
+        if field_rows:
+            field_table = _table(
+                ["Source Field", "Source Instance", "Transformations", "Target Field", "Target Instance"],
+                field_rows
+            )
+            if len(fl) > 50:
+                field_table += f'<p style="color:#6C757D;font-size:12px;">Showing 50 of {len(fl)} field paths.</p>'
+
+        lineage_items.append(
+            f'<div style="margin-bottom:8px;">'
+            f'<label class="lineage-mapping-title" for="{toggle_id}">'
+            f'▸ {escape(m["name"])} '
+            f'{_badge(m.get("complexity", "?"), COLORS.get(m.get("complexity", ""), COLORS["muted"]))}'
+            f'</label>'
+            f'<span class="lineage-stats"> — {field_count} field paths, '
+            f'score {m.get("conversion_score", 0)}/100, '
+            f'{len(m.get("sources", []))} sources → {len(m.get("targets", []))} targets</span>'
+            f'<input type="checkbox" class="lineage-toggle" id="{toggle_id}"/>'
+            f'<div class="lineage-detail">'
+            f'<div class="lineage-flow">{flow_svg}</div>'
+            f'{field_table}'
+            f'</div></div>'
+        )
+    lineage_body = "".join(lineage_items)
+
+    # KPIs
+    total_sources = len(cross_lineage)
+    total_targets = len(target_to_mappings)
+    kpi_html = "".join(f'<div class="kpi"><div class="number">{v}</div><div class="label">{l}</div></div>' for v, l in [
+        (len(mappings), "Total Mappings"),
+        (mappings_with_lineage, "With Field Lineage"),
+        (total_field_paths, "Field Paths Traced"),
+        (total_sources, "Source Tables"),
+        (total_targets, "Target Tables"),
+    ])
+
+    detail_card = _card(
+        f"Per-Mapping Lineage Detail ({mappings_with_lineage}/{len(mappings)})",
+        '<p style="font-size:12px;color:#6C757D;margin-bottom:12px;">'
+        'Click a mapping name to expand its flow diagram and field-level detail.</p>' + lineage_body,
+        "🔍"
+    )
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lineage Report — Informatica to Fabric</title>
+{CSS}
+</head>
+<body>
+<div class="header" style="background:linear-gradient(135deg, #8E44AD 0%, #6C3483 100%);">
+  <h1>🔗 Data Lineage Report</h1>
+  <div class="subtitle">Source → Transformation → Target &mdash; Generated {escape(now)}</div>
+</div>
+<div class="container">
+  <div class="grid">{kpi_html}</div>
+  <h2 class="section-title">Cross-Mapping Lineage (Source → Target)</h2>
+  {cross_card}
+  {target_card}
+  <h2 class="section-title">Per-Mapping Lineage Detail</h2>
+  {detail_card}
+</div>
+<div class="footer">
+  Informatica-to-Fabric Lineage Report &bull; {escape(now)} &bull; Source: inventory.json
+</div>
+</body>
+</html>"""
+
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
+
+# ─────────────────────────────────────────────
 #  Main
 # ─────────────────────────────────────────────
 
@@ -630,6 +969,11 @@ def main():
     migration_path = OUTPUT_DIR / "migration_report.html"
     generate_migration_report(inv, migration_path)
     print(f"  ✅ Migration report:  {migration_path}")
+
+    # Lineage report
+    lineage_path = OUTPUT_DIR / "lineage_report.html"
+    generate_lineage_report(inv, lineage_path)
+    print(f"  ✅ Lineage report:    {lineage_path}")
 
     print()
     print("  Open in browser to view reports.")

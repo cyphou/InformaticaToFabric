@@ -1,48 +1,88 @@
 {
-  "name": "AUTOSYS_BOX_DAILY_SALES_LOAD",
-  "tasks": [
-    {
-      "task_key": "CMD_RUN_WF_DAILY_SALES",
-      "description": "AutoSys → Informatica WF_DAILY_SALES_LOAD",
-      "depends_on": [],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/NB_WF_DAILY_SALES_LOAD",
-        "source": "WORKSPACE"
+  "name": "PL_AUTOSYS_BOX_DAILY_SALES_LOAD",
+  "properties": {
+    "description": "Migrated from AutoSys BOX/chain BOX_DAILY_SALES_LOAD.",
+    "activities": [
+      {
+        "name": "CMD_RUN_WF_DAILY_SALES",
+        "type": "Notebook",
+        "dependsOn": [],
+        "description": "AutoSys CMD → Informatica WF_DAILY_SALES_LOAD. Run Informatica WF_DAILY_SALES_LOAD",
+        "typeProperties": {
+          "notebook": {
+            "referenceName": "NB_WF_DAILY_SALES_LOAD",
+            "type": "NotebookReference"
+          },
+          "parameters": {}
+        },
+        "annotations": [
+          "AutoSysJob:CMD_RUN_WF_DAILY_SALES",
+          "InformaticaWorkflow:WF_DAILY_SALES_LOAD",
+          "AlarmIfFail"
+        ]
+      },
+      {
+        "name": "CMD_VALIDATE_SALES",
+        "type": "Script",
+        "dependsOn": [
+          {
+            "activity": "CMD_RUN_WF_DAILY_SALES",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "description": "AutoSys CMD: Validate row counts after sales load. Command: /opt/scripts/validate_sales_counts.sh",
+        "typeProperties": {
+          "content": "-- TODO: Convert AutoSys command to Fabric activity\n-- Original: /opt/scripts/validate_sales_counts.sh"
+        },
+        "annotations": [
+          "AutoSysJob:CMD_VALIDATE_SALES",
+          "ManualReviewRequired",
+          "AlarmIfFail"
+        ]
+      },
+      {
+        "name": "CMD_NOTIFY_SALES_DONE",
+        "type": "Script",
+        "dependsOn": [
+          {
+            "activity": "CMD_VALIDATE_SALES",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "description": "AutoSys CMD: Send success email. Command: /opt/scripts/send_email.sh \"Daily sales load completed successfully",
+        "typeProperties": {
+          "content": "-- TODO: Convert AutoSys command to Fabric activity\n-- Original: /opt/scripts/send_email.sh \"Daily sales load completed successfully"
+        },
+        "annotations": [
+          "AutoSysJob:CMD_NOTIFY_SALES_DONE",
+          "ManualReviewRequired"
+        ]
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
       }
     },
-    {
-      "task_key": "CMD_VALIDATE_SALES",
-      "description": "AutoSys CMD: Validate row counts after sales load. TODO: Convert command.",
-      "depends_on": [
-        {
-          "task_key": "CMD_RUN_WF_DAILY_SALES"
+    "variables": {},
+    "annotations": [
+      "MigratedFromAutoSys",
+      "OriginalBox:BOX_DAILY_SALES_LOAD"
+    ],
+    "trigger": {
+      "type": "ScheduleTrigger",
+      "description": "AutoSys schedule: 02:00 mo,tu,we,th,fr",
+      "typeProperties": {
+        "recurrence": {
+          "cron": "00 02 * * 1,2,3,4,5",
+          "timeZone": "UTC"
         }
-      ],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/SCRIPT_CMD_VALIDATE_SALES",
-        "source": "WORKSPACE"
-      }
-    },
-    {
-      "task_key": "CMD_NOTIFY_SALES_DONE",
-      "description": "AutoSys CMD: Send success email. TODO: Convert command.",
-      "depends_on": [
-        {
-          "task_key": "CMD_VALIDATE_SALES"
-        }
-      ],
-      "notebook_task": {
-        "notebook_path": "/Shared/migration/SCRIPT_CMD_NOTIFY_SALES_DONE",
-        "source": "WORKSPACE"
       }
     }
-  ],
-  "tags": {
-    "source": "autosys",
-    "migrated": "true"
-  },
-  "schedule": {
-    "quartz_cron_expression": "0 00 02 ? * 1,2,3,4,5 *",
-    "timezone_id": "UTC"
   }
 }

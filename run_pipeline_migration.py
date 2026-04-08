@@ -140,6 +140,63 @@ def _resolve_activity_name(session_name, session_to_mapping):
     return session_name
 
 
+def _event_wait_activity(event_name, depends_on_activity):
+    """Generate a Wait activity for Informatica Event Wait tasks.
+
+    Event Wait blocks execution until a signal is received.
+    Maps to Fabric Wait Activity or WebActivity polling pattern.
+    """
+    return {
+        "name": event_name,
+        "description": f"Migrated from Informatica Event Wait '{event_name}'. "
+                        "TODO: Replace with actual event source (webhook, file sensor, or queue).",
+        "type": "Wait",
+        "dependsOn": [{
+            "activity": depends_on_activity,
+            "dependencyConditions": ["Succeeded"]
+        }] if depends_on_activity else [],
+        "typeProperties": {
+            "waitTimeInSeconds": 60
+        }
+    }
+
+
+def _event_raise_activity(event_name, depends_on_activity):
+    """Generate a WebActivity for Informatica Event Raise tasks.
+
+    Event Raise signals that an event has occurred — other workflows
+    waiting on this event can proceed. Maps to a Web Activity that
+    posts to a webhook, queue, or event trigger.
+    """
+    return {
+        "name": event_name,
+        "description": f"Migrated from Informatica Event Raise '{event_name}'. "
+                        "TODO: Configure webhook URL or event mechanism.",
+        "type": "WebActivity",
+        "dependsOn": [{
+            "activity": depends_on_activity,
+            "dependencyConditions": ["Succeeded"]
+        }] if depends_on_activity else [],
+        "policy": {
+            "timeout": "0.00:10:00",
+            "retry": 1,
+            "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+            "url": {
+                "value": "@pipeline().parameters.event_webhook_url",
+                "type": "Expression"
+            },
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": {
+                "value": f"@json(concat('{{\"event\":\"{event_name}\",\"pipeline\":\"', pipeline().Pipeline, '\",\"runId\":\"', pipeline().RunId, '\"}}'))",
+                "type": "Expression"
+            }
+        }
+    }
+
+
 def generate_pipeline(workflow, mappings_by_name):
     """Generate a complete Fabric Pipeline JSON for a workflow."""
     name = workflow["name"]
@@ -148,6 +205,8 @@ def generate_pipeline(workflow, mappings_by_name):
     dependencies = workflow.get("dependencies", {})
     decision_tasks = workflow.get("decision_tasks", [])
     email_tasks = workflow.get("email_tasks", [])
+    event_wait_tasks = workflow.get("event_wait_tasks", [])
+    event_raise_tasks = workflow.get("event_raise_tasks", [])
     schedule = workflow.get("schedule", "")
     is_iics = workflow.get("format") == "iics"
 
@@ -221,7 +280,19 @@ def generate_pipeline(workflow, mappings_by_name):
             activities.append(_email_activity(email_name, trigger))
             break  # One email activity per email task
 
-    # 4. Collect pipeline parameters
+    # 4. Build Event Wait activities (Sprint 66)
+    for ew_name in event_wait_tasks:
+        ew_deps = dependencies.get(ew_name, [])
+        dep_activity = _resolve_activity_name(ew_deps[0], session_to_mapping) if ew_deps else ""
+        activities.append(_event_wait_activity(ew_name, dep_activity))
+
+    # 5. Build Event Raise activities (Sprint 66)
+    for er_name in event_raise_tasks:
+        er_deps = dependencies.get(er_name, [])
+        dep_activity = _resolve_activity_name(er_deps[0], session_to_mapping) if er_deps else ""
+        activities.append(_event_raise_activity(er_name, dep_activity))
+
+    # 6. Collect pipeline parameters
     pipeline_params = {
         "load_date": {
             "type": "string",
@@ -234,8 +305,14 @@ def generate_pipeline(workflow, mappings_by_name):
             "type": "string",
             "defaultValue": "https://your-logic-app-webhook-url"
         }
+    # Add event webhook if there are event raise tasks
+    if event_raise_tasks:
+        pipeline_params["event_webhook_url"] = {
+            "type": "string",
+            "defaultValue": "https://your-event-webhook-url"
+        }
 
-    # 5. Annotations
+    # 7. Annotations
     annotations = [
         "MigratedFromInformatica",
         f"OriginalWorkflow:{name}",
@@ -243,7 +320,7 @@ def generate_pipeline(workflow, mappings_by_name):
     if schedule:
         annotations.append(f"OriginalSchedule:{schedule}")
 
-    # 6. Schedule trigger (from schedule_cron if available)
+    # 8. Schedule trigger (from schedule_cron if available)
     schedule_cron = workflow.get("schedule_cron", {})
     trigger = None
     cron_expr = schedule_cron.get("cron", "") if schedule_cron else ""
@@ -363,8 +440,14 @@ def main():
     target = _get_target()
     target_label = "Databricks Workflows" if target == "databricks" else "Fabric Pipelines"
 
+    # Check if dbt mode is active (auto or dbt)
+    dbt_mode = os.environ.get("INFORMATICA_DBT_MODE", "")
+    use_mixed = target == "databricks" and dbt_mode in ("auto", "dbt")
+
     print("=" * 60)
     print(f"  Pipeline Migration — Phase 3 [{target_label}]")
+    if use_mixed:
+        print(f"  Mode: Mixed dbt + notebook workflows (dbt_mode={dbt_mode})")
     print("=" * 60)
     print()
 
@@ -373,8 +456,22 @@ def main():
     workflows = inv.get("workflows", [])
     generated = 0
 
+    # Pre-classify mappings for mixed mode
+    dbt_mappings = []
+    pyspark_mappings = []
+    if use_mixed:
+        try:
+            from run_dbt_migration import classify_mappings
+            all_mappings = inv.get("mappings", [])
+            dbt_mappings, pyspark_mappings = classify_mappings(all_mappings)
+        except ImportError:
+            use_mixed = False
+
     for wf in workflows:
-        if target == "databricks":
+        if use_mixed:
+            from run_dbt_migration import generate_mixed_workflow
+            pipeline = generate_mixed_workflow(wf, dbt_mappings, pyspark_mappings)
+        elif target == "databricks":
             pipeline = generate_databricks_workflow(wf, mappings_by_name)
         else:
             pipeline = generate_pipeline(wf, mappings_by_name)
@@ -383,7 +480,7 @@ def main():
             json.dump(pipeline, f, indent=2, ensure_ascii=False)
         generated += 1
 
-        if target == "databricks":
+        if target == "databricks" or use_mixed:
             act_count = len(pipeline.get("tasks", []))
         else:
             act_count = len(pipeline["properties"]["activities"])

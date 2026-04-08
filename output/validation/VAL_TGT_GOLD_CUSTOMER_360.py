@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 # =============================================================================
 # Validation Notebook: VAL_TGT_GOLD_CUSTOMER_360
-# Source: src_sf_contacts, src_sf_accounts, src_erp_customers, src_erp_transactions, src_snow_scores, src_api_firmographics → Target: main.gold.tgt_gold_customer_360
+# Source: src_sf_contacts, src_sf_accounts, src_erp_customers, src_erp_transactions, src_snow_scores, src_api_firmographics → Target: gold.tgt_gold_customer_360
 # Mapping: m_customer_360
 # =============================================================================
 
@@ -16,7 +16,7 @@ from pyspark.sql.functions import (
 from datetime import datetime
 
 mapping_name = "m_customer_360"
-target_table = "main.gold.tgt_gold_customer_360"
+target_table = "gold.tgt_gold_customer_360"
 
 # Oracle JDBC — update for your environment
 source_jdbc_url = "jdbc:oracle:thin:@<host>:1521/<service>"

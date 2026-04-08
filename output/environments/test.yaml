@@ -1,0 +1,12 @@
+{
+  "environment": "test",
+  "fabric": {
+    "workspace_id": "{{ TEST_WORKSPACE_ID }}"
+  },
+  "logging": {
+    "level": "INFO"
+  },
+  "sources": {
+    "connection_string": "{{ TEST_CONNECTION_STRING }}"
+  }
+}

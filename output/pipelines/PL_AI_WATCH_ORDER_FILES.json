@@ -1,42 +1,97 @@
 {
   "name": "PL_AI_WATCH_ORDER_FILES",
-  "description": "Migrated from Informatica workflow AI_WATCH_ORDER_FILES. ",
-  "tasks": [
-    {
-      "task_key": "NB_m_batch_order_ingest",
-      "description": "Migrated from Informatica session mt_process_batch.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_m_batch_order_ingest",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
+  "properties": {
+    "description": "Migrated from Informatica workflow AI_WATCH_ORDER_FILES. ",
+    "activities": [
+      {
+        "name": "NB_m_batch_order_ingest",
+        "description": "Migrated from Informatica session mt_process_batch.",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_m_batch_order_ingest",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
         }
       },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000
+      {
+        "name": "NB_notify_batch_complete",
+        "description": "Migrated from Informatica session notify_batch_complete.",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "NB_m_batch_order_ingest",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "",
+          "notebook": {
+            "referenceName": "NB_notify_batch_complete",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "load_date": {
+              "value": {
+                "value": "@pipeline().parameters.load_date",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sparkPool": {
+            "referenceName": "default",
+            "type": "BigDataPoolReference"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "load_date": {
+        "type": "string",
+        "defaultValue": "@utcnow('yyyy-MM-dd')"
+      }
     },
-    {
-      "task_key": "NB_notify_batch_complete",
-      "description": "Migrated from Informatica session notify_batch_complete.",
-      "notebook_task": {
-        "notebook_path": "/Workspace/Shared/migration/NB_notify_batch_complete",
-        "base_parameters": {
-          "load_date": "{{job.start_time.iso_date}}"
-        }
-      },
-      "timeout_seconds": 7200,
-      "max_retries": 2,
-      "min_retry_interval_millis": 60000,
-      "depends_on": [
-        {
-          "task_key": "NB_m_batch_order_ingest"
-        }
-      ]
-    }
-  ],
-  "tags": {
-    "migrated_from": "informatica",
-    "original_workflow": "AI_WATCH_ORDER_FILES"
-  },
-  "format": "MULTI_TASK"
+    "variables": {
+      "skip_reason": {
+        "type": "String",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "MigratedFromInformatica",
+      "OriginalWorkflow:AI_WATCH_ORDER_FILES"
+    ]
+  }
 }

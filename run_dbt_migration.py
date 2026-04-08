@@ -150,9 +150,122 @@ def convert_sql_to_dbsql(sql):
 
 
 def _expand_decode(sql):
-    """Expand _DECODE_(...) placeholders to CASE WHEN."""
-    # Simple pass-through for now — full DECODE expansion is complex
-    return sql.replace('_DECODE_(', 'CASE -- TODO: expand DECODE(')
+    """Expand _DECODE_(...) placeholders to CASE WHEN expressions.
+
+    Handles: DECODE(expr, val1, result1, val2, result2, ..., default)
+    Converts to: CASE expr WHEN val1 THEN result1 WHEN val2 THEN result2 ... ELSE default END
+    """
+    result = []
+    i = 0
+    while i < len(sql):
+        pos = sql.find('_DECODE_(', i)
+        if pos == -1:
+            result.append(sql[i:])
+            break
+        result.append(sql[i:pos])
+        # Find matching closing paren, respecting nesting
+        depth = 0
+        start = pos + len('_DECODE_(')
+        j = start
+        while j < len(sql):
+            if sql[j] == '(':
+                depth += 1
+            elif sql[j] == ')':
+                if depth == 0:
+                    break
+                depth -= 1
+            j += 1
+        if j >= len(sql):
+            # No matching paren — leave as-is
+            result.append(sql[pos:])
+            break
+        inner = sql[start:j]
+        # Split args on top-level commas (respecting parens)
+        args = _split_decode_args(inner)
+        if len(args) >= 3:
+            expr = args[0].strip()
+            case_parts = [f"CASE {expr}"]
+            k = 1
+            while k + 1 < len(args):
+                case_parts.append(f" WHEN {args[k].strip()} THEN {args[k+1].strip()}")
+                k += 2
+            if k < len(args):
+                # Odd remaining arg is the default
+                case_parts.append(f" ELSE {args[k].strip()}")
+            case_parts.append(" END")
+            result.append("".join(case_parts))
+        else:
+            # Too few args — pass through
+            result.append(f"DECODE({inner})")
+        i = j + 1
+    return "".join(result)
+
+
+def _split_decode_args(s):
+    """Split a DECODE argument string on top-level commas."""
+    args = []
+    depth = 0
+    current = []
+    for ch in s:
+        if ch == '(':
+            depth += 1
+            current.append(ch)
+        elif ch == ')':
+            depth -= 1
+            current.append(ch)
+        elif ch == ',' and depth == 0:
+            args.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    if current:
+        args.append("".join(current))
+    return args
+
+
+def _extract_instance_info(field_lineage):
+    """Build a dict of instance_name -> {type, fields} from field lineage entries."""
+    info = {}
+    for entry in field_lineage:
+        for tx in entry.get("transformations", []):
+            inst = tx.get("instance", "")
+            ttype = tx.get("type", "")
+            if inst and inst not in info:
+                info[inst] = {"type": ttype, "fields": []}
+            if inst:
+                tf = entry.get("target_field", "")
+                if tf and tf not in info[inst]["fields"]:
+                    info[inst]["fields"].append(tf)
+    return info
+
+
+def _fields_through_instance(field_lineage, instance_name):
+    """Return target field names that pass through a specific transform instance."""
+    fields = []
+    for entry in field_lineage:
+        for tx in entry.get("transformations", []):
+            if tx.get("instance", "").lower() == instance_name.lower():
+                tf = entry.get("target_field", "")
+                if tf and tf not in fields:
+                    fields.append(tf)
+    return fields
+
+
+def _generate_router_group_model(mapping, target_name, group_idx):
+    """Generate a separate intermediate model for one Router group/target."""
+    name = _sanitize_name(mapping["name"])
+    tgt_safe = _sanitize_name(target_name)
+    return (
+        f"-- Router group {group_idx} for: {mapping['name']} → {target_name}\n"
+        f"-- Auto-generated from Router transform\n"
+        f"-- Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
+        f"\n"
+        f'{_model_config(materialized="view", tags=["intermediate", "router_group"], schema="intermediate")}\n'
+        f"\n"
+        f"SELECT *\n"
+        f"FROM {{{{ ref('int_{name}') }}}}\n"
+        f"WHERE 1=1  -- TODO: Add Router group {group_idx} condition for target {tgt_safe}\n"
+    )
 
 
 # ─── DBT model generators ─────────────────────────────────────────────────
@@ -220,6 +333,16 @@ def generate_intermediate_model(mapping):
     """Generate an intermediate model (int_*.sql) with transformation logic."""
     name = _sanitize_name(mapping["name"])
     transforms = mapping.get("transformations", [])
+    field_lineage = mapping.get("field_lineage", [])
+    lookup_conditions = mapping.get("lookup_conditions", [])
+
+    # Build instance metadata from field lineage
+    instance_info = _extract_instance_info(field_lineage)
+    # Build target fields list from lineage
+    target_fields = sorted({e["target_field"] for e in field_lineage}) if field_lineage else []
+    # Build source fields known from lineage
+    source_fields = sorted({e["source_field"] for e in field_lineage}) if field_lineage else []
+
     lines = [
         f"-- Intermediate model for: {mapping['name']}",
         f"-- Transforms: {' → '.join(transforms)}",
@@ -244,86 +367,158 @@ def generate_intermediate_model(mapping):
 
         if tx == "EXP":
             cte_idx += 1
+            # Find EXP instances from lineage
+            exp_instances = [inst for inst, info in instance_info.items()
+                            if info.get("type") == "Expression"]
+            exp_name = exp_instances[0] if exp_instances else "EXP"
             cte_name = f"expressions_{cte_idx}"
-            cte_parts.append(
-                f", {cte_name} AS (\n"
-                f"    -- Expression transform: derived columns\n"
-                f"    -- TODO: Add CASE/COALESCE/CONCAT/CAST expressions\n"
-                f"    SELECT\n"
-                f"        *\n"
-                f"        -- , CONCAT(first_name, ' ', last_name) AS full_name\n"
-                f"        -- , COALESCE(email, 'unknown@example.com') AS email_clean\n"
-                f"    FROM {prev_cte}\n"
-                f")"
-            )
+            # Build field list from target fields that pass through this transform
+            exp_fields = _fields_through_instance(field_lineage, exp_name)
+            if exp_fields:
+                field_lines = ",\n".join(
+                    f"        {f}" for f in exp_fields
+                )
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Expression transform: {exp_name}\n"
+                    f"    -- Target fields: {', '.join(exp_fields[:5])}{'...' if len(exp_fields) > 5 else ''}\n"
+                    f"    SELECT\n"
+                    f"        *\n"
+                    f"        -- Derived fields from {exp_name}:\n"
+                    f"        -- {', '.join(exp_fields)}\n"
+                    f"    FROM {prev_cte}\n"
+                    f")"
+                )
+            else:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Expression transform: derived columns\n"
+                    f"    SELECT\n"
+                    f"        *\n"
+                    f"    FROM {prev_cte}\n"
+                    f")"
+                )
             prev_cte = cte_name
 
         elif tx == "FIL":
             cte_idx += 1
+            fil_instances = [inst for inst, info in instance_info.items()
+                            if info.get("type") == "Filter"]
+            fil_name = fil_instances[0] if fil_instances else "FIL"
             cte_name = f"filtered_{cte_idx}"
             cte_parts.append(
                 f", {cte_name} AS (\n"
-                f"    -- Filter transform\n"
-                f"    -- TODO: Add WHERE condition from mapping\n"
+                f"    -- Filter transform: {fil_name}\n"
                 f"    SELECT * FROM {prev_cte}\n"
-                f"    -- WHERE status = 'ACTIVE'\n"
+                f"    WHERE 1=1  -- TODO: Add condition from {fil_name}\n"
                 f")"
             )
             prev_cte = cte_name
 
         elif tx == "AGG":
             cte_idx += 1
+            agg_instances = [inst for inst, info in instance_info.items()
+                            if info.get("type") in ("Aggregator", "AGG")]
+            agg_name = agg_instances[0] if agg_instances else "AGG"
+            agg_fields = _fields_through_instance(field_lineage, agg_name)
             cte_name = f"aggregated_{cte_idx}"
-            cte_parts.append(
-                f", {cte_name} AS (\n"
-                f"    -- Aggregator transform\n"
-                f"    -- TODO: Add GROUP BY + aggregate functions\n"
-                f"    SELECT\n"
-                f"        -- group_key,\n"
-                f"        -- SUM(amount) AS total_amount,\n"
-                f"        -- COUNT(*) AS row_count\n"
-                f"        *\n"
-                f"    FROM {prev_cte}\n"
-                f"    -- GROUP BY group_key\n"
-                f")"
-            )
+            if agg_fields:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Aggregator transform: {agg_name}\n"
+                    f"    -- Output fields: {', '.join(agg_fields)}\n"
+                    f"    SELECT\n"
+                    f"        -- GROUP BY key columns, aggregate: {', '.join(agg_fields)}\n"
+                    f"        *\n"
+                    f"    FROM {prev_cte}\n"
+                    f"    -- GROUP BY group_key\n"
+                    f")"
+                )
+            else:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Aggregator transform: {agg_name}\n"
+                    f"    SELECT\n"
+                    f"        *\n"
+                    f"    FROM {prev_cte}\n"
+                    f"    -- GROUP BY group_key\n"
+                    f")"
+                )
             prev_cte = cte_name
 
         elif tx == "LKP":
             cte_idx += 1
+            lkp_instances = [inst for inst, info in instance_info.items()
+                            if info.get("type") in ("Lookup Procedure", "Lookup", "LKP")]
+            # Fallback: use lookup name from lookup_conditions
+            if lkp_instances:
+                lkp_name = lkp_instances[0]
+            elif lookup_conditions:
+                lkp_name = lookup_conditions[0].get("lookup", "dim_lookup")
+            else:
+                lkp_name = "dim_lookup"
             cte_name = f"with_lookup_{cte_idx}"
-            # Check for lookup conditions
-            lkp_conditions = mapping.get("lookup_conditions", [])
-            lkp_comment = ""
-            if lkp_conditions:
-                lkp_name = lkp_conditions[0].get("lookup", "dim_lookup")
-                lkp_comment = f"    -- Lookup: {lkp_name}\n"
-            cte_parts.append(
-                f", {cte_name} AS (\n"
-                f"    -- Lookup transform → LEFT JOIN\n"
-                f"{lkp_comment}"
-                f"    SELECT\n"
-                f"        s.*\n"
-                f"        -- , lkp.lookup_value\n"
-                f"    FROM {prev_cte} s\n"
-                f"    -- LEFT JOIN {{{{ ref('dim_lookup') }}}} lkp ON s.key = lkp.key\n"
-                f")"
-            )
+            # Use lookup_conditions from inventory
+            lkp_cond = ""
+            lkp_ref = _sanitize_name(lkp_name)
+            for lc in lookup_conditions:
+                if lc.get("lookup", "").lower() == lkp_name.lower() or not lkp_cond:
+                    if lc.get("condition"):
+                        lkp_cond = convert_sql_to_dbsql(lc["condition"])
+                    elif lc.get("sql"):
+                        lkp_cond = convert_sql_to_dbsql(lc["sql"])
+            if lkp_cond:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Lookup: {lkp_name}\n"
+                    f"    SELECT\n"
+                    f"        s.*\n"
+                    f"    FROM {prev_cte} s\n"
+                    f"    LEFT JOIN {{{{ ref('{lkp_ref}') }}}} lkp\n"
+                    f"        ON {lkp_cond}\n"
+                    f")"
+                )
+            else:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Lookup: {lkp_name}\n"
+                    f"    SELECT\n"
+                    f"        s.*\n"
+                    f"    FROM {prev_cte} s\n"
+                    f"    LEFT JOIN {{{{ ref('{lkp_ref}') }}}} lkp ON s.id = lkp.id\n"
+                    f")"
+                )
             prev_cte = cte_name
 
         elif tx == "JNR":
             cte_idx += 1
+            jnr_instances = [inst for inst, info in instance_info.items()
+                            if info.get("type") in ("Joiner", "JNR")]
+            jnr_name = jnr_instances[0] if jnr_instances else "JOINER"
             cte_name = f"joined_{cte_idx}"
-            cte_parts.append(
-                f", {cte_name} AS (\n"
-                f"    -- Joiner transform\n"
-                f"    -- TODO: Add JOIN condition\n"
-                f"    SELECT\n"
-                f"        a.*\n"
-                f"    FROM {prev_cte} a\n"
-                f"    -- INNER JOIN {{{{ ref('other_source') }}}} b ON a.key = b.key\n"
-                f")"
-            )
+            # Check if there are multiple sources
+            sources = mapping.get("sources", [])
+            if len(sources) > 1:
+                other_src = _sanitize_name(sources[1])
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Joiner: {jnr_name}\n"
+                    f"    SELECT\n"
+                    f"        a.*\n"
+                    f"    FROM {prev_cte} a\n"
+                    f"    INNER JOIN {{{{ ref('stg_{other_src}') }}}} b ON a.id = b.id\n"
+                    f")"
+                )
+            else:
+                cte_parts.append(
+                    f", {cte_name} AS (\n"
+                    f"    -- Joiner: {jnr_name}\n"
+                    f"    SELECT\n"
+                    f"        a.*\n"
+                    f"    FROM {prev_cte} a\n"
+                    f"    -- INNER JOIN {{{{ ref('other_source') }}}} b ON a.key = b.key\n"
+                    f")"
+                )
             prev_cte = cte_name
 
         elif tx == "SRT":
@@ -468,6 +663,28 @@ def generate_intermediate_model(mapping):
         lines.append("-- ORDER BY sort_column")
 
     return "\n".join(lines)
+
+
+def _is_scd2_candidate(mapping):
+    """Detect if a mapping is an SCD2 / snapshot candidate.
+
+    Triggers on:
+      - UPD transform present (explicit upsert/merge)
+      - Target name contains 'history', 'snapshot', 'scd', 'archive'
+      - Mapping name contains 'scd', 'history', 'snapshot'
+    """
+    transforms = set(mapping.get("transformations", []))
+    if "UPD" in transforms:
+        return True
+    targets = [t.lower() for t in mapping.get("targets", [])]
+    name_lower = mapping.get("name", "").lower()
+    scd_keywords = {"history", "snapshot", "scd", "archive", "slowly_changing"}
+    for tgt in targets:
+        if any(kw in tgt for kw in scd_keywords):
+            return True
+    if any(kw in name_lower for kw in scd_keywords):
+        return True
+    return False
 
 
 def generate_mart_model(mapping):
@@ -703,9 +920,22 @@ def write_dbt_project(dbt_mappings, all_mappings):
         int_path = intermediate_dir / f"int_{name}.sql"
         int_path.write_text(generate_intermediate_model(mapping), encoding="utf-8")
 
-        # Check for UPD → incremental or snapshot
+        # Router → separate models per target (Sprint 67)
+        if "RTR" in mapping.get("transformations", []):
+            targets = mapping.get("targets", [])
+            if len(targets) > 1:
+                for idx, tgt in enumerate(targets, 1):
+                    tgt_name = _sanitize_name(tgt)
+                    rtr_path = intermediate_dir / f"int_{name}_group_{idx}.sql"
+                    rtr_path.write_text(
+                        _generate_router_group_model(mapping, tgt, idx),
+                        encoding="utf-8",
+                    )
+
+        # Check for UPD or SCD2 candidate → incremental + snapshot
+        is_scd2 = _is_scd2_candidate(mapping)
         has_upsert = "UPD" in mapping.get("transformations", [])
-        if has_upsert:
+        if has_upsert or is_scd2:
             # Generate incremental model (Sprint 56) instead of plain mart
             mart_path = marts_dir / f"mart_{name}.sql"
             mart_path.write_text(generate_incremental_model(mapping), encoding="utf-8")

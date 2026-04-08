@@ -1,0 +1,37 @@
+{
+  "$schema": "fabric-deployment-pipeline/v1",
+  "displayName": "Migration Deployment Pipeline",
+  "description": "Auto-generated from Informatica migration. Promotes artifacts Dev→Test→Prod.",
+  "stages": [
+    {
+      "order": 0,
+      "displayName": "Development",
+      "description": "Development workspace — initial deployment target",
+      "isActive": true
+    },
+    {
+      "order": 1,
+      "displayName": "Test",
+      "description": "Test workspace — validation and QA",
+      "isActive": true
+    },
+    {
+      "order": 2,
+      "displayName": "Production",
+      "description": "Production workspace — final target",
+      "isActive": true
+    }
+  ],
+  "rules": [
+    {
+      "artifactType": "Notebook",
+      "rule": "KeepLabel",
+      "description": "Preserve notebook labels across stages"
+    },
+    {
+      "artifactType": "DataPipeline",
+      "rule": "ParameterOverride",
+      "description": "Override pipeline parameters per stage (connection strings)"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
--- Table: main.silver.tgt_silver_orders (from mapping m_cdc_order_pipeline)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_silver_orders (
+-- Table: silver.tgt_silver_orders (from mapping m_cdc_order_pipeline)
+CREATE TABLE IF NOT EXISTS silver.tgt_silver_orders (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -8,8 +8,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_cdc_order_pipeline'
 ;
 
--- Table: main.silver.tgt_silver_customer (from mapping m_customer_360)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_silver_customer (
+-- Table: silver.tgt_silver_customer (from mapping m_customer_360)
+CREATE TABLE IF NOT EXISTS silver.tgt_silver_customer (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -18,8 +18,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_customer_360'
 ;
 
--- Table: main.silver.tgt_lh_contacts (from mapping m_load_contacts)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_lh_contacts (
+-- Table: silver.tgt_lh_contacts (from mapping m_load_contacts)
+CREATE TABLE IF NOT EXISTS silver.tgt_lh_contacts (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -28,8 +28,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_load_contacts'
 ;
 
--- Table: main.silver.tgt_accounts (from mapping m_sync_accounts)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_accounts (
+-- Table: silver.tgt_accounts (from mapping m_sync_accounts)
+CREATE TABLE IF NOT EXISTS silver.tgt_accounts (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -38,8 +38,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_sync_accounts'
 ;
 
--- Table: main.silver.tgt_silver_inventory (from mapping m_realtime_inventory_scd2)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_silver_inventory (
+-- Table: silver.tgt_silver_inventory (from mapping m_realtime_inventory_scd2)
+CREATE TABLE IF NOT EXISTS silver.tgt_silver_inventory (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -48,8 +48,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_realtime_inventory_scd2'
 ;
 
--- Table: main.silver.tgt_alert_queue (from mapping m_realtime_inventory_scd2)
-CREATE TABLE IF NOT EXISTS main.silver.tgt_alert_queue (
+-- Table: silver.tgt_alert_queue (from mapping m_realtime_inventory_scd2)
+CREATE TABLE IF NOT EXISTS silver.tgt_alert_queue (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -58,8 +58,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping m_realtime_inventory_scd2'
 ;
 
--- Table: main.silver.fact_txn_high (from mapping M_COMPLEX_MULTI_SOURCE)
-CREATE TABLE IF NOT EXISTS main.silver.fact_txn_high (
+-- Table: silver.fact_txn_high (from mapping M_COMPLEX_MULTI_SOURCE)
+CREATE TABLE IF NOT EXISTS silver.fact_txn_high (
     account_name STRING  -- from TXN_ID,
     amount_usd STRING  -- from TXN_ID,
     txn_date STRING  -- from TXN_ID,
@@ -75,8 +75,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_COMPLEX_MULTI_SOURCE'
 ;
 
--- Table: main.silver.fact_txn_low (from mapping M_COMPLEX_MULTI_SOURCE)
-CREATE TABLE IF NOT EXISTS main.silver.fact_txn_low (
+-- Table: silver.fact_txn_low (from mapping M_COMPLEX_MULTI_SOURCE)
+CREATE TABLE IF NOT EXISTS silver.fact_txn_low (
     account_name STRING  -- from TXN_ID,
     amount_usd STRING  -- from TXN_ID,
     txn_date STRING  -- from TXN_ID,
@@ -92,8 +92,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_COMPLEX_MULTI_SOURCE'
 ;
 
--- Table: main.silver.fact_txn_tags (from mapping M_COMPLEX_MULTI_SOURCE)
-CREATE TABLE IF NOT EXISTS main.silver.fact_txn_tags (
+-- Table: silver.fact_txn_tags (from mapping M_COMPLEX_MULTI_SOURCE)
+CREATE TABLE IF NOT EXISTS silver.fact_txn_tags (
     account_name STRING  -- from TXN_ID,
     amount_usd STRING  -- from TXN_ID,
     txn_date STRING  -- from TXN_ID,
@@ -109,8 +109,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_COMPLEX_MULTI_SOURCE'
 ;
 
--- Table: main.silver.dim_customer (from mapping M_LOAD_CUSTOMERS)
-CREATE TABLE IF NOT EXISTS main.silver.dim_customer (
+-- Table: silver.dim_customer (from mapping M_LOAD_CUSTOMERS)
+CREATE TABLE IF NOT EXISTS silver.dim_customer (
     customer_id STRING  -- from CUSTOMER_ID,
     full_name STRING  -- from CUSTOMER_ID,
     email STRING  -- from CUSTOMER_ID,
@@ -125,8 +125,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_LOAD_CUSTOMERS'
 ;
 
--- Table: main.silver.dim_employee (from mapping M_LOAD_EMPLOYEES)
-CREATE TABLE IF NOT EXISTS main.silver.dim_employee (
+-- Table: silver.dim_employee (from mapping M_LOAD_EMPLOYEES)
+CREATE TABLE IF NOT EXISTS silver.dim_employee (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -135,8 +135,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_LOAD_EMPLOYEES'
 ;
 
--- Table: main.silver.fact_orders (from mapping M_LOAD_ORDERS)
-CREATE TABLE IF NOT EXISTS main.silver.fact_orders (
+-- Table: silver.fact_orders (from mapping M_LOAD_ORDERS)
+CREATE TABLE IF NOT EXISTS silver.fact_orders (
     product_name STRING  -- from PRODUCT_ID,
     order_id STRING  -- from PRODUCT_ID,
     customer_id STRING  -- from PRODUCT_ID,
@@ -157,8 +157,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_LOAD_ORDERS'
 ;
 
--- Table: main.silver.dim_inventory (from mapping M_UPSERT_INVENTORY)
-CREATE TABLE IF NOT EXISTS main.silver.dim_inventory (
+-- Table: silver.dim_inventory (from mapping M_UPSERT_INVENTORY)
+CREATE TABLE IF NOT EXISTS silver.dim_inventory (
     product_id STRING  -- from PRODUCT_ID,
     warehouse_id STRING  -- from PRODUCT_ID,
     qty_on_hand STRING  -- from PRODUCT_ID,
@@ -172,8 +172,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping M_UPSERT_INVENTORY'
 ;
 
--- Table: main.silver.lakehouse_silver (from mapping SYNC_CUSTOMER_DATA)
-CREATE TABLE IF NOT EXISTS main.silver.lakehouse_silver (
+-- Table: silver.lakehouse_silver (from mapping SYNC_CUSTOMER_DATA)
+CREATE TABLE IF NOT EXISTS silver.lakehouse_silver (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING
@@ -182,8 +182,8 @@ USING DELTA
 COMMENT 'Migrated from Informatica mapping SYNC_CUSTOMER_DATA'
 ;
 
--- Table: main.silver.lakehouse_bronze (from mapping MI_BULK_LOAD_PRODUCTS)
-CREATE TABLE IF NOT EXISTS main.silver.lakehouse_bronze (
+-- Table: silver.lakehouse_bronze (from mapping MI_BULK_LOAD_PRODUCTS)
+CREATE TABLE IF NOT EXISTS silver.lakehouse_bronze (
     id BIGINT,
     _etl_load_timestamp TIMESTAMP,
     _etl_source_mapping STRING

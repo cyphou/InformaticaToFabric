@@ -73,6 +73,11 @@ py-modules = [
     "deploy_to_databricks",
     "generate_html_reports",
     "dashboard",
+    "plugins",
+    "sdk",
+    "api_server",
+    "rule_engine",
+    "catalog_integration",
 ]
 
 [tool.setuptools.packages.find]

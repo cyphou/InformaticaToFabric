@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-02T12:27:47Z",
+  "generated": "2026-04-07T16:45:50Z",
   "source_platform": "Informatica PowerCenter",
   "target_platform": "Microsoft Fabric",
   "mappings": [
@@ -8594,7 +8594,7 @@
     "total_field_lineage_paths": 380,
     "total_parameter_files": 1,
     "total_mapplets": 3,
-    "total_session_configs": 10,
+    "total_session_configs": 44,
     "total_pii_findings": 35,
     "total_dq_rules": 8
   },
@@ -8717,6 +8717,312 @@
       "infa_value": "default_session_config",
       "spark_property": "spark.conf.set()",
       "note": "Resolve config object 'default_session_config'"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "DTM buffer size",
+      "infa_value": "64000000",
+      "spark_property": "spark.sql.shuffle.partitions",
+      "note": "Adjust based on data volume"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Commit Interval",
+      "infa_value": "10000",
+      "spark_property": "spark.databricks.delta.optimizeWrite.enabled",
+      "note": "Use Delta auto-optimize"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Commit Type",
+      "infa_value": "Source",
+      "spark_property": "write_mode",
+      "note": "Source=process all rows; Target=commit per target batch"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Error handling",
+      "infa_value": "Stop On Errors",
+      "spark_property": "error_handling",
+      "note": "Stop on Errors → raise exception on failure"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Session Sort Order",
+      "infa_value": "Binary",
+      "spark_property": "spark.sql.shuffle.sortBased",
+      "note": "Sort-based shuffle"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Treat source rows as",
+      "infa_value": "Insert",
+      "spark_property": "merge_strategy",
+      "note": "DD_INSERT/UPDATE/DELETE"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Pushdown Optimization",
+      "infa_value": "None",
+      "spark_property": "spark.sql.adaptive.enabled",
+      "note": "Full → enable AQE"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Recovery Strategy",
+      "infa_value": "Restart task",
+      "spark_property": "checkpoint",
+      "note": "Resume → use Delta checkpointing"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Maximum Memory Allowed",
+      "infa_value": "Auto",
+      "spark_property": "spark.executor.memory",
+      "note": "Executor memory"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Lookup Cache Size",
+      "infa_value": "2000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Broadcast threshold for lookup joins"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Lookup Data Cache Size",
+      "infa_value": "2000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Lookup data cache"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Lookup Index Cache Size",
+      "infa_value": "1000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Lookup index cache"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Sorter Cache Size",
+      "infa_value": "4000000",
+      "spark_property": "spark.sql.execution.sortMergeJoinThreshold",
+      "note": "Sorter memory"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Aggregator Cache Size",
+      "infa_value": "4000000",
+      "spark_property": "spark.executor.memory",
+      "note": "Aggregator cache → executor memory"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Joiner Cache Size",
+      "infa_value": "4000000",
+      "spark_property": "spark.sql.join.preferSortMergeJoin",
+      "note": "Joiner cache → sort merge threshold"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Target Load Type",
+      "infa_value": "Bulk",
+      "spark_property": "write_mode",
+      "note": "Bulk=overwrite; Normal=append/merge"
+    },
+    {
+      "config_name": "default_session_config",
+      "config_description": "Default session configuration for standard loads",
+      "session": "[shared config] default_session_config",
+      "infa_property": "Truncate Target Table Option",
+      "infa_value": "NO",
+      "spark_property": "truncate_before_write",
+      "note": "YES → mode('overwrite')"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "DTM buffer size",
+      "infa_value": "256000000",
+      "spark_property": "spark.sql.shuffle.partitions",
+      "note": "Adjust based on data volume"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Commit Interval",
+      "infa_value": "100000",
+      "spark_property": "spark.databricks.delta.optimizeWrite.enabled",
+      "note": "Use Delta auto-optimize"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Commit Type",
+      "infa_value": "Target",
+      "spark_property": "write_mode",
+      "note": "Source=process all rows; Target=commit per target batch"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Error handling",
+      "infa_value": "Stop On Errors",
+      "spark_property": "error_handling",
+      "note": "Stop on Errors → raise exception on failure"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Session Sort Order",
+      "infa_value": "Binary",
+      "spark_property": "spark.sql.shuffle.sortBased",
+      "note": "Sort-based shuffle"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Treat source rows as",
+      "infa_value": "Insert",
+      "spark_property": "merge_strategy",
+      "note": "DD_INSERT/UPDATE/DELETE"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Recovery Strategy",
+      "infa_value": "Resume from last checkpoint",
+      "spark_property": "checkpoint",
+      "note": "Resume → use Delta checkpointing"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Pushdown Optimization",
+      "infa_value": "Full",
+      "spark_property": "spark.sql.adaptive.enabled",
+      "note": "Full → enable AQE"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Lookup Cache Size",
+      "infa_value": "16000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Broadcast threshold for lookup joins"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Lookup Data Cache Size",
+      "infa_value": "16000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Lookup data cache"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Lookup Index Cache Size",
+      "infa_value": "8000000",
+      "spark_property": "spark.sql.autoBroadcastJoinThreshold",
+      "note": "Lookup index cache"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Sorter Cache Size",
+      "infa_value": "32000000",
+      "spark_property": "spark.sql.execution.sortMergeJoinThreshold",
+      "note": "Sorter memory"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Aggregator Cache Size",
+      "infa_value": "32000000",
+      "spark_property": "spark.executor.memory",
+      "note": "Aggregator cache → executor memory"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Joiner Cache Size",
+      "infa_value": "32000000",
+      "spark_property": "spark.sql.join.preferSortMergeJoin",
+      "note": "Joiner cache → sort merge threshold"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Maximum Memory Allowed",
+      "infa_value": "512000000",
+      "spark_property": "spark.executor.memory",
+      "note": "Executor memory"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Target Load Type",
+      "infa_value": "Bulk",
+      "spark_property": "write_mode",
+      "note": "Bulk=overwrite; Normal=append/merge"
+    },
+    {
+      "config_name": "high_perf_session_config",
+      "config_description": "High-performance session config for large volumes",
+      "session": "[shared config] high_perf_session_config",
+      "infa_property": "Truncate Target Table Option",
+      "infa_value": "YES",
+      "spark_property": "truncate_before_write",
+      "note": "YES → mode('overwrite')"
     }
   ],
   "pii_findings": [
