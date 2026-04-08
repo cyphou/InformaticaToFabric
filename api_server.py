@@ -29,75 +29,101 @@ logger = logging.getLogger(__name__)
 WORKSPACE = Path(__file__).resolve().parent
 
 # ─────────────────────────────────────────────
+#  Configuration
+# ─────────────────────────────────────────────
+
+MAX_BODY_SIZE = 1_048_576  # 1 MB max request body
+MAX_JOBS = 1000  # Maximum tracked jobs before eviction
+
+# ─────────────────────────────────────────────
 #  Job Tracking
 # ─────────────────────────────────────────────
 
 _jobs = {}  # job_id → {status, created, result, ...}
+_jobs_lock = threading.Lock()
 
 
 def _create_job(job_type, params=None):
     """Create a new background job entry."""
     job_id = str(uuid.uuid4())
-    _jobs[job_id] = {
-        "id": job_id,
-        "type": job_type,
-        "status": "pending",
-        "created": datetime.now(timezone.utc).isoformat(),
-        "completed": None,
-        "params": params or {},
-        "result": None,
-        "error": None,
-    }
+    with _jobs_lock:
+        # Evict oldest completed jobs if at capacity
+        if len(_jobs) >= MAX_JOBS:
+            completed = [
+                (jid, j) for jid, j in _jobs.items()
+                if j["status"] in ("completed", "failed")
+            ]
+            completed.sort(key=lambda x: x[1].get("created", ""))
+            for jid, _ in completed[:len(completed) // 2]:
+                del _jobs[jid]
+        _jobs[job_id] = {
+            "id": job_id,
+            "type": job_type,
+            "status": "pending",
+            "created": datetime.now(timezone.utc).isoformat(),
+            "completed": None,
+            "params": params or {},
+            "result": None,
+            "error": None,
+        }
     return job_id
 
 
 def _run_migration_job(job_id, params):
     """Execute a migration job in a background thread."""
-    if job_id not in _jobs:
-        return
+    with _jobs_lock:
+        if job_id not in _jobs:
+            return
     try:
-        _jobs[job_id]["status"] = "running"
+        with _jobs_lock:
+            _jobs[job_id]["status"] = "running"
         from sdk import MigrationSDK, MigrationConfig
 
         config = MigrationConfig.from_dict(params)
         sdk = MigrationSDK(config)
         results = sdk.migrate()
 
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "completed"
-            _jobs[job_id]["result"] = results
-            _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
+        with _jobs_lock:
+            if job_id in _jobs:
+                _jobs[job_id]["status"] = "completed"
+                _jobs[job_id]["result"] = results
+                _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
     except Exception as e:
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "failed"
-            _jobs[job_id]["error"] = str(e)
-            _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
+        with _jobs_lock:
+            if job_id in _jobs:
+                _jobs[job_id]["status"] = "failed"
+                _jobs[job_id]["error"] = str(e)
+                _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
 
 
 def _run_assessment_job(job_id, params):
     """Execute an assessment job in a background thread."""
-    if job_id not in _jobs:
-        return
+    with _jobs_lock:
+        if job_id not in _jobs:
+            return
     try:
-        _jobs[job_id]["status"] = "running"
+        with _jobs_lock:
+            _jobs[job_id]["status"] = "running"
         from sdk import MigrationSDK, MigrationConfig
 
         config = MigrationConfig.from_dict(params)
         sdk = MigrationSDK(config)
         inventory = sdk.assess(params.get("source_dir"))
 
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "completed"
-            _jobs[job_id]["result"] = {
-                "mappings": len(inventory.get("mappings", [])),
-                "workflows": len(inventory.get("workflows", [])),
-            }
-            _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
+        with _jobs_lock:
+            if job_id in _jobs:
+                _jobs[job_id]["status"] = "completed"
+                _jobs[job_id]["result"] = {
+                    "mappings": len(inventory.get("mappings", [])),
+                    "workflows": len(inventory.get("workflows", [])),
+                }
+                _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
     except Exception as e:
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "failed"
-            _jobs[job_id]["error"] = str(e)
-            _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
+        with _jobs_lock:
+            if job_id in _jobs:
+                _jobs[job_id]["status"] = "failed"
+                _jobs[job_id]["error"] = str(e)
+                _jobs[job_id]["completed"] = datetime.now(timezone.utc).isoformat()
 
 
 # ─────────────────────────────────────────────
@@ -151,7 +177,8 @@ def api_get_status(job_id):
     Returns:
         Job details dict or None if not found.
     """
-    return _jobs.get(job_id)
+    with _jobs_lock:
+        return _jobs.get(job_id)
 
 
 def api_get_inventory():
@@ -169,7 +196,8 @@ def api_get_inventory():
 
 def api_list_jobs():
     """GET /jobs — list all jobs."""
-    return list(_jobs.values())
+    with _jobs_lock:
+        return list(_jobs.values())
 
 
 # ─────────────────────────────────────────────
@@ -257,6 +285,9 @@ def _run_stdlib_server(port=8000):
 
         def do_POST(self):
             content_len = int(self.headers.get("Content-Length", 0))
+            if content_len > MAX_BODY_SIZE:
+                self._json_response({"error": "Request body too large"}, 413)
+                return
             body = json.loads(self.rfile.read(content_len)) if content_len else {}
 
             if self.path == "/migrate":
@@ -275,8 +306,8 @@ def _run_stdlib_server(port=8000):
         def log_message(self, format, *args):
             logger.info(format, *args)
 
-    server = HTTPServer(("0.0.0.0", port), MigrationAPIHandler)
-    print(f"Migration API server running on http://0.0.0.0:{port}")
+    server = HTTPServer(("127.0.0.1", port), MigrationAPIHandler)
+    print(f"Migration API server running on http://127.0.0.1:{port}")
     print("Endpoints: GET /health, POST /migrate, POST /assess, GET /status/<id>, GET /inventory")
     server.serve_forever()
 
@@ -286,6 +317,6 @@ if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     if app:
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="127.0.0.1", port=port)
     else:
         _run_stdlib_server(port)

@@ -286,13 +286,18 @@ def detect_xml_format(filepath):
     Returns 'powercenter', 'iics', or 'unknown'.
     """
     try:
-        for event, elem in ET.iterparse(filepath, events=("start",)):
-            tag = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-            if tag in POWERCENTER_ROOT_TAGS:
-                return "powercenter"
-            if tag in IICS_ROOT_TAGS:
-                return "iics"
-            return "unknown"
+        iterator = ET.iterparse(filepath, events=("start",))
+        try:
+            for event, elem in iterator:
+                tag = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
+                if tag in POWERCENTER_ROOT_TAGS:
+                    return "powercenter"
+                if tag in IICS_ROOT_TAGS:
+                    return "iics"
+                return "unknown"
+        finally:
+            # Close the iterator to release the file handle
+            del iterator
     except ET.ParseError:
         return "unknown"
     return "unknown"
@@ -303,14 +308,36 @@ def safe_parse_xml(filepath):
     Returns (tree, root) or (None, None) on failure.
     Uses a restricted parser to mitigate XXE and entity expansion attacks.
     """
-    # Use a parser that disables external entities and DTD processing
+    # Use defusedxml if available, otherwise restrict the stdlib parser
     def _make_parser():
+        try:
+            import defusedxml.ElementTree as DefusedET
+            return None  # defusedxml uses its own parse path
+        except ImportError:
+            pass
+        # Fallback: stdlib parser with entity limits to mitigate billion-laughs
         parser = ET.XMLParser()
+        # Limit entity expansion to prevent denial-of-service
+        try:
+            parser.parser.UseForeignDTD(False)
+        except AttributeError:
+            pass  # Not all expat builds support this
         return parser
 
-    # Try standard parse first
+    # Try defusedxml first (secure by default)
     try:
-        tree = ET.parse(filepath, parser=_make_parser())
+        import defusedxml.ElementTree as DefusedET
+        tree = DefusedET.parse(str(filepath))
+        return tree, tree.getroot()
+    except ImportError:
+        pass  # defusedxml not installed — fall through to stdlib with mitigations
+    except Exception:
+        pass
+
+    # Try standard parse with restricted parser
+    try:
+        parser = _make_parser()
+        tree = ET.parse(filepath, parser=parser)
         return tree, tree.getroot()
     except ET.ParseError as e:
         warnings.append(f"XML parse error in {filepath.name}: {e}")

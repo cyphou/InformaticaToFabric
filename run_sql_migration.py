@@ -33,7 +33,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 ORACLE_REPLACEMENTS = [
     # Functions (order matters — more specific patterns first)
     (r"\bNVL2\s*\(([^,]+),\s*([^,]+),\s*([^)]+)\)", r"CASE WHEN \1 IS NOT NULL THEN \2 ELSE \3 END"),
-    (r"\bNVL\s*\(", "COALESCE("),
+    (r"\bNVL\b(?!2)\s*\(", "COALESCE("),
     (r"\bSYSTIMESTAMP\b", "current_timestamp()"),
     (r"\bSYSDATE\b", "current_timestamp()"),
     (r"\bTO_NUMBER\s*\(([^)]+)\)", r"CAST(\1 AS DECIMAL)"),
@@ -147,7 +147,8 @@ SQLSERVER_REPLACEMENTS = [
     (r"\bCROSS\s+APPLY\b", "-- TODO: CROSS APPLY → LATERAL VIEW EXPLODE or lateral join"),
     (r"\bOUTER\s+APPLY\b", "-- TODO: OUTER APPLY → LATERAL VIEW OUTER EXPLODE or left lateral join"),
     # Temp tables
-    (r"#(\w+)", r"temp_\1  -- TODO: use createOrReplaceTempView"),
+    # Temp tables (only match #name at word boundaries, not in comments)
+    (r"(?<![\w-])#(\w+)", r"temp_\1  -- TODO: use createOrReplaceTempView"),
     # @@ERROR
     (r"\b@@ERROR\b", "-- TODO: Replace @@ERROR with Python try/except"),
 ]

@@ -23,6 +23,7 @@ Usage:
 """
 
 import json
+import importlib
 import logging
 import os
 import sys
@@ -117,7 +118,8 @@ class MigrationSDK:
             os.environ["INFORMATICA_INPUT_DIR"] = str(source_dir)
 
         import run_assessment
-        importlib.reload(run_assessment) if "run_assessment" in sys.modules else None
+        if "run_assessment" in sys.modules:
+            importlib.reload(run_assessment)
 
         # Capture inventory
         inv_path = Path(self.config.output_dir) / "inventory" / "inventory.json"
@@ -263,7 +265,6 @@ class MigrationSDK:
 
 
 # Convenience one-liner for simple use
-import importlib
 
 
 def migrate(source_dir=None, target="fabric", **kwargs):

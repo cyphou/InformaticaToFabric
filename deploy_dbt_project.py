@@ -8,6 +8,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
 
 try:
@@ -64,8 +65,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deploy dbt project to Databricks")
     parser.add_argument("--workspace-url", required=True,
                         help="Databricks workspace URL (https://<workspace>.azuredatabricks.net)")
-    parser.add_argument("--token", required=True,
-                        help="Databricks personal access token")
+    parser.add_argument("--token", default=None,
+                        help="Databricks personal access token (prefer DATABRICKS_TOKEN env var)")
     parser.add_argument("--repo-path", default="/Repos/migration/dbt_project",
                         help="Target path in Databricks Repos")
     parser.add_argument("--git-url", required=True,
@@ -74,7 +75,12 @@ if __name__ == "__main__":
                         help="Git branch to deploy (default: main)")
     args = parser.parse_args()
 
+    token = args.token or os.environ.get("DATABRICKS_TOKEN")
+    if not token:
+        print("ERROR: Provide --token or set DATABRICKS_TOKEN environment variable")
+        sys.exit(1)
+
     result = deploy_to_repos(
-        args.workspace_url, args.token, args.repo_path, args.git_url, args.branch
+        args.workspace_url, token, args.repo_path, args.git_url, args.branch
     )
     print(json.dumps(result, indent=2))

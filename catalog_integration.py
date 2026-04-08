@@ -156,21 +156,27 @@ def generate_unity_catalog_lineage(inventory):
 
             fqn = f"{catalog}.{tier}.{target_lower}"
 
+            # Sanitize values to prevent SQL injection in generated statements
+            safe_mapping = mapping_name.replace("'", "''")
+            safe_complexity = complexity.replace("'", "''")
+            safe_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
             # SET TAGS
             statements.append(
                 f"ALTER TABLE {fqn} SET TAGS ("
                 f"'migration_source' = 'informatica', "
-                f"'source_mapping' = '{mapping_name}', "
-                f"'complexity' = '{complexity}', "
-                f"'migration_date' = '{datetime.now(timezone.utc).strftime('%Y-%m-%d')}'"
+                f"'source_mapping' = '{safe_mapping}', "
+                f"'complexity' = '{safe_complexity}', "
+                f"'migration_date' = '{safe_date}'"
                 f");"
             )
 
             # COMMENT
             sources = ", ".join(mapping.get("sources", []))
+            safe_sources = sources.replace("'", "''")
             statements.append(
                 f"COMMENT ON TABLE {fqn} IS "
-                f"'Migrated from Informatica mapping {mapping_name}. Sources: {sources}';"
+                f"'Migrated from Informatica mapping {safe_mapping}. Sources: {safe_sources}';"
             )
 
     return statements
