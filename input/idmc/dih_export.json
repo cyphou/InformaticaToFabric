@@ -1,0 +1,61 @@
+{
+  "objects": [
+    {
+      "id": "dih-pub-001",
+      "name": "Customer_CDC_Publication",
+      "type": "publication",
+      "description": "CDC publication streaming customer changes from Oracle CRM to downstream subscribers",
+      "createdBy": "dih_admin",
+      "updateTime": "2026-03-10T08:00:00Z",
+      "tags": ["cdc", "customer", "publication"],
+      "dependencies": [
+        {"component": "cdi", "name": "Oracle_CRM_Prod"}
+      ],
+      "sourceTable": "CUSTOMERS",
+      "changeTypes": ["INSERT", "UPDATE", "DELETE"],
+      "format": "AVRO",
+      "latencyTarget": "< 5 min"
+    },
+    {
+      "id": "dih-sub-001",
+      "name": "DWH_Customer_Subscriber",
+      "type": "subscription",
+      "description": "DWH subscription consuming customer CDC events for near-real-time updates",
+      "createdBy": "dih_admin",
+      "updateTime": "2026-03-10T08:30:00Z",
+      "tags": ["dwh", "subscription", "customer"],
+      "dependencies": [
+        {"component": "dih", "name": "Customer_CDC_Publication"}
+      ],
+      "targetSystem": "Snowflake_DWH",
+      "deliveryMode": "batch_micro",
+      "batchIntervalMinutes": 5
+    },
+    {
+      "id": "dih-topic-001",
+      "name": "Order_Events_Topic",
+      "type": "topic",
+      "description": "Central topic for order lifecycle events (created, shipped, delivered, returned)",
+      "createdBy": "dih_admin",
+      "updateTime": "2026-03-05T12:00:00Z",
+      "tags": ["orders", "events", "topic"],
+      "dependencies": [],
+      "partitions": 12,
+      "retentionDays": 30,
+      "format": "JSON"
+    },
+    {
+      "id": "dih-chan-001",
+      "name": "Kafka_Bridge_Channel",
+      "type": "delivery_channel",
+      "description": "Kafka bridge delivery channel for high-throughput event streaming",
+      "createdBy": "dih_admin",
+      "updateTime": "2026-02-15T10:00:00Z",
+      "tags": ["kafka", "streaming"],
+      "dependencies": [],
+      "protocol": "Kafka",
+      "brokers": "kafka-cluster.corp.internal:9092",
+      "maxThroughputMBps": 100
+    }
+  ]
+}

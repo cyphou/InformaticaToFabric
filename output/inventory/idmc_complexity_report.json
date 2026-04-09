@@ -1,0 +1,137 @@
+{
+  "generated_at": "2026-04-09T05:48:54.491956+00:00",
+  "components": {
+    "cdi": {
+      "name": "Cloud Data Integration",
+      "object_count": 12,
+      "complexity": "medium",
+      "artifact_types": [
+        "mapping",
+        "taskflow",
+        "sync_task",
+        "mass_ingestion",
+        "mapping_task",
+        "dq_task",
+        "app_integration",
+        "connection"
+      ]
+    },
+    "cdgc": {
+      "name": "Cloud Data Governance & Catalog",
+      "object_count": 8,
+      "complexity": "simple",
+      "artifact_types": [
+        "business_glossary",
+        "data_domain",
+        "data_classification",
+        "lineage_link",
+        "data_asset",
+        "reference_data"
+      ]
+    },
+    "cdq": {
+      "name": "Cloud Data Quality",
+      "object_count": 7,
+      "complexity": "simple",
+      "artifact_types": [
+        "dq_rule",
+        "dq_scorecard",
+        "dq_profile",
+        "dq_exception",
+        "address_validation",
+        "identity_resolution"
+      ]
+    },
+    "mdm": {
+      "name": "Master Data Management",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "business_entity",
+        "match_rule",
+        "merge_policy",
+        "hierarchy",
+        "trust_rule",
+        "bvt_config"
+      ]
+    },
+    "b2b": {
+      "name": "B2B Gateway",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "partner_profile",
+        "edi_mapping",
+        "communication_channel",
+        "document_type",
+        "acknowledgment_config"
+      ]
+    },
+    "privacy": {
+      "name": "Data Privacy Management",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "subject_registry",
+        "data_store_registration",
+        "privacy_workflow",
+        "deletion_policy",
+        "consent_rule"
+      ]
+    },
+    "marketplace": {
+      "name": "Data Marketplace",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "data_collection",
+        "data_listing",
+        "subscription",
+        "access_policy",
+        "data_contract"
+      ]
+    },
+    "api_center": {
+      "name": "API Center",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "api_definition",
+        "api_collection",
+        "api_group",
+        "api_policy",
+        "api_deployment"
+      ]
+    },
+    "dih": {
+      "name": "Data Integration Hub",
+      "object_count": 4,
+      "complexity": "simple",
+      "artifact_types": [
+        "publication",
+        "subscription",
+        "topic",
+        "delivery_channel",
+        "processing_rule"
+      ]
+    },
+    "opinsights": {
+      "name": "Operational Insights",
+      "object_count": 5,
+      "complexity": "simple",
+      "artifact_types": [
+        "monitor_config",
+        "alert_rule",
+        "schedule",
+        "performance_baseline",
+        "capacity_plan"
+      ]
+    }
+  },
+  "total_objects": 56,
+  "complexity_distribution": {
+    "simple": 9,
+    "medium": 1,
+    "complex": 0
+  }
+}

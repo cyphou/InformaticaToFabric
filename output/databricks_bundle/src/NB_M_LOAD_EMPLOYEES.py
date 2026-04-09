@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_M_LOAD_EMPLOYEES
@@ -10,7 +10,7 @@
 # Sources: Oracle.HR.EMPLOYEES
 # Targets: DIM_EMPLOYEE
 # Flow: SQ → EXP → FIL → SRT → LKP → SQLT
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,12 +19,20 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "800")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "104857600")
+spark.conf.set("spark.executor.memory", "4g")
+spark.conf.set("spark.executor.cores", "4")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: Oracle.HR.EMPLOYEES ---
 # Oracle: SELECT * FROM HR.EMPLOYEES
-df_source = spark.table("main.bronze.employees")
+df_source = spark.table("bronze.employees")
 
 # SQL Override detected — review converted SQL in output/sql/
 # See: SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql
@@ -54,7 +62,7 @@ df = df.orderBy(col("SORT_COL").asc())  # TODO: Replace with actual sort columns
 # CELL 6 — Transformation: LKP
 # --- Lookup: LKP_DEPT_MGR ---
 # Using broadcast join for lookup table (< 100MB)
-df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace with actual lookup table
+df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table
 df = df.join(
     broadcast(df_lookup),
     on="LOOKUP_KEY",  # TODO: Replace with actual lookup condition
@@ -70,9 +78,9 @@ df = df
 # COMMAND ----------
 
 # CELL 8 — Target Write
-# --- Target: DIM_EMPLOYEE → main.silver.dim_employee ---
+# --- Target: DIM_EMPLOYEE → silver.dim_employee ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.dim_employee")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.dim_employee")
 
 # COMMAND ----------
 

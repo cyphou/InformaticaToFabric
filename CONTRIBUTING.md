@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 1,489 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
+**Current status:** 1,843 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
 
 ## Test Files
 
@@ -58,6 +58,12 @@ py -m pytest tests/test_coverage.py::TestSqlConversion -v
 | `tests/test_sprint71_73.py` | Phase 8: Query Optimization, PL/SQL, Dynamic SQL | ~55 |
 | `tests/test_sprint74_76.py` | Phase 9: Plugins, SDK, Rule Engine | ~50 |
 | `tests/test_sprint77_79.py` | Phase 10: Validation, Catalog Integration | ~50 |
+| `tests/test_datadog.py` | DD1–DD3: Datadog logging, metrics, APM | 42 |
+| `tests/test_agentic_alerting.py` | DD4–DD6: Agentic alerting & learning | 55 |
+| `tests/test_monitoring_platform.py` | DD7–DD9: Global monitoring platform | 46 |
+| `tests/test_idmc_review.py` | DD10–DD12: IDMC & migration review | 54 |
+| `tests/test_sprint92_94.py` | Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD | 87 |
+| `tests/test_sprint95_97.py` | Phase 16: Benchmarks, Parallel/Memory, Regression/Golden | 69 |
 
 ## Code Style
 
@@ -98,7 +104,16 @@ Configuration is in `pyproject.toml`.
 ├── api_server.py              # REST API server
 ├── rule_engine.py             # Configurable rule engine
 ├── catalog_integration.py     # Data catalog integration
-├── tests/                     # 1,489 tests (22 test files)
+├── datadog_integration.py     # Datadog observability
+├── agentic_alerting.py        # Agentic auto-remediation
+├── monitoring_platform.py     # Global monitoring platform
+├── idmc_client.py             # IDMC full component assessment
+├── migration_review.py        # Migration review workflow
+├── iac_generator.py           # Terraform & Bicep IaC generation
+├── cicd_generator.py          # CI/CD pipeline generation
+├── Dockerfile                 # Production container
+├── docker-compose.yml         # Docker Compose (API + Web + Redis)
+├── tests/                     # 1,843 tests (29 test files)
 ├── input/                     # Informatica XML exports
 │   └── autosys/               # AutoSys JIL files (.jil)
 ├── output/                    # Generated artifacts

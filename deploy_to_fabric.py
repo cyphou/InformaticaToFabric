@@ -447,6 +447,43 @@ def emit_azure_monitor_metrics(results, workspace_id=None, dry_run=True):
     return metrics
 
 
+def emit_datadog_deploy_metrics(results, config=None):
+    """Emit deployment metrics to Datadog alongside Azure Monitor.
+
+    Complements emit_azure_monitor_metrics with Datadog-specific metrics.
+    """
+    try:
+        from datadog_integration import (
+            emit_datadog_metrics,
+            load_datadog_config,
+            send_datadog_event,
+        )
+        dd_cfg = load_datadog_config(config or {})
+        if not dd_cfg.get("enabled"):
+            return {"status": "disabled"}
+
+        metrics_list = []
+        if isinstance(results, list):
+            deployed = sum(1 for r in results if r.get("status") in ("created", "dry-run"))
+            errors = sum(1 for r in results if r.get("status") == "error")
+            metrics_list.append({"name": "deploy.artifacts", "value": deployed, "tags": []})
+            metrics_list.append({"name": "deploy.errors", "value": errors, "tags": []})
+
+        result = emit_datadog_metrics(metrics_list, config=dd_cfg)
+
+        # Send deployment event
+        send_datadog_event(
+            "Fabric Deployment Complete",
+            f"Deployed {deployed} artifacts, {errors} errors",
+            alert_type="success" if errors == 0 else "warning",
+            config=dd_cfg,
+        )
+
+        return result
+    except ImportError:
+        return {"status": "datadog not installed"}
+
+
 # ─────────────────────────────────────────────
 #  Sprint 70: Webhook Alerting (Teams / Slack)
 # ─────────────────────────────────────────────

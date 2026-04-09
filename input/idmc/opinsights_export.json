@@ -1,0 +1,77 @@
+{
+  "objects": [
+    {
+      "id": "ops-mon-001",
+      "name": "Daily_ETL_Monitor",
+      "type": "monitor_config",
+      "description": "Monitors daily ETL pipeline health — alerts on failures, SLA breaches, and data anomalies",
+      "createdBy": "ops_admin",
+      "updateTime": "2026-03-12T09:00:00Z",
+      "tags": ["etl", "daily", "monitor"],
+      "dependencies": [
+        {"component": "cdi", "name": "tf_Daily_Sales_ETL"}
+      ],
+      "monitoredTasks": ["tf_Daily_Sales_ETL", "m_Customer_Load_Daily", "m_Order_Fact_Full"],
+      "checkIntervalMinutes": 15,
+      "slaDeadline": "08:00 UTC"
+    },
+    {
+      "id": "ops-alert-001",
+      "name": "ETL_Failure_Alert",
+      "type": "alert_rule",
+      "description": "Sends PagerDuty + email alerts when any production ETL task fails",
+      "createdBy": "ops_admin",
+      "updateTime": "2026-03-10T11:00:00Z",
+      "tags": ["alert", "failure", "pagerduty"],
+      "dependencies": [
+        {"component": "opinsights", "name": "Daily_ETL_Monitor"}
+      ],
+      "condition": "task_status == 'FAILED'",
+      "severity": "critical",
+      "channels": ["pagerduty", "email:data-ops@corp.com"],
+      "cooldownMinutes": 30
+    },
+    {
+      "id": "ops-alert-002",
+      "name": "SLA_Breach_Warning",
+      "type": "alert_rule",
+      "description": "Warning alert when ETL tasks approach SLA deadline (within 30 min)",
+      "createdBy": "ops_admin",
+      "updateTime": "2026-03-10T11:30:00Z",
+      "tags": ["alert", "sla", "warning"],
+      "dependencies": [
+        {"component": "opinsights", "name": "Daily_ETL_Monitor"}
+      ],
+      "condition": "minutes_to_sla < 30 AND task_status == 'RUNNING'",
+      "severity": "warning",
+      "channels": ["slack:#data-ops-alerts"],
+      "cooldownMinutes": 15
+    },
+    {
+      "id": "ops-sched-001",
+      "name": "Nightly_Maintenance_Window",
+      "type": "schedule",
+      "description": "Nightly maintenance window definition for non-critical batch jobs",
+      "createdBy": "ops_admin",
+      "updateTime": "2026-01-15T10:00:00Z",
+      "tags": ["schedule", "maintenance"],
+      "dependencies": [],
+      "startTime": "02:00 UTC",
+      "endTime": "05:00 UTC",
+      "daysOfWeek": ["MON", "TUE", "WED", "THU", "FRI"]
+    },
+    {
+      "id": "ops-perf-001",
+      "name": "ETL_Performance_Baseline",
+      "type": "performance_baseline",
+      "description": "30-day rolling performance baseline for all CDI mappings",
+      "createdBy": "ops_analyst",
+      "updateTime": "2026-03-15T08:00:00Z",
+      "tags": ["performance", "baseline"],
+      "dependencies": [],
+      "baselinePeriodDays": 30,
+      "metrics": ["duration_seconds", "rows_processed", "error_count"],
+      "anomalyThreshold": 2.0
+    }
+  ]
+}

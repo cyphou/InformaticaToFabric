@@ -63,3 +63,100 @@ logging:
 # ── Alerting ──
 alerting:
   webhook_url: ""                     # Logic App / Teams webhook for pipeline failure alerts
+
+# ── Datadog Observability ──
+datadog:
+  enabled: false                          # Master toggle (or use --datadog CLI flag)
+  api_key: ""                             # DD_API_KEY env var takes precedence
+  site: "datadoghq.com"                   # Datadog site (datadoghq.com | datadoghq.eu | us3.datadoghq.com)
+  service: "informatica-migration"        # APM service name
+  env: "production"                       # Environment tag (dev | staging | production)
+  tags:                                   # Custom tags applied to all logs/metrics/traces
+    - "team:data-engineering"
+    - "project:informatica-migration"
+  logs:
+    enabled: true                         # Send structured logs to Datadog Logs API
+    source: "informatica-migration"       # ddsource (enables pipeline auto-matching)
+    send_level: "INFO"                    # Minimum level to forward (DEBUG|INFO|WARNING|ERROR)
+  metrics:
+    enabled: true                         # Send custom metrics to Datadog Metrics API v2
+    prefix: "informatica.migration"       # Metric name prefix
+  tracing:
+    enabled: false                        # APM tracing (requires ddtrace package)
+    sample_rate: 1.0                      # Trace sampling rate (0.0–1.0)
+
+# ── Agentic Alerting (requires Datadog) ──
+agent:
+  enabled: false                          # Master toggle (or use --agent CLI flag)
+  mode: "reactive"                        # reactive (respond to alerts) | daemon (continuous monitoring)
+  poll_interval_seconds: 30               # How often to poll Datadog Monitors/Events
+  max_retries_per_phase: 3                # Circuit breaker: max auto-retries before escalate
+  cooldown_seconds: 60                    # Cooldown between corrective actions
+  ai_fix_enabled: false                   # Allow agent to invoke AI-assisted SQL conversion
+  escalation:
+    teams_webhook: ""                     # Teams webhook for P1/P2 escalations
+    slack_webhook: ""                     # Slack webhook for escalations
+    email: ""                             # SMTP email for critical escalations
+  learning:
+    enabled: false                        # Adaptive decision weights from historical outcomes
+    db_path: "output/.agent_memory.db"    # SQLite path for learning store
+
+# ── Global Monitoring Platform ──
+alerting_platform:
+  enabled: false                          # Master toggle for global monitoring
+  escalation:
+    tiers:
+      - level: 1
+        channels: ["datadog_event", "dashboard"]
+        delay_seconds: 0
+      - level: 2
+        channels: ["teams", "slack"]
+        delay_seconds: 120
+      - level: 3
+        channels: ["datadog_incident"]
+        delay_seconds: 300
+      - level: 4
+        channels: ["pagerduty", "email"]
+        delay_seconds: 900
+    suppression_window_seconds: 300       # Suppress duplicate alerts within window
+    correlation_window_seconds: 120       # Correlate related alerts within window
+  on_call:
+    source: "config"                      # config | pagerduty | datadog
+    schedule: []                          # List of {name, email, hours, timezone}
+  pagerduty:
+    enabled: false
+    routing_key: ""                       # PagerDuty Events API v2 routing key
+  reporting:
+    daily_report: false                   # Auto-generate daily migration report
+    weekly_trend: false                   # Auto-generate weekly trend report
+    report_webhook: ""                    # Webhook to send reports to (Teams/Slack/email)
+  slo:
+    phase_completion_target: 0.95         # 95% phases complete within timeout
+    deployment_success_target: 0.99       # 99% deployments succeed
+    conversion_score_min: 70              # Minimum acceptable conversion score
+
+# ── IDMC Full-Platform Configuration ──
+idmc:
+  enabled: false                          # Enable full IDMC platform assessment
+  api:
+    base_url: ""                          # IDMC REST API base URL (e.g. https://dm-us.informaticacloud.com)
+    org_id: ""                            # IDMC organization ID
+    # Credentials: use IDMC_USERNAME + IDMC_PASSWORD env vars (or IDMC_API_KEY)
+  components:                             # Toggle per IDMC component
+    cdi: true                             # Cloud Data Integration (already supported via XML)
+    cdgc: true                            # Cloud Data Governance & Catalog
+    cdq: true                             # Cloud Data Quality (expanded rules/scorecards)
+    mdm: false                            # Master Data Management
+    b2b: false                            # B2B Gateway (EDI)
+    data_privacy: false                   # Data Privacy Management (CLAIRE)
+    marketplace: false                    # Data Marketplace
+    api_center: false                     # API Center
+    app_integration: true                 # Application Integration (already supported)
+    dih: false                            # Data Integration Hub (pub/sub)
+    operational_insights: true            # Operational Insights (job metrics)
+  review:
+    enabled: false                        # Enable migration review workflow
+    merge_similarity_threshold: 70        # Jaccard score ≥ threshold → merge candidate
+    auto_fix_trivial: true                # Auto-apply trivial anti-pattern fixes
+    readiness_gate_threshold: 60          # Block deployment if component readiness < threshold
+    quality_score_min: 75                 # Minimum quality score to pass review gate

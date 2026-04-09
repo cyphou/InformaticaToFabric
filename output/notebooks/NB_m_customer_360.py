@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_customer_360
@@ -10,7 +10,7 @@
 # Sources: src_sf_contacts, src_sf_accounts, src_erp_customers, src_erp_transactions, src_snow_scores, src_api_firmographics
 # Targets: tgt_silver_customer, tgt_gold_customer_360
 # Flow: JNR → LKP → EXP → port → FIL → SRT → RTR → group → UPD → SEQ
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,32 +19,40 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "800")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "104857600")
+spark.conf.set("spark.executor.memory", "4g")
+spark.conf.set("spark.executor.cores", "4")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: src_sf_contacts ---
 # Oracle: SELECT * FROM src_sf_contacts
-df_source = spark.table("main.bronze.src_sf_contacts")
+df_source = spark.table("bronze.src_sf_contacts")
 
 # --- Source: src_sf_accounts ---
 # Oracle: SELECT * FROM src_sf_accounts
-df_source_2 = spark.table("main.bronze.src_sf_accounts")
+df_source_2 = spark.table("bronze.src_sf_accounts")
 
 # --- Source: src_erp_customers ---
 # Oracle: SELECT * FROM src_erp_customers
-df_source_3 = spark.table("main.bronze.src_erp_customers")
+df_source_3 = spark.table("bronze.src_erp_customers")
 
 # --- Source: src_erp_transactions ---
 # Oracle: SELECT * FROM src_erp_transactions
-df_source_4 = spark.table("main.bronze.src_erp_transactions")
+df_source_4 = spark.table("bronze.src_erp_transactions")
 
 # --- Source: src_snow_scores ---
 # Oracle: SELECT * FROM src_snow_scores
-df_source_5 = spark.table("main.bronze.src_snow_scores")
+df_source_5 = spark.table("bronze.src_snow_scores")
 
 # --- Source: src_api_firmographics ---
 # Oracle: SELECT * FROM src_api_firmographics
-df_source_6 = spark.table("main.bronze.src_api_firmographics")
+df_source_6 = spark.table("bronze.src_api_firmographics")
 
 # COMMAND ----------
 
@@ -60,7 +68,7 @@ df = df_source.join(
 
 # CELL 4 — Transformation: LKP
 # --- Lookup transformation ---
-df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace
+df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace
 df = df.join(broadcast(df_lookup), on="KEY", how="left")
 # COMMAND ----------
 
@@ -110,7 +118,7 @@ df = df
 
 # CELL 11 — Transformation: UPD
 # --- Update Strategy → Delta MERGE ---
-target_table = DeltaTable.forName(spark, "main.silver.tgt_silver_customer")
+target_table = DeltaTable.forName(spark, "silver.tgt_silver_customer")
 target_table.alias('tgt').merge(
     df.alias('src'),
     'tgt.ID = src.ID'  # TODO: Replace with actual merge key
@@ -125,10 +133,10 @@ df = df.withColumn("SEQ_ID", monotonically_increasing_id())
 # COMMAND ----------
 
 # CELL 13 — Target Write
-# MERGE handled in Update Strategy cell above → main.silver.tgt_silver_customer
-# --- Target: tgt_gold_customer_360 → main.gold.tgt_gold_customer_360 ---
+# MERGE handled in Update Strategy cell above → silver.tgt_silver_customer
+# --- Target: tgt_gold_customer_360 → gold.tgt_gold_customer_360 ---
 df_target_2 = df
-df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.gold.tgt_gold_customer_360")
+df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold.tgt_gold_customer_360")
 
 # COMMAND ----------
 

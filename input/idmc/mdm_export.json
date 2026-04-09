@@ -1,0 +1,95 @@
+{
+  "objects": [
+    {
+      "id": "mdm-ent-001",
+      "name": "Customer_Master",
+      "type": "business_entity",
+      "description": "Golden customer record — unified across CRM, ERP, and marketing",
+      "createdBy": "mdm_admin",
+      "updateTime": "2026-03-12T10:00:00Z",
+      "tags": ["customer", "master", "golden-record"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"},
+        {"component": "cdq", "name": "DQ_Customer_Email_Check"}
+      ],
+      "attributes": [
+        {"name": "customer_id", "type": "STRING", "key": true},
+        {"name": "first_name", "type": "STRING", "key": false},
+        {"name": "last_name", "type": "STRING", "key": false},
+        {"name": "email", "type": "STRING", "key": false},
+        {"name": "phone", "type": "STRING", "key": false},
+        {"name": "address_line1", "type": "STRING", "key": false},
+        {"name": "city", "type": "STRING", "key": false},
+        {"name": "state", "type": "STRING", "key": false},
+        {"name": "postal_code", "type": "STRING", "key": false},
+        {"name": "country_code", "type": "STRING", "key": false}
+      ],
+      "matchRules": [
+        {"name": "Exact_Email", "type": "exact", "fields": ["email"], "weight": 100},
+        {"name": "Fuzzy_Name_Address", "type": "fuzzy", "fields": ["first_name", "last_name", "postal_code"], "weight": 85},
+        {"name": "Phone_Match", "type": "exact", "fields": ["phone"], "weight": 70}
+      ],
+      "trustSettings": {
+        "CRM": 95,
+        "ERP": 80,
+        "Marketing": 60
+      }
+    },
+    {
+      "id": "mdm-ent-002",
+      "name": "Product_Master",
+      "type": "business_entity",
+      "description": "Canonical product record across supply chain, catalog, and pricing",
+      "createdBy": "mdm_admin",
+      "updateTime": "2026-03-08T14:00:00Z",
+      "tags": ["product", "master"],
+      "dependencies": [],
+      "attributes": [
+        {"name": "product_id", "type": "STRING", "key": true},
+        {"name": "product_name", "type": "STRING", "key": false},
+        {"name": "category", "type": "STRING", "key": false},
+        {"name": "brand", "type": "STRING", "key": false},
+        {"name": "sku", "type": "STRING", "key": false},
+        {"name": "unit_price", "type": "DECIMAL", "key": false}
+      ],
+      "matchRules": [
+        {"name": "Exact_SKU", "type": "exact", "fields": ["sku"], "weight": 100},
+        {"name": "Fuzzy_Name_Brand", "type": "fuzzy", "fields": ["product_name", "brand"], "weight": 75}
+      ],
+      "trustSettings": {
+        "ERP": 100,
+        "Catalog": 90,
+        "PricingEngine": 70
+      }
+    },
+    {
+      "id": "mdm-hier-001",
+      "name": "Product_Category_Hierarchy",
+      "type": "hierarchy",
+      "description": "4-level product category hierarchy for analytics roll-up",
+      "createdBy": "mdm_admin",
+      "updateTime": "2026-02-28T10:00:00Z",
+      "tags": ["product", "hierarchy"],
+      "dependencies": [
+        {"component": "mdm", "name": "Product_Master"}
+      ],
+      "levels": ["Division", "Department", "Category", "Subcategory"],
+      "nodeCount": 342
+    },
+    {
+      "id": "mdm-merge-001",
+      "name": "Customer_Merge_Policy",
+      "type": "merge_policy",
+      "description": "Survivorship rules for merging duplicate customer records",
+      "createdBy": "mdm_admin",
+      "updateTime": "2026-03-05T16:00:00Z",
+      "tags": ["customer", "merge", "survivorship"],
+      "dependencies": [
+        {"component": "mdm", "name": "Customer_Master"}
+      ],
+      "strategy": "trust_based",
+      "autoMergeThreshold": 95,
+      "reviewThreshold": 75
+    }
+  ]
+}

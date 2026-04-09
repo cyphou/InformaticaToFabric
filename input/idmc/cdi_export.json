@@ -1,0 +1,176 @@
+{
+  "objects": [
+    {
+      "id": "cdi-map-001",
+      "name": "m_Customer_Load_Daily",
+      "type": "mapping",
+      "description": "Daily incremental load of customer master data from Oracle CRM to Lakehouse",
+      "createdBy": "etl_admin",
+      "updateTime": "2026-03-15T08:30:00Z",
+      "tags": ["daily", "customer", "incremental"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"},
+        {"component": "cdq", "name": "DQ_Customer_Email_Check"}
+      ],
+      "sourceConnection": "Oracle_CRM_Prod",
+      "targetConnection": "Snowflake_DWH",
+      "transformationCount": 8,
+      "sqlOverride": true
+    },
+    {
+      "id": "cdi-map-002",
+      "name": "m_Order_Fact_Full",
+      "type": "mapping",
+      "description": "Full refresh of order fact table with multi-source join",
+      "createdBy": "etl_admin",
+      "updateTime": "2026-03-14T12:00:00Z",
+      "tags": ["full-refresh", "orders", "fact"],
+      "dependencies": [
+        {"component": "cdq", "name": "DQ_Order_Amount_Range"}
+      ],
+      "sourceConnection": "SQL_Server_ERP",
+      "targetConnection": "Snowflake_DWH",
+      "transformationCount": 14,
+      "sqlOverride": true
+    },
+    {
+      "id": "cdi-map-003",
+      "name": "m_Product_Dimension_SCD2",
+      "type": "mapping",
+      "description": "SCD Type 2 dimension for product catalog with history tracking",
+      "createdBy": "data_eng_01",
+      "updateTime": "2026-03-10T09:15:00Z",
+      "tags": ["scd2", "product", "dimension"],
+      "dependencies": [],
+      "sourceConnection": "Oracle_CRM_Prod",
+      "targetConnection": "Snowflake_DWH",
+      "transformationCount": 11,
+      "sqlOverride": false
+    },
+    {
+      "id": "cdi-tf-001",
+      "name": "tf_Daily_Sales_ETL",
+      "type": "taskflow",
+      "description": "Orchestrates daily sales pipeline: staging → transform → load → validate",
+      "createdBy": "etl_admin",
+      "updateTime": "2026-03-16T06:00:00Z",
+      "tags": ["daily", "sales", "orchestration"],
+      "dependencies": [
+        {"component": "cdi", "name": "m_Customer_Load_Daily"},
+        {"component": "cdi", "name": "m_Order_Fact_Full"}
+      ],
+      "taskCount": 6,
+      "schedule": "0 6 * * *"
+    },
+    {
+      "id": "cdi-tf-002",
+      "name": "tf_Weekly_Finance_Reconciliation",
+      "type": "taskflow",
+      "description": "Weekly finance reconciliation with error handling and notifications",
+      "createdBy": "finance_ops",
+      "updateTime": "2026-02-28T18:00:00Z",
+      "tags": ["weekly", "finance", "reconciliation"],
+      "dependencies": [],
+      "taskCount": 9,
+      "schedule": "0 2 * * 0"
+    },
+    {
+      "id": "cdi-sync-001",
+      "name": "sync_Salesforce_Contacts",
+      "type": "sync_task",
+      "description": "Real-time sync of Salesforce contacts to staging area",
+      "createdBy": "crm_team",
+      "updateTime": "2026-03-12T14:00:00Z",
+      "tags": ["realtime", "salesforce", "contacts"],
+      "dependencies": [],
+      "sourceConnection": "Salesforce_Prod",
+      "targetConnection": "Snowflake_DWH"
+    },
+    {
+      "id": "cdi-mi-001",
+      "name": "mi_Legacy_Oracle_Tables",
+      "type": "mass_ingestion",
+      "description": "Mass ingestion of 120 Oracle legacy tables into Bronze lakehouse",
+      "createdBy": "migration_lead",
+      "updateTime": "2026-03-01T10:00:00Z",
+      "tags": ["migration", "oracle", "bronze"],
+      "dependencies": [],
+      "sourceConnection": "Oracle_Legacy",
+      "targetConnection": "Snowflake_DWH",
+      "tableCount": 120
+    },
+    {
+      "id": "cdi-conn-001",
+      "name": "Oracle_CRM_Prod",
+      "type": "connection",
+      "description": "Oracle 19c CRM production database",
+      "createdBy": "infra_admin",
+      "updateTime": "2026-01-15T09:00:00Z",
+      "tags": ["oracle", "production"],
+      "dependencies": [],
+      "connectorType": "Oracle",
+      "host": "crm-db.corp.internal",
+      "port": 1521,
+      "database": "CRMDB"
+    },
+    {
+      "id": "cdi-conn-002",
+      "name": "SQL_Server_ERP",
+      "type": "connection",
+      "description": "SQL Server 2019 ERP system",
+      "createdBy": "infra_admin",
+      "updateTime": "2026-01-15T09:30:00Z",
+      "tags": ["sqlserver", "production"],
+      "dependencies": [],
+      "connectorType": "SQL_Server",
+      "host": "erp-sql.corp.internal",
+      "port": 1433,
+      "database": "ERP_PROD"
+    },
+    {
+      "id": "cdi-conn-003",
+      "name": "Snowflake_DWH",
+      "type": "connection",
+      "description": "Snowflake data warehouse (target)",
+      "createdBy": "infra_admin",
+      "updateTime": "2026-01-15T10:00:00Z",
+      "tags": ["snowflake", "target"],
+      "dependencies": [],
+      "connectorType": "Snowflake",
+      "account": "corp-analytics.snowflakecomputing.com",
+      "warehouse": "ETL_WH",
+      "database": "ANALYTICS"
+    },
+    {
+      "id": "cdi-map-004",
+      "name": "m_Employee_HR_Sync",
+      "type": "mapping",
+      "description": "HR employee data synchronization with PII masking",
+      "createdBy": "hr_data_team",
+      "updateTime": "2026-03-08T11:00:00Z",
+      "tags": ["hr", "employee", "pii"],
+      "dependencies": [
+        {"component": "privacy", "name": "Employee_PII_Policy"},
+        {"component": "cdq", "name": "DQ_Email_Format"}
+      ],
+      "sourceConnection": "Oracle_CRM_Prod",
+      "targetConnection": "Snowflake_DWH",
+      "transformationCount": 6,
+      "sqlOverride": false
+    },
+    {
+      "id": "cdi-map-005",
+      "name": "m_Inventory_Snapshot",
+      "type": "mapping",
+      "description": "Nightly inventory snapshot with warehouse aggregation",
+      "createdBy": "supply_chain",
+      "updateTime": "2026-03-05T22:00:00Z",
+      "tags": ["nightly", "inventory", "snapshot"],
+      "dependencies": [],
+      "sourceConnection": "SQL_Server_ERP",
+      "targetConnection": "Snowflake_DWH",
+      "transformationCount": 9,
+      "sqlOverride": true
+    }
+  ]
+}

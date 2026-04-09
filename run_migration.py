@@ -141,6 +141,20 @@ def _parse_args():
     # AutoSys JIL support
     parser.add_argument("--autosys-dir", type=str, default=None, metavar="DIR",
                         help="Path to directory containing AutoSys JIL files (default: input/autosys/)")
+    # DD1-DD3: Datadog integration
+    parser.add_argument("--datadog", action="store_true",
+                        help="Enable Datadog integration (logs, metrics, tracing)")
+    # DD4-DD6: Agentic alerting
+    parser.add_argument("--agent", choices=["monitor", "auto_fix", "full_auto"], default=None,
+                        help="Enable agentic alerting (monitor | auto_fix | full_auto)")
+    # DD7-DD9: Monitoring platform
+    parser.add_argument("--platform-status", action="store_true",
+                        help="Generate platform status page after migration")
+    parser.add_argument("--platform-report", action="store_true",
+                        help="Generate platform JSON report after migration")
+    # DD11: Migration review
+    parser.add_argument("--review", action="store_true",
+                        help="Run migration review (duplicates, anti-patterns, rework)")
     parsed = parser.parse_args()
     return parsed
 
@@ -203,6 +217,15 @@ def _setup_logging(verbose=False, log_format=None, config=None):
         fh = logging.FileHandler(log_file, encoding="utf-8")
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+
+    # DD1: Datadog logging handler (if enabled)
+    try:
+        from datadog_integration import setup_datadog_logging
+        dd_handler = setup_datadog_logging(logger, config or {})
+        if dd_handler:
+            logger.debug("DatadogHandler attached")
+    except ImportError:
+        pass
 
     return logger
 
@@ -472,6 +495,47 @@ def main():
     config = _load_config(args.config)
     log = _setup_logging(verbose=args.verbose, log_format=args.log_format, config=config)
 
+    # DD1-DD3: Datadog integration
+    dd_config = None
+    dd_tracer_instance = None
+    if args.datadog:
+        config.setdefault("datadog", {})["enabled"] = True
+    try:
+        from datadog_integration import load_datadog_config, init_tracer as dd_init_tracer
+        dd_config = load_datadog_config(config)
+        if dd_config.get("enabled"):
+            dd_tracer_instance = dd_init_tracer(dd_config)
+    except ImportError:
+        dd_config = None
+
+    # DD4-DD6: Agentic alerting
+    migration_agent = None
+    if args.agent:
+        config.setdefault("agent", {})["enabled"] = True
+        config["agent"]["mode"] = args.agent
+    try:
+        from agentic_alerting import MigrationAgent
+        agent_cfg = (config or {}).get("agent", {})
+        if agent_cfg.get("enabled"):
+            migration_agent = MigrationAgent(config)
+            log.info(f"Migration agent enabled (mode: {agent_cfg.get('mode', 'monitor')})")
+    except ImportError:
+        migration_agent = None
+
+    # DD7-DD9: Monitoring platform
+    platform_state = None
+    alerting_orch = None
+    slo_tracker = None
+    try:
+        from monitoring_platform import PlatformState, AlertingOrchestrator, SLOTracker
+        if args.platform_status or args.platform_report or (config or {}).get("alerting_platform"):
+            platform_state = PlatformState()
+            alerting_orch = AlertingOrchestrator(config)
+            slo_tracker = SLOTracker(config)
+            platform_run = platform_state.start_run(target=config.get("target", "fabric"))
+    except ImportError:
+        pass
+
     # Resolve target platform: CLI flag > config file > default
     target = args.target or config.get("target", "fabric")
     # Sprint 45: --target all runs dual-target (databricks + dbt)
@@ -597,7 +661,19 @@ def main():
 
         log.info(f"Phase {pid} starting: {pname}")
         mem_before = _get_memory_mb() if args.profile else 0
+        if migration_agent:
+            migration_agent.on_phase_start(pname, phase_id=pid)
         t0 = time.time()
+        # DD3: Trace span around phase execution
+        span = None
+        try:
+            from datadog_integration import trace_phase as dd_trace_phase, tag_span_error
+            if dd_config and dd_config.get("enabled"):
+                span = dd_trace_phase(pname, phase_id=pid)
+                if hasattr(span, '__enter__'):
+                    span.__enter__()
+        except ImportError:
+            pass
         try:
             run_phase(phase)
             elapsed = time.time() - t0
@@ -611,6 +687,19 @@ def main():
             log.info(f"Phase {pid} completed in {elapsed:.1f}s")
             profile_msg = f" | mem: {mem_before}→{mem_after}MB" if args.profile else ""
             print(f"  ✅ Phase {pid} completed in {elapsed:.1f}s{profile_msg}")
+            # DD2: Emit phase metrics
+            if dd_config and dd_config.get("enabled"):
+                try:
+                    from datadog_integration import emit_phase_metrics
+                    emit_phase_metrics(pid, pname, "ok", elapsed, config=dd_config)
+                except ImportError:
+                    pass
+            # DD4: Agent notification
+            if migration_agent:
+                migration_agent.on_phase_complete(pname, elapsed, phase_id=pid)
+            # DD7: Platform state
+            if platform_state and platform_run:
+                platform_run.record_phase(pname, "ok", duration=elapsed)
             # Save checkpoint
             completed_phases.add(pid)
             checkpoint["completed_phases"] = sorted(completed_phases)
@@ -639,6 +728,38 @@ def main():
             log.error(f"Phase {pid} failed: {error_msg}")
             print(f"  ❌ Phase {pid} failed: {error_msg}")
             print("     Continuing to next phase...")
+            # DD3: Tag span with error
+            if span and hasattr(span, 'set_tag'):
+                try:
+                    from datadog_integration import tag_span_error
+                    tag_span_error(span, exc)
+                except ImportError:
+                    pass
+            # DD2: Emit error metrics
+            if dd_config and dd_config.get("enabled"):
+                try:
+                    from datadog_integration import emit_phase_metrics
+                    emit_phase_metrics(pid, pname, "error", elapsed, config=dd_config)
+                except ImportError:
+                    pass
+            # DD4: Agent error notification
+            if migration_agent:
+                decision = migration_agent.on_phase_error(pname, exc, phase_id=pid)
+                if decision:
+                    log.info(f"Agent decision for {pname}: {decision.get('action', 'n/a')}")
+            # DD7: Platform state
+            if platform_state and platform_run:
+                platform_run.record_phase(pname, "error", duration=elapsed, errors=[error_msg])
+            # DD8: Create alert
+            if alerting_orch:
+                alerting_orch.create_alert(
+                    f"Phase {pid} ({pname}) failed: {error_msg[:50]}",
+                    "high" if "OOM" not in error_msg else "critical",
+                    details=error_msg)
+        finally:
+            # DD3: Finish span
+            if span and hasattr(span, '__exit__'):
+                span.__exit__(None, None, None)
         print()
 
     # Sprint 45: Dual-target — run DBT phase too if --target all
@@ -678,6 +799,70 @@ def main():
     # Generate audit log and summary
     audit_path = _write_audit_log(results, config)
     log.info(f"Audit log written to {audit_path}")
+
+    # DD2: Emit final artifact metrics
+    if dd_config and dd_config.get("enabled"):
+        try:
+            from datadog_integration import emit_artifact_metrics, send_datadog_event
+            # Count output artifacts
+            artifact_counts = {}
+            for subdir in ("notebooks", "pipelines", "sql", "dbt", "schema", "validation"):
+                d = WORKSPACE / "output" / subdir
+                if d.is_dir():
+                    artifact_counts[subdir] = len([f for f in d.iterdir() if f.is_file()])
+            emit_artifact_metrics(artifact_counts, config=dd_config)
+            # Send completion event
+            ok_count_dd = sum(1 for r in results if r["status"] == "ok")
+            total_dd = len([r for r in results if r["status"] not in ("skipped", "dry-run")])
+            send_datadog_event(
+                f"Migration Complete: {ok_count_dd}/{total_dd} phases",
+                f"Target: {target}\nArtifacts: {sum(artifact_counts.values())}",
+                alert_type="success" if ok_count_dd == total_dd else "warning",
+                config=dd_config)
+        except ImportError:
+            pass
+
+    # DD11: Migration review
+    if getattr(args, 'review', False):
+        try:
+            from migration_review import run_migration_review
+            review_results = run_migration_review(output_dir=str(WORKSPACE / "output"), config=config)
+            queue_summary = review_results.get("queue", {})
+            print(f"  📝 Review: {queue_summary.get('total', 0)} items "
+                  f"({review_results.get('rework', {}).get('total', 0)} rework, "
+                  f"{len(review_results.get('duplicates', []))} duplicates)")
+        except Exception as exc:
+            log.warning(f"Migration review: {exc}")
+
+    # DD7-DD9: Platform reporting
+    if platform_state:
+        platform_state.end_run("completed" if all(r["status"] in ("ok", "skipped", "dry-run") for r in results) else "failed")
+        if slo_tracker and platform_run:
+            slo_check = slo_tracker.check(platform_run)
+            if not slo_check.get("overall_met"):
+                log.warning("SLO targets not met — see platform report")
+        if getattr(args, 'platform_status', False):
+            try:
+                from monitoring_platform import generate_status_page
+                status_path = generate_status_page(platform_state, alerting_orch, slo_tracker)
+                print(f"  🌐 Platform status: {Path(status_path).name}")
+            except Exception as exc:
+                log.warning(f"Status page: {exc}")
+        if getattr(args, 'platform_report', False):
+            try:
+                from monitoring_platform import generate_platform_report
+                report = generate_platform_report(platform_state, alerting_orch, slo_tracker)
+                print(f"  📊 Platform report: health={report.get('health', {}).get('overall', 0)}/100")
+            except Exception as exc:
+                log.warning(f"Platform report: {exc}")
+
+    # DD4-DD6: Agent report
+    if migration_agent:
+        agent_report = migration_agent.get_report()
+        if agent_report.get("decisions", 0) > 0:
+            log.info(f"Agent: {agent_report['decisions']} decisions made")
+        migration_agent.close()
+
     summary_path = generate_summary(results, target=target)
 
     # Sprint 35: Deployment manifest

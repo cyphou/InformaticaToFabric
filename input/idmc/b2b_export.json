@@ -1,0 +1,60 @@
+{
+  "objects": [
+    {
+      "id": "b2b-partner-001",
+      "name": "Acme_Corp_EDI",
+      "type": "partner_profile",
+      "description": "EDI trading partner profile for Acme Corporation — X12 850/856/810",
+      "createdBy": "b2b_admin",
+      "updateTime": "2026-03-01T10:00:00Z",
+      "tags": ["edi", "partner", "x12"],
+      "dependencies": [],
+      "partnerId": "ACME-001",
+      "protocol": "AS2",
+      "documentTypes": ["850-PurchaseOrder", "856-ASN", "810-Invoice"]
+    },
+    {
+      "id": "b2b-partner-002",
+      "name": "GlobalTech_EDIFACT",
+      "type": "partner_profile",
+      "description": "EDIFACT trading partner for GlobalTech — ORDERS/DESADV/INVOIC",
+      "createdBy": "b2b_admin",
+      "updateTime": "2026-02-20T14:00:00Z",
+      "tags": ["edifact", "partner", "europe"],
+      "dependencies": [],
+      "partnerId": "GTECH-001",
+      "protocol": "SFTP",
+      "documentTypes": ["ORDERS", "DESADV", "INVOIC"]
+    },
+    {
+      "id": "b2b-map-001",
+      "name": "X12_850_to_SalesOrder",
+      "type": "edi_mapping",
+      "description": "Maps X12 850 Purchase Order segments to internal sales order format",
+      "createdBy": "b2b_dev",
+      "updateTime": "2026-03-05T11:00:00Z",
+      "tags": ["mapping", "850", "sales-order"],
+      "dependencies": [
+        {"component": "b2b", "name": "Acme_Corp_EDI"}
+      ],
+      "sourceFormat": "X12_850",
+      "targetFormat": "JSON_SalesOrder",
+      "segmentMappings": 24
+    },
+    {
+      "id": "b2b-chan-001",
+      "name": "AS2_Channel_Acme",
+      "type": "communication_channel",
+      "description": "AS2 communication channel for Acme Corp with MDN receipts",
+      "createdBy": "b2b_admin",
+      "updateTime": "2026-01-15T09:00:00Z",
+      "tags": ["as2", "channel", "acme"],
+      "dependencies": [
+        {"component": "b2b", "name": "Acme_Corp_EDI"}
+      ],
+      "protocol": "AS2",
+      "encryption": "3DES",
+      "signing": "SHA256"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_cdc_order_pipeline
@@ -10,7 +10,7 @@
 # Sources: src_ods_orders, src_ods_order_lines, src_pg_products
 # Targets: tgt_bronze_cdc_events, tgt_silver_orders, tgt_gold_daily_summary
 # Flow: JNR → LKP → EXP → port → RTR → group → UPD → AGG → RNK
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,20 +19,28 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "800")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "104857600")
+spark.conf.set("spark.executor.memory", "4g")
+spark.conf.set("spark.executor.cores", "4")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: src_ods_orders ---
 # Oracle: SELECT * FROM src_ods_orders
-df_source = spark.table("main.bronze.src_ods_orders")
+df_source = spark.table("bronze.src_ods_orders")
 
 # --- Source: src_ods_order_lines ---
 # Oracle: SELECT * FROM src_ods_order_lines
-df_source_2 = spark.table("main.bronze.src_ods_order_lines")
+df_source_2 = spark.table("bronze.src_ods_order_lines")
 
 # --- Source: src_pg_products ---
 # Oracle: SELECT * FROM src_pg_products
-df_source_3 = spark.table("main.bronze.src_pg_products")
+df_source_3 = spark.table("bronze.src_pg_products")
 
 # COMMAND ----------
 
@@ -48,7 +56,7 @@ df = df_source.join(
 
 # CELL 4 — Transformation: LKP
 # --- Lookup transformation ---
-df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace
+df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace
 df = df.join(broadcast(df_lookup), on="KEY", how="left")
 # COMMAND ----------
 
@@ -86,7 +94,7 @@ df = df
 
 # CELL 9 — Transformation: UPD
 # --- Update Strategy → Delta MERGE ---
-target_table = DeltaTable.forName(spark, "main.silver.tgt_bronze_cdc_events")
+target_table = DeltaTable.forName(spark, "silver.tgt_bronze_cdc_events")
 target_table.alias('tgt').merge(
     df.alias('src'),
     'tgt.ID = src.ID'  # TODO: Replace with actual merge key
@@ -112,14 +120,14 @@ df = df.withColumn("RANK", row_number().over(w))
 # COMMAND ----------
 
 # CELL 12 — Target Write
-# MERGE handled in Update Strategy cell above → main.silver.tgt_bronze_cdc_events
-# --- Target: tgt_silver_orders → main.silver.tgt_silver_orders ---
+# MERGE handled in Update Strategy cell above → silver.tgt_bronze_cdc_events
+# --- Target: tgt_silver_orders → silver.tgt_silver_orders ---
 df_target_2 = df
-df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.tgt_silver_orders")
+df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.tgt_silver_orders")
 
-# --- Target: tgt_gold_daily_summary → main.gold.tgt_gold_daily_summary ---
+# --- Target: tgt_gold_daily_summary → gold.tgt_gold_daily_summary ---
 df_target_3 = df
-df_target_3.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.gold.tgt_gold_daily_summary")
+df_target_3.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold.tgt_gold_daily_summary")
 
 # COMMAND ----------
 

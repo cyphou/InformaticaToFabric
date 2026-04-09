@@ -1,0 +1,114 @@
+{
+  "objects": [
+    {
+      "id": "cdq-rule-001",
+      "name": "DQ_Customer_Email_Check",
+      "type": "dq_rule",
+      "description": "Validates customer email format and domain existence",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-03-10T09:00:00Z",
+      "tags": ["email", "customer", "validity"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"}
+      ],
+      "ruleType": "validity",
+      "expression": "REGEXP_LIKE(email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')",
+      "threshold": 98.0,
+      "dimensions": ["validity", "completeness"],
+      "targetObjects": ["DIM_CUSTOMER.email"]
+    },
+    {
+      "id": "cdq-rule-002",
+      "name": "DQ_Order_Amount_Range",
+      "type": "dq_rule",
+      "description": "Ensures order amounts are within acceptable range (0.01–10,000,000)",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-03-08T14:00:00Z",
+      "tags": ["orders", "amount", "range"],
+      "dependencies": [],
+      "ruleType": "validity",
+      "expression": "order_amount BETWEEN 0.01 AND 10000000",
+      "threshold": 99.5,
+      "dimensions": ["validity"],
+      "targetObjects": ["FACT_ORDERS.order_amount"]
+    },
+    {
+      "id": "cdq-rule-003",
+      "name": "DQ_Email_Format",
+      "type": "dq_rule",
+      "description": "Generic email format validation across all string columns tagged as email",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-02-15T11:00:00Z",
+      "tags": ["email", "format", "generic"],
+      "dependencies": [],
+      "ruleType": "validity",
+      "expression": "email IS NOT NULL AND LENGTH(email) > 5",
+      "threshold": 95.0,
+      "dimensions": ["completeness", "validity"],
+      "targetObjects": []
+    },
+    {
+      "id": "cdq-sc-001",
+      "name": "Customer_Quality_Scorecard",
+      "type": "dq_scorecard",
+      "description": "Composite quality scorecard for all customer data assets",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-03-15T08:00:00Z",
+      "tags": ["customer", "scorecard"],
+      "dependencies": [
+        {"component": "cdq", "name": "DQ_Customer_Email_Check"}
+      ],
+      "overallScore": 96.3,
+      "dimensions": {
+        "completeness": 98.1,
+        "validity": 95.2,
+        "uniqueness": 99.8,
+        "timeliness": 92.0
+      }
+    },
+    {
+      "id": "cdq-prof-001",
+      "name": "Customer_Table_Profile",
+      "type": "dq_profile",
+      "description": "Column profiling results for DIM_CUSTOMER table",
+      "createdBy": "dq_analyst",
+      "updateTime": "2026-03-14T16:00:00Z",
+      "tags": ["profile", "customer"],
+      "dependencies": [],
+      "totalRows": 2500000,
+      "columnCount": 42,
+      "nullPercentAvg": 3.2,
+      "distinctCountAvg": 85400
+    },
+    {
+      "id": "cdq-rule-004",
+      "name": "DQ_Phone_Format_US",
+      "type": "dq_rule",
+      "description": "US phone number format validation (10 digits, optional +1 prefix)",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-02-20T10:00:00Z",
+      "tags": ["phone", "format", "us"],
+      "dependencies": [],
+      "ruleType": "validity",
+      "expression": "REGEXP_LIKE(phone, '^\\+?1?[2-9]\\d{2}[2-9]\\d{6}$')",
+      "threshold": 90.0,
+      "dimensions": ["validity"],
+      "targetObjects": ["DIM_CUSTOMER.phone"]
+    },
+    {
+      "id": "cdq-rule-005",
+      "name": "DQ_Date_Not_Future",
+      "type": "dq_rule",
+      "description": "Ensures dates are not in the future (order_date, ship_date)",
+      "createdBy": "dq_admin",
+      "updateTime": "2026-03-01T09:00:00Z",
+      "tags": ["date", "validity"],
+      "dependencies": [],
+      "ruleType": "validity",
+      "expression": "order_date <= CURRENT_DATE",
+      "threshold": 99.9,
+      "dimensions": ["validity"],
+      "targetObjects": ["FACT_ORDERS.order_date", "FACT_ORDERS.ship_date"]
+    }
+  ]
+}

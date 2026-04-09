@@ -1,0 +1,872 @@
+"""
+Infrastructure-as-Code Generator — Sprint 92
+Generates Terraform (HCL) and Azure Bicep templates for provisioning
+Fabric workspaces, Databricks workspaces, storage accounts, and Key Vault.
+
+Usage:
+    python iac_generator.py                      # Default: read migration.yaml
+    python iac_generator.py --target fabric       # Fabric IaC only
+    python iac_generator.py --target databricks   # Databricks IaC only
+    python iac_generator.py --format terraform    # Terraform only
+    python iac_generator.py --format bicep        # Bicep only
+"""
+
+import argparse
+import json
+import logging
+import os
+import re
+import textwrap
+from datetime import datetime, timezone
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+WORKSPACE = Path(__file__).resolve().parent
+OUTPUT_DIR = WORKSPACE / "output" / "iac"
+
+
+# ─────────────────────────────────────────────
+#  Configuration
+# ─────────────────────────────────────────────
+
+def _load_config(config_path=None):
+    """Load migration.yaml config."""
+    if config_path:
+        p = Path(config_path)
+    else:
+        p = WORKSPACE / "migration.yaml"
+    if not p.exists():
+        return {}
+    try:
+        import yaml
+        with open(p, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        return {}
+
+
+def _get_target(config=None):
+    """Resolve target platform."""
+    return os.environ.get(
+        "INFORMATICA_MIGRATION_TARGET",
+        (config or {}).get("target", "fabric"),
+    )
+
+
+# ─────────────────────────────────────────────
+#  Variable Extraction
+# ─────────────────────────────────────────────
+
+def extract_variables(config, inventory=None):
+    """Extract deployment parameters from config + inventory into a variables dict.
+
+    Returns:
+        dict with all parameters needed for IaC templates.
+    """
+    target = config.get("target", _get_target(config))
+    fabric_cfg = config.get("fabric", {})
+    db_cfg = config.get("databricks", {})
+    lakehouse = config.get("lakehouse", {})
+
+    variables = {
+        "target": target,
+        "resource_group_name": config.get("azure", {}).get("resource_group", "rg-migration"),
+        "location": config.get("azure", {}).get("location", "eastus2"),
+        "tags": {
+            "project": "informatica-migration",
+            "managed_by": "terraform",
+            "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        },
+    }
+
+    if target == "fabric" or target == "all":
+        variables["fabric"] = {
+            "workspace_name": fabric_cfg.get("workspace_name", "Migration-Workspace"),
+            "workspace_id": fabric_cfg.get("workspace_id", ""),
+            "capacity_name": fabric_cfg.get("capacity_name", "migration-capacity"),
+            "capacity_sku": fabric_cfg.get("capacity_sku", "F2"),
+            "admin_members": fabric_cfg.get("admin_members", []),
+        }
+        variables["lakehouse"] = {
+            "bronze": lakehouse.get("bronze", "bronze"),
+            "silver": lakehouse.get("silver", "silver"),
+            "gold": lakehouse.get("gold", "gold"),
+        }
+
+    if target in ("databricks", "dbt", "pyspark", "auto", "all"):
+        variables["databricks"] = {
+            "workspace_name": db_cfg.get("workspace_name", "dbw-migration"),
+            "workspace_url": db_cfg.get("workspace_url", ""),
+            "catalog": db_cfg.get("catalog", "main"),
+            "secret_scope": db_cfg.get("secret_scope", "migration-secrets"),
+            "cluster_id": db_cfg.get("cluster_id", ""),
+            "sku": db_cfg.get("sku", "premium"),
+            "node_type": db_cfg.get("node_type", "Standard_DS3_v2"),
+            "min_workers": db_cfg.get("min_workers", 1),
+            "max_workers": db_cfg.get("max_workers", 4),
+        }
+
+    # Key Vault
+    variables["keyvault"] = {
+        "name": config.get("keyvault", {}).get("name", "kv-migration"),
+        "sku": "standard",
+    }
+
+    # Storage
+    variables["storage"] = {
+        "account_name": config.get("storage", {}).get("account_name", "stmigration"),
+        "sku": config.get("storage", {}).get("sku", "Standard_LRS"),
+        "container_name": config.get("storage", {}).get("container_name", "migration-data"),
+    }
+
+    # Inventory-derived counts (for sizing)
+    if inventory:
+        mappings = inventory.get("mappings", [])
+        workflows = inventory.get("workflows", [])
+        variables["inventory_stats"] = {
+            "mapping_count": len(mappings),
+            "workflow_count": len(workflows),
+            "complex_count": sum(1 for m in mappings if m.get("complexity") == "Complex"),
+        }
+
+    return variables
+
+
+# ─────────────────────────────────────────────
+#  Terraform HCL Generation
+# ─────────────────────────────────────────────
+
+def generate_terraform_variables(variables):
+    """Generate variables.tf content."""
+    lines = [
+        '# Auto-generated by iac_generator.py',
+        f'# Generated: {datetime.now(timezone.utc).isoformat()}',
+        '',
+        'variable "resource_group_name" {',
+        '  type        = string',
+        f'  default     = "{variables["resource_group_name"]}"',
+        '  description = "Name of the Azure resource group"',
+        '}',
+        '',
+        'variable "location" {',
+        '  type        = string',
+        f'  default     = "{variables["location"]}"',
+        '  description = "Azure region for resources"',
+        '}',
+        '',
+        'variable "tags" {',
+        '  type = map(string)',
+        '  default = {',
+    ]
+    for k, v in variables.get("tags", {}).items():
+        lines.append(f'    {k} = "{v}"')
+    lines.extend([
+        '  }',
+        '}',
+        '',
+    ])
+
+    # Key Vault variables
+    kv = variables.get("keyvault", {})
+    lines.extend([
+        'variable "keyvault_name" {',
+        '  type        = string',
+        f'  default     = "{kv.get("name", "kv-migration")}"',
+        '  description = "Name of the Azure Key Vault"',
+        '}',
+        '',
+    ])
+
+    # Storage variables
+    st = variables.get("storage", {})
+    lines.extend([
+        'variable "storage_account_name" {',
+        '  type        = string',
+        f'  default     = "{st.get("account_name", "stmigration")}"',
+        '  description = "Name of the storage account"',
+        '}',
+        '',
+    ])
+
+    # Fabric variables
+    if "fabric" in variables:
+        fab = variables["fabric"]
+        lines.extend([
+            'variable "fabric_workspace_name" {',
+            '  type        = string',
+            f'  default     = "{fab.get("workspace_name", "Migration-Workspace")}"',
+            '  description = "Fabric workspace display name"',
+            '}',
+            '',
+            'variable "fabric_capacity_sku" {',
+            '  type        = string',
+            f'  default     = "{fab.get("capacity_sku", "F2")}"',
+            '  description = "Fabric capacity SKU (F2, F4, F8, ...)"',
+            '}',
+            '',
+        ])
+
+    # Databricks variables
+    if "databricks" in variables:
+        db = variables["databricks"]
+        lines.extend([
+            'variable "databricks_workspace_name" {',
+            '  type        = string',
+            f'  default     = "{db.get("workspace_name", "dbw-migration")}"',
+            '  description = "Databricks workspace name"',
+            '}',
+            '',
+            'variable "databricks_sku" {',
+            '  type        = string',
+            f'  default     = "{db.get("sku", "premium")}"',
+            '  description = "Databricks workspace SKU (standard, premium, trial)"',
+            '}',
+            '',
+            'variable "databricks_catalog" {',
+            '  type        = string',
+            f'  default     = "{db.get("catalog", "main")}"',
+            '  description = "Unity Catalog name"',
+            '}',
+            '',
+        ])
+
+    return "\n".join(lines)
+
+
+def generate_terraform_fabric(variables):
+    """Generate main.tf for Fabric target."""
+    fab = variables.get("fabric", {})
+    kv = variables.get("keyvault", {})
+    st = variables.get("storage", {})
+    lh = variables.get("lakehouse", {})
+
+    return textwrap.dedent(f"""\
+        # Auto-generated by iac_generator.py — Fabric Target
+        # Generated: {datetime.now(timezone.utc).isoformat()}
+
+        terraform {{
+          required_providers {{
+            azurerm = {{
+              source  = "hashicorp/azurerm"
+              version = "~> 3.90"
+            }}
+          }}
+        }}
+
+        provider "azurerm" {{
+          features {{}}
+        }}
+
+        # ── Resource Group ──
+        resource "azurerm_resource_group" "migration" {{
+          name     = var.resource_group_name
+          location = var.location
+          tags     = var.tags
+        }}
+
+        # ── Key Vault ──
+        resource "azurerm_key_vault" "migration" {{
+          name                = var.keyvault_name
+          location            = azurerm_resource_group.migration.location
+          resource_group_name = azurerm_resource_group.migration.name
+          sku_name            = "{kv.get('sku', 'standard')}"
+          tenant_id           = data.azurerm_client_config.current.tenant_id
+          tags                = var.tags
+
+          purge_protection_enabled   = true
+          soft_delete_retention_days = 90
+        }}
+
+        data "azurerm_client_config" "current" {{}}
+
+        # ── Storage Account ──
+        resource "azurerm_storage_account" "migration" {{
+          name                     = var.storage_account_name
+          resource_group_name      = azurerm_resource_group.migration.name
+          location                 = azurerm_resource_group.migration.location
+          account_tier             = "Standard"
+          account_replication_type = "{st.get('sku', 'Standard_LRS').replace('Standard_', '')}"
+          tags                     = var.tags
+
+          blob_properties {{
+            versioning_enabled = true
+          }}
+        }}
+
+        resource "azurerm_storage_container" "data" {{
+          name                  = "{st.get('container_name', 'migration-data')}"
+          storage_account_name  = azurerm_storage_account.migration.name
+          container_access_type = "private"
+        }}
+
+        # ── Fabric Capacity ──
+        resource "azurerm_fabric_capacity" "migration" {{
+          name                = "{fab.get('capacity_name', 'migration-capacity')}"
+          resource_group_name = azurerm_resource_group.migration.name
+          location            = azurerm_resource_group.migration.location
+          tags                = var.tags
+
+          sku {{
+            name = var.fabric_capacity_sku
+            tier = "Fabric"
+          }}
+
+          administration {{
+            members = {json.dumps(fab.get('admin_members', ['admin@contoso.com']))}
+          }}
+        }}
+
+        # ── Outputs ──
+        output "resource_group_name" {{
+          value = azurerm_resource_group.migration.name
+        }}
+
+        output "keyvault_uri" {{
+          value = azurerm_key_vault.migration.vault_uri
+        }}
+
+        output "storage_account_name" {{
+          value = azurerm_storage_account.migration.name
+        }}
+
+        output "fabric_capacity_id" {{
+          value = azurerm_fabric_capacity.migration.id
+        }}
+    """)
+
+
+def generate_terraform_databricks(variables):
+    """Generate main.tf for Databricks target."""
+    db = variables.get("databricks", {})
+    kv = variables.get("keyvault", {})
+    st = variables.get("storage", {})
+
+    return textwrap.dedent(f"""\
+        # Auto-generated by iac_generator.py — Databricks Target
+        # Generated: {datetime.now(timezone.utc).isoformat()}
+
+        terraform {{
+          required_providers {{
+            azurerm = {{
+              source  = "hashicorp/azurerm"
+              version = "~> 3.90"
+            }}
+            databricks = {{
+              source  = "databricks/databricks"
+              version = "~> 1.40"
+            }}
+          }}
+        }}
+
+        provider "azurerm" {{
+          features {{}}
+        }}
+
+        provider "databricks" {{
+          host = azurerm_databricks_workspace.migration.workspace_url
+        }}
+
+        # ── Resource Group ──
+        resource "azurerm_resource_group" "migration" {{
+          name     = var.resource_group_name
+          location = var.location
+          tags     = var.tags
+        }}
+
+        # ── Key Vault ──
+        resource "azurerm_key_vault" "migration" {{
+          name                = var.keyvault_name
+          location            = azurerm_resource_group.migration.location
+          resource_group_name = azurerm_resource_group.migration.name
+          sku_name            = "{kv.get('sku', 'standard')}"
+          tenant_id           = data.azurerm_client_config.current.tenant_id
+          tags                = var.tags
+
+          purge_protection_enabled   = true
+          soft_delete_retention_days = 90
+        }}
+
+        data "azurerm_client_config" "current" {{}}
+
+        # ── Storage Account ──
+        resource "azurerm_storage_account" "migration" {{
+          name                     = var.storage_account_name
+          resource_group_name      = azurerm_resource_group.migration.name
+          location                 = azurerm_resource_group.migration.location
+          account_tier             = "Standard"
+          account_replication_type = "{st.get('sku', 'Standard_LRS').replace('Standard_', '')}"
+          is_hns_enabled           = true
+          tags                     = var.tags
+        }}
+
+        # ── Databricks Workspace ──
+        resource "azurerm_databricks_workspace" "migration" {{
+          name                = var.databricks_workspace_name
+          resource_group_name = azurerm_resource_group.migration.name
+          location            = azurerm_resource_group.migration.location
+          sku                 = var.databricks_sku
+          tags                = var.tags
+
+          custom_parameters {{
+            no_public_ip = true
+          }}
+        }}
+
+        # ── Unity Catalog ──
+        resource "databricks_catalog" "migration" {{
+          name    = var.databricks_catalog
+          comment = "Migration catalog for Informatica workloads"
+
+          depends_on = [azurerm_databricks_workspace.migration]
+        }}
+
+        resource "databricks_schema" "bronze" {{
+          catalog_name = databricks_catalog.migration.name
+          name         = "bronze"
+          comment      = "Raw ingestion layer"
+        }}
+
+        resource "databricks_schema" "silver" {{
+          catalog_name = databricks_catalog.migration.name
+          name         = "silver"
+          comment      = "Cleaned / conformed layer"
+        }}
+
+        resource "databricks_schema" "gold" {{
+          catalog_name = databricks_catalog.migration.name
+          name         = "gold"
+          comment      = "Aggregated / business-ready layer"
+        }}
+
+        # ── Cluster ──
+        resource "databricks_cluster" "migration" {{
+          cluster_name            = "migration-cluster"
+          spark_version           = "14.3.x-scala2.12"
+          node_type_id            = "{db.get('node_type', 'Standard_DS3_v2')}"
+          autotermination_minutes = 30
+
+          autoscale {{
+            min_workers = {db.get('min_workers', 1)}
+            max_workers = {db.get('max_workers', 4)}
+          }}
+
+          spark_conf = {{
+            "spark.databricks.unityCatalog.enabled" = "true"
+          }}
+
+          depends_on = [azurerm_databricks_workspace.migration]
+        }}
+
+        # ── Outputs ──
+        output "resource_group_name" {{
+          value = azurerm_resource_group.migration.name
+        }}
+
+        output "databricks_workspace_url" {{
+          value = azurerm_databricks_workspace.migration.workspace_url
+        }}
+
+        output "databricks_workspace_id" {{
+          value = azurerm_databricks_workspace.migration.workspace_id
+        }}
+
+        output "keyvault_uri" {{
+          value = azurerm_key_vault.migration.vault_uri
+        }}
+
+        output "catalog_name" {{
+          value = databricks_catalog.migration.name
+        }}
+    """)
+
+
+# ─────────────────────────────────────────────
+#  Bicep Generation
+# ─────────────────────────────────────────────
+
+def generate_bicep_parameters(variables):
+    """Generate parameters.bicep content."""
+    lines = [
+        '// Auto-generated by iac_generator.py',
+        f'// Generated: {datetime.now(timezone.utc).isoformat()}',
+        '',
+        '@description(\'Azure region for all resources\')',
+        f'param location string = \'{variables["location"]}\'',
+        '',
+        '@description(\'Resource group name\')',
+        f'param resourceGroupName string = \'{variables["resource_group_name"]}\'',
+        '',
+        '@description(\'Key Vault name\')',
+        f'param keyVaultName string = \'{variables.get("keyvault", {}).get("name", "kv-migration")}\'',
+        '',
+        '@description(\'Storage account name\')',
+        f'param storageAccountName string = \'{variables.get("storage", {}).get("account_name", "stmigration")}\'',
+        '',
+    ]
+
+    if "fabric" in variables:
+        fab = variables["fabric"]
+        lines.extend([
+            '@description(\'Fabric capacity name\')',
+            f'param fabricCapacityName string = \'{fab.get("capacity_name", "migration-capacity")}\'',
+            '',
+            '@description(\'Fabric capacity SKU\')',
+            f'param fabricCapacitySku string = \'{fab.get("capacity_sku", "F2")}\'',
+            '',
+        ])
+
+    if "databricks" in variables:
+        db = variables["databricks"]
+        lines.extend([
+            '@description(\'Databricks workspace name\')',
+            f'param databricksWorkspaceName string = \'{db.get("workspace_name", "dbw-migration")}\'',
+            '',
+            '@description(\'Databricks pricing tier\')',
+            f'param databricksSku string = \'{db.get("sku", "premium")}\'',
+            '',
+        ])
+
+    return "\n".join(lines)
+
+
+def generate_bicep_fabric(variables):
+    """Generate main.bicep for Fabric target."""
+    kv = variables.get("keyvault", {})
+    st = variables.get("storage", {})
+    fab = variables.get("fabric", {})
+
+    return textwrap.dedent(f"""\
+        // Auto-generated by iac_generator.py — Fabric Target
+        // Generated: {datetime.now(timezone.utc).isoformat()}
+
+        targetScope = 'resourceGroup'
+
+        @description('Azure region')
+        param location string = '{variables["location"]}'
+
+        @description('Key Vault name')
+        param keyVaultName string = '{kv.get("name", "kv-migration")}'
+
+        @description('Storage account name')
+        param storageAccountName string = '{st.get("account_name", "stmigration")}'
+
+        @description('Fabric capacity name')
+        param fabricCapacityName string = '{fab.get("capacity_name", "migration-capacity")}'
+
+        @description('Fabric capacity SKU')
+        param fabricCapacitySku string = '{fab.get("capacity_sku", "F2")}'
+
+        // ── Key Vault ──
+        resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {{
+          name: keyVaultName
+          location: location
+          properties: {{
+            sku: {{
+              family: 'A'
+              name: 'standard'
+            }}
+            tenantId: subscription().tenantId
+            enablePurgeProtection: true
+            enableSoftDelete: true
+            softDeleteRetentionInDays: 90
+            accessPolicies: []
+          }}
+          tags: {{
+            project: 'informatica-migration'
+            managed_by: 'bicep'
+          }}
+        }}
+
+        // ── Storage Account ──
+        resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {{
+          name: storageAccountName
+          location: location
+          kind: 'StorageV2'
+          sku: {{
+            name: '{st.get("sku", "Standard_LRS")}'
+          }}
+          properties: {{
+            supportsHttpsTrafficOnly: true
+            minimumTlsVersion: 'TLS1_2'
+          }}
+          tags: {{
+            project: 'informatica-migration'
+            managed_by: 'bicep'
+          }}
+        }}
+
+        // ── Fabric Capacity ──
+        resource fabricCapacity 'Microsoft.Fabric/capacities@2023-11-01' = {{
+          name: fabricCapacityName
+          location: location
+          sku: {{
+            name: fabricCapacitySku
+            tier: 'Fabric'
+          }}
+          properties: {{
+            administration: {{
+              members: {json.dumps(fab.get('admin_members', ['admin@contoso.com']))}
+            }}
+          }}
+          tags: {{
+            project: 'informatica-migration'
+            managed_by: 'bicep'
+          }}
+        }}
+
+        // ── Outputs ──
+        output keyVaultUri string = keyVault.properties.vaultUri
+        output storageAccountName string = storageAccount.name
+        output fabricCapacityId string = fabricCapacity.id
+    """)
+
+
+def generate_bicep_databricks(variables):
+    """Generate main.bicep for Databricks target."""
+    kv = variables.get("keyvault", {})
+    st = variables.get("storage", {})
+    db = variables.get("databricks", {})
+
+    return textwrap.dedent(f"""\
+        // Auto-generated by iac_generator.py — Databricks Target
+        // Generated: {datetime.now(timezone.utc).isoformat()}
+
+        targetScope = 'resourceGroup'
+
+        @description('Azure region')
+        param location string = '{variables["location"]}'
+
+        @description('Key Vault name')
+        param keyVaultName string = '{kv.get("name", "kv-migration")}'
+
+        @description('Storage account name')
+        param storageAccountName string = '{st.get("account_name", "stmigration")}'
+
+        @description('Databricks workspace name')
+        param databricksWorkspaceName string = '{db.get("workspace_name", "dbw-migration")}'
+
+        @description('Databricks SKU')
+        param databricksSku string = '{db.get("sku", "premium")}'
+
+        // ── Key Vault ──
+        resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {{
+          name: keyVaultName
+          location: location
+          properties: {{
+            sku: {{
+              family: 'A'
+              name: 'standard'
+            }}
+            tenantId: subscription().tenantId
+            enablePurgeProtection: true
+            enableSoftDelete: true
+            softDeleteRetentionInDays: 90
+            accessPolicies: []
+          }}
+        }}
+
+        // ── Storage Account (ADLS Gen2) ──
+        resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {{
+          name: storageAccountName
+          location: location
+          kind: 'StorageV2'
+          sku: {{
+            name: '{st.get("sku", "Standard_LRS")}'
+          }}
+          properties: {{
+            isHnsEnabled: true
+            supportsHttpsTrafficOnly: true
+            minimumTlsVersion: 'TLS1_2'
+          }}
+        }}
+
+        // ── Databricks Workspace ──
+        resource databricksWorkspace 'Microsoft.Databricks/workspaces@2024-05-01' = {{
+          name: databricksWorkspaceName
+          location: location
+          sku: {{
+            name: databricksSku
+          }}
+          properties: {{
+            managedResourceGroupId: subscriptionResourceId('Microsoft.Resources/resourceGroups', '${{databricksWorkspaceName}}-managed')
+            parameters: {{
+              enableNoPublicIp: {{
+                value: true
+              }}
+            }}
+          }}
+          tags: {{
+            project: 'informatica-migration'
+            managed_by: 'bicep'
+          }}
+        }}
+
+        // ── Outputs ──
+        output keyVaultUri string = keyVault.properties.vaultUri
+        output storageAccountName string = storageAccount.name
+        output databricksWorkspaceUrl string = 'https://${{databricksWorkspace.properties.workspaceUrl}}'
+        output databricksWorkspaceId string = databricksWorkspace.properties.workspaceId
+    """)
+
+
+# ─────────────────────────────────────────────
+#  IaC Validation
+# ─────────────────────────────────────────────
+
+def validate_terraform(output_dir):
+    """Run `terraform validate` on generated templates. Returns (valid, message)."""
+    import subprocess
+    tf_dir = output_dir / "terraform"
+    if not tf_dir.exists():
+        return False, "Terraform directory not found"
+    try:
+        result = subprocess.run(
+            ["terraform", "init", "-backend=false"],
+            cwd=str(tf_dir), capture_output=True, text=True, timeout=60,
+        )
+        if result.returncode != 0:
+            return False, f"terraform init failed: {result.stderr[:200]}"
+        result = subprocess.run(
+            ["terraform", "validate"],
+            cwd=str(tf_dir), capture_output=True, text=True, timeout=60,
+        )
+        return result.returncode == 0, result.stdout or result.stderr
+    except FileNotFoundError:
+        return False, "terraform CLI not found (install: https://www.terraform.io/downloads)"
+    except subprocess.TimeoutExpired:
+        return False, "terraform validate timed out"
+
+
+def validate_bicep(output_dir):
+    """Run `az bicep build` on generated templates. Returns (valid, message)."""
+    import subprocess
+    bicep_dir = output_dir / "bicep"
+    main_file = bicep_dir / "main.bicep"
+    if not main_file.exists():
+        return False, "main.bicep not found"
+    try:
+        result = subprocess.run(
+            ["az", "bicep", "build", "--file", str(main_file)],
+            capture_output=True, text=True, timeout=60,
+        )
+        return result.returncode == 0, result.stdout or result.stderr
+    except FileNotFoundError:
+        return False, "Azure CLI not found (install: https://docs.microsoft.com/cli/azure/install-azure-cli)"
+    except subprocess.TimeoutExpired:
+        return False, "az bicep build timed out"
+
+
+# ─────────────────────────────────────────────
+#  Orchestrator
+# ─────────────────────────────────────────────
+
+def generate_iac(config=None, target=None, fmt=None, output_dir=None):
+    """Generate all IaC templates.
+
+    Args:
+        config: Migration config dict.
+        target: Override target platform (fabric/databricks/all).
+        fmt: Output format filter (terraform/bicep/all).
+        output_dir: Output directory path.
+
+    Returns:
+        dict with generated file paths and validation results.
+    """
+    config = config or _load_config()
+    target = target or _get_target(config)
+    output_dir = Path(output_dir) if output_dir else OUTPUT_DIR
+    fmt = fmt or "all"
+
+    # Load inventory if available
+    inventory = None
+    inv_path = WORKSPACE / "output" / "inventory" / "inventory.json"
+    if inv_path.exists():
+        try:
+            with open(inv_path, encoding="utf-8") as f:
+                inventory = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    variables = extract_variables(config, inventory)
+    generated = {"terraform": [], "bicep": [], "variables": {}}
+
+    # Terraform
+    if fmt in ("terraform", "all"):
+        tf_dir = output_dir / "terraform"
+        tf_dir.mkdir(parents=True, exist_ok=True)
+
+        # variables.tf
+        var_content = generate_terraform_variables(variables)
+        var_path = tf_dir / "variables.tf"
+        var_path.write_text(var_content, encoding="utf-8")
+        generated["terraform"].append(str(var_path))
+
+        # main.tf
+        if target in ("fabric", "all"):
+            main_content = generate_terraform_fabric(variables)
+        else:
+            main_content = generate_terraform_databricks(variables)
+        main_path = tf_dir / "main.tf"
+        main_path.write_text(main_content, encoding="utf-8")
+        generated["terraform"].append(str(main_path))
+
+        # terraform.tfvars.json
+        tfvars = {k: v for k, v in variables.items() if k not in ("tags",)}
+        tfvars_path = tf_dir / "terraform.tfvars.json"
+        tfvars_path.write_text(json.dumps(tfvars, indent=2), encoding="utf-8")
+        generated["terraform"].append(str(tfvars_path))
+
+    # Bicep
+    if fmt in ("bicep", "all"):
+        bicep_dir = output_dir / "bicep"
+        bicep_dir.mkdir(parents=True, exist_ok=True)
+
+        # parameters.bicep
+        params_content = generate_bicep_parameters(variables)
+        params_path = bicep_dir / "parameters.bicep"
+        params_path.write_text(params_content, encoding="utf-8")
+        generated["bicep"].append(str(params_path))
+
+        # main.bicep
+        if target in ("fabric", "all"):
+            main_content = generate_bicep_fabric(variables)
+        else:
+            main_content = generate_bicep_databricks(variables)
+        main_path = bicep_dir / "main.bicep"
+        main_path.write_text(main_content, encoding="utf-8")
+        generated["bicep"].append(str(main_path))
+
+    generated["variables"] = variables
+    return generated
+
+
+def main():
+    parser = argparse.ArgumentParser(description="IaC Generator (Terraform/Bicep)")
+    parser.add_argument("--target", choices=["fabric", "databricks", "all"], default=None)
+    parser.add_argument("--format", choices=["terraform", "bicep", "all"], default="all")
+    parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--output-dir", type=str, default=None)
+    args = parser.parse_args()
+
+    config = _load_config(args.config)
+    result = generate_iac(
+        config=config,
+        target=args.target,
+        fmt=args.format,
+        output_dir=args.output_dir,
+    )
+
+    print(f"\n  IaC Generation Complete")
+    print(f"  ─────────────────────")
+    for fmt_name in ("terraform", "bicep"):
+        files = result.get(fmt_name, [])
+        if files:
+            print(f"  {fmt_name.title()}: {len(files)} files generated")
+            for f in files:
+                print(f"    → {f}")
+    print()
+
+
+if __name__ == "__main__":
+    main()

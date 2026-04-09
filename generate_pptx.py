@@ -116,8 +116,8 @@ def slide_title(prs):
 
     # Stat bar
     stats = [
-        ("79 / 100", "Sprints Complete", ACCENT_ORANGE),
-        ("1,489", "Automated Tests", ACCENT_GREEN),
+        ("97 / 100", "Sprints Complete", ACCENT_ORANGE),
+        ("1,843", "Automated Tests", ACCENT_GREEN),
         ("6", "AI Agents", FABRIC_BLUE),
         ("3", "Target Platforms", ACCENT_PURPLE),
     ]
@@ -203,9 +203,14 @@ def slide_solution(prs):
         "Delta Lake DDL with partition strategy",
         "Plugin system for custom enterprise rules",
         "Python SDK + REST API for CI/CD",
-        "5-level validation framework + statistical checks",
+        "11-level validation framework + statistical checks",
+        "Datadog observability (logs, metrics, APM tracing)",
+        "Agentic alerting with auto-remediation & learning",
+        "IDMC full component assessment (12 services)",
         "Data catalog integration (Purview / Unity Catalog)",
-        "Column-level lineage & impact analysis",
+        "IaC generation (Terraform + Bicep)",
+        "Container & K8s deployment (Helm chart)",
+        "CI/CD pipelines (GitHub Actions + Azure DevOps)",
     ]
     _add_bullet_list(slide, Inches(0.4), Inches(3.9), Inches(6), Inches(3.3), features_l, font_size=14)
     _add_bullet_list(slide, Inches(6.7), Inches(3.9), Inches(6), Inches(3.3), features_r, font_size=14)
@@ -354,7 +359,7 @@ def slide_validation(prs):
         y += Inches(0.48)
 
     _add_text_box(slide, Inches(0.4), Inches(6.9), Inches(12), Inches(0.4),
-                  "1,489 automated tests  •  Purview & Unity Catalog lineage  •  Column-level impact analysis",
+                  "1,843 automated tests  •  Purview & Unity Catalog lineage  •  Column-level impact analysis",
                   font_size=14, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
 
@@ -393,6 +398,51 @@ def slide_extensibility(prs):
             "Default rules/ directory",
             "10+ SQL rules out-of-box",
         ], ACCENT_ORANGE),
+    ]
+
+    x = Inches(0.3)
+    for title, items, clr in cards:
+        _add_shape(slide, x, Inches(1.5), Inches(3.05), Inches(0.55), clr, title, font_size=15, font_color=WHITE, bold=True)
+        _add_bullet_list(slide, x + Inches(0.1), Inches(2.1), Inches(2.85), Inches(4.5), items, font_size=12, font_color=DARK_GRAY, spacing=Pt(4))
+        x += Inches(3.2)
+
+
+def slide_observability(prs):
+    """Slide — Observability & Intelligent Monitoring."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Observability & Intelligent Monitoring",
+                   "Datadog integration, agentic alerting, global monitoring platform")
+
+    cards = [
+        ("Datadog Integration", [
+            "Structured logs → Datadog Log Explorer",
+            "Custom metrics per phase & artifact type",
+            "APM distributed tracing (ddtrace)",
+            "Monitor definitions for SLA breaches",
+            "Graceful degradation if not installed",
+        ], RGBColor(0x63, 0x2C, 0xA6)),
+        ("Agentic Alerting", [
+            "Signal processor with confidence scoring",
+            "Auto-remediation actions (3 modes)",
+            "Learning loop with SQLite history",
+            "Pattern recognition → auto-fix",
+            "Escalation when confidence < threshold",
+        ], ACCENT_ORANGE),
+        ("Global Monitoring", [
+            "Unified control plane for all targets",
+            "4-tier escalation chains (L1→L4)",
+            "SLO tracking & compliance reporting",
+            "Enterprise dashboards (Ops + Exec)",
+            "Cross-component alert correlation",
+        ], FABRIC_BLUE),
+        ("IDMC Assessment", [
+            "12 IDMC components parsed via REST",
+            "CDI / CDGC / CDQ / MDM / DI / B2B",
+            "Migration review: merge/optimize/rework",
+            "Quality scoring & readiness gate",
+            "IDMC-to-Fabric comparison report",
+        ], ACCENT_GREEN),
     ]
 
     x = Inches(0.3)
@@ -536,6 +586,55 @@ def slide_security(prs):
     _add_shape(slide, Inches(8.8), Inches(1.8), Inches(4), Inches(4.5), DARK_BLUE,
                "Compliance Coverage\n\n✓ SOX audit trail\n✓ GDPR PII detection\n✓ HIPAA data masking flags\n✓ Zero credential exposure\n✓ Role-based access via\n   Key Vault / Unity Catalog\n✓ Full lineage for regulators",
                font_size=14, font_color=WHITE, bold=False)
+
+
+def slide_cloud_native(prs):
+    """Slide — Cloud-Native DevOps & Scale."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Cloud-Native DevOps & Scale",
+                   "Infrastructure as Code, containerized deployment, CI/CD pipelines, and enterprise benchmarks")
+
+    # Three columns: IaC, Container/K8s, CI/CD
+    cols = [
+        ("🏗️ Infrastructure as Code", ACCENT_PURPLE, [
+            "Terraform HCL for Fabric & Databricks",
+            "Azure Bicep templates with parameters",
+            "Multi-environment variable extraction",
+            "Validated output (HCL lint + Bicep lint)",
+        ]),
+        ("🐳 Container & Kubernetes", FABRIC_BLUE, [
+            "Production Dockerfile (Python 3.12-slim)",
+            "Docker Compose (API + Web + Redis)",
+            "K8s manifests (Deployment, Service, ConfigMap)",
+            "Helm chart with configurable values",
+        ]),
+        ("🔄 CI/CD Pipelines", ACCENT_GREEN, [
+            "GitHub Actions workflow generation",
+            "Azure DevOps multi-stage pipelines",
+            "Environment gates (dev → test → prod)",
+            "Secret injection (never hardcoded)",
+        ]),
+    ]
+
+    x = Inches(0.3)
+    for title, clr, items in cols:
+        _add_shape(slide, x, Inches(1.6), Inches(4.0), Inches(0.6), clr, title,
+                   font_size=15, font_color=WHITE, bold=True)
+        _add_bullet_list(slide, x + Inches(0.1), Inches(2.3), Inches(3.8), Inches(2.5),
+                         items, font_size=13)
+        x += Inches(4.3)
+
+    # Benchmark row
+    _add_shape(slide, Inches(0.3), Inches(5.0), Inches(12.5), Inches(0.5), ACCENT_ORANGE,
+               "📊 Enterprise Benchmarks: 500+ mapping stress tests  •  Memory profiling  •  "
+               "Parallel generation (ProcessPoolExecutor)  •  Golden dataset regression suite",
+               font_size=13, font_color=WHITE, bold=False)
+
+    _add_text_box(slide, Inches(0.4), Inches(5.7), Inches(12), Inches(0.8),
+                  "One command deploys the entire migration tool to AKS, ECS, or any K8s cluster.\n"
+                  "CI/CD pipelines automate: assess → convert → validate → deploy — with approval gates per environment.",
+                  font_size=14, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
 
 
 def slide_next_steps(prs):
@@ -685,12 +784,14 @@ def main():
     slide_sql_depth(prs)       # 6 - Advanced SQL
     slide_validation(prs)      # 7 - Validation
     slide_extensibility(prs)   # 8 - Extensibility
-    slide_roi_model(prs)       # 9 - ROI Model
-    slide_roi_timeline(prs)    # 10 - Timeline
-    slide_detailed_savings(prs)   # 11 - Detailed Savings Breakdown
-    slide_customer_scenarios(prs)  # 12 - Scenarios
-    slide_security(prs)        # 13 - Security
-    slide_next_steps(prs)      # 14 - Next Steps
+    slide_observability(prs)   # 9 - Observability & Monitoring
+    slide_roi_model(prs)       # 10 - ROI Model
+    slide_roi_timeline(prs)    # 11 - Timeline
+    slide_detailed_savings(prs)   # 12 - Detailed Savings Breakdown
+    slide_customer_scenarios(prs)  # 13 - Scenarios
+    slide_security(prs)        # 14 - Security
+    slide_cloud_native(prs)    # 15 - Cloud-Native DevOps & Scale
+    slide_next_steps(prs)      # 16 - Next Steps
 
     out_path = os.path.join(os.path.dirname(__file__), "output", "Informatica_to_Fabric_Migration_Tool.pptx")
     prs.save(out_path)

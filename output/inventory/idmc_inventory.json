@@ -1,0 +1,1717 @@
+{
+  "cdi": {
+    "component_name": "Cloud Data Integration",
+    "object_count": 12,
+    "objects": [
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-map-001",
+        "name": "m_Customer_Load_Daily",
+        "type": "mapping",
+        "description": "Daily incremental load of customer master data from Oracle CRM to Lakehouse",
+        "created_by": "etl_admin",
+        "updated_at": "2026-03-15T08:30:00Z",
+        "tags": [
+          "daily",
+          "customer",
+          "incremental"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          },
+          {
+            "component": "cdq",
+            "name": "DQ_Customer_Email_Check"
+          }
+        ],
+        "metadata": {
+          "sourceConnection": "Oracle_CRM_Prod",
+          "targetConnection": "Snowflake_DWH",
+          "transformationCount": 8,
+          "sqlOverride": true
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-map-002",
+        "name": "m_Order_Fact_Full",
+        "type": "mapping",
+        "description": "Full refresh of order fact table with multi-source join",
+        "created_by": "etl_admin",
+        "updated_at": "2026-03-14T12:00:00Z",
+        "tags": [
+          "full-refresh",
+          "orders",
+          "fact"
+        ],
+        "dependencies": [
+          {
+            "component": "cdq",
+            "name": "DQ_Order_Amount_Range"
+          }
+        ],
+        "metadata": {
+          "sourceConnection": "SQL_Server_ERP",
+          "targetConnection": "Snowflake_DWH",
+          "transformationCount": 14,
+          "sqlOverride": true
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-map-003",
+        "name": "m_Product_Dimension_SCD2",
+        "type": "mapping",
+        "description": "SCD Type 2 dimension for product catalog with history tracking",
+        "created_by": "data_eng_01",
+        "updated_at": "2026-03-10T09:15:00Z",
+        "tags": [
+          "scd2",
+          "product",
+          "dimension"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "sourceConnection": "Oracle_CRM_Prod",
+          "targetConnection": "Snowflake_DWH",
+          "transformationCount": 11,
+          "sqlOverride": false
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-tf-001",
+        "name": "tf_Daily_Sales_ETL",
+        "type": "taskflow",
+        "description": "Orchestrates daily sales pipeline: staging → transform → load → validate",
+        "created_by": "etl_admin",
+        "updated_at": "2026-03-16T06:00:00Z",
+        "tags": [
+          "daily",
+          "sales",
+          "orchestration"
+        ],
+        "dependencies": [
+          {
+            "component": "cdi",
+            "name": "m_Customer_Load_Daily"
+          },
+          {
+            "component": "cdi",
+            "name": "m_Order_Fact_Full"
+          }
+        ],
+        "metadata": {
+          "taskCount": 6,
+          "schedule": "0 6 * * *"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-tf-002",
+        "name": "tf_Weekly_Finance_Reconciliation",
+        "type": "taskflow",
+        "description": "Weekly finance reconciliation with error handling and notifications",
+        "created_by": "finance_ops",
+        "updated_at": "2026-02-28T18:00:00Z",
+        "tags": [
+          "weekly",
+          "finance",
+          "reconciliation"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "taskCount": 9,
+          "schedule": "0 2 * * 0"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-sync-001",
+        "name": "sync_Salesforce_Contacts",
+        "type": "sync_task",
+        "description": "Real-time sync of Salesforce contacts to staging area",
+        "created_by": "crm_team",
+        "updated_at": "2026-03-12T14:00:00Z",
+        "tags": [
+          "realtime",
+          "salesforce",
+          "contacts"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "sourceConnection": "Salesforce_Prod",
+          "targetConnection": "Snowflake_DWH"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-mi-001",
+        "name": "mi_Legacy_Oracle_Tables",
+        "type": "mass_ingestion",
+        "description": "Mass ingestion of 120 Oracle legacy tables into Bronze lakehouse",
+        "created_by": "migration_lead",
+        "updated_at": "2026-03-01T10:00:00Z",
+        "tags": [
+          "migration",
+          "oracle",
+          "bronze"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "sourceConnection": "Oracle_Legacy",
+          "targetConnection": "Snowflake_DWH",
+          "tableCount": 120
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-conn-001",
+        "name": "Oracle_CRM_Prod",
+        "type": "connection",
+        "description": "Oracle 19c CRM production database",
+        "created_by": "infra_admin",
+        "updated_at": "2026-01-15T09:00:00Z",
+        "tags": [
+          "oracle",
+          "production"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "connectorType": "Oracle",
+          "host": "crm-db.corp.internal",
+          "port": 1521,
+          "database": "CRMDB"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-conn-002",
+        "name": "SQL_Server_ERP",
+        "type": "connection",
+        "description": "SQL Server 2019 ERP system",
+        "created_by": "infra_admin",
+        "updated_at": "2026-01-15T09:30:00Z",
+        "tags": [
+          "sqlserver",
+          "production"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "connectorType": "SQL_Server",
+          "host": "erp-sql.corp.internal",
+          "port": 1433,
+          "database": "ERP_PROD"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-conn-003",
+        "name": "Snowflake_DWH",
+        "type": "connection",
+        "description": "Snowflake data warehouse (target)",
+        "created_by": "infra_admin",
+        "updated_at": "2026-01-15T10:00:00Z",
+        "tags": [
+          "snowflake",
+          "target"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "connectorType": "Snowflake",
+          "account": "corp-analytics.snowflakecomputing.com",
+          "warehouse": "ETL_WH",
+          "database": "ANALYTICS"
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-map-004",
+        "name": "m_Employee_HR_Sync",
+        "type": "mapping",
+        "description": "HR employee data synchronization with PII masking",
+        "created_by": "hr_data_team",
+        "updated_at": "2026-03-08T11:00:00Z",
+        "tags": [
+          "hr",
+          "employee",
+          "pii"
+        ],
+        "dependencies": [
+          {
+            "component": "privacy",
+            "name": "Employee_PII_Policy"
+          },
+          {
+            "component": "cdq",
+            "name": "DQ_Email_Format"
+          }
+        ],
+        "metadata": {
+          "sourceConnection": "Oracle_CRM_Prod",
+          "targetConnection": "Snowflake_DWH",
+          "transformationCount": 6,
+          "sqlOverride": false
+        }
+      },
+      {
+        "component": "cdi",
+        "component_name": "Cloud Data Integration",
+        "object_id": "cdi-map-005",
+        "name": "m_Inventory_Snapshot",
+        "type": "mapping",
+        "description": "Nightly inventory snapshot with warehouse aggregation",
+        "created_by": "supply_chain",
+        "updated_at": "2026-03-05T22:00:00Z",
+        "tags": [
+          "nightly",
+          "inventory",
+          "snapshot"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "sourceConnection": "SQL_Server_ERP",
+          "targetConnection": "Snowflake_DWH",
+          "transformationCount": 9,
+          "sqlOverride": true
+        }
+      }
+    ],
+    "artifact_types": [
+      "mapping",
+      "taskflow",
+      "sync_task",
+      "mass_ingestion",
+      "mapping_task",
+      "dq_task",
+      "app_integration",
+      "connection"
+    ]
+  },
+  "cdgc": {
+    "component_name": "Cloud Data Governance & Catalog",
+    "object_count": 8,
+    "objects": [
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-gl-001",
+        "name": "Enterprise_Business_Glossary",
+        "type": "business_glossary",
+        "description": "Organization-wide glossary of business terms, KPIs, and data definitions",
+        "created_by": "data_governance_lead",
+        "updated_at": "2026-03-10T08:00:00Z",
+        "tags": [
+          "governance",
+          "glossary",
+          "enterprise"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "termCount": 245
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-dom-001",
+        "name": "Customer_Domain",
+        "type": "data_domain",
+        "description": "Customer data domain covering demographics, contacts, and preferences",
+        "created_by": "data_governance_lead",
+        "updated_at": "2026-03-12T10:30:00Z",
+        "tags": [
+          "customer",
+          "domain",
+          "core"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Enterprise_Business_Glossary"
+          }
+        ],
+        "metadata": {
+          "assetCount": 34,
+          "classificationRules": 12
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-dom-002",
+        "name": "Finance_Domain",
+        "type": "data_domain",
+        "description": "Financial data domain — transactions, accounts, GL entries",
+        "created_by": "finance_steward",
+        "updated_at": "2026-03-11T14:00:00Z",
+        "tags": [
+          "finance",
+          "domain",
+          "regulated"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Enterprise_Business_Glossary"
+          }
+        ],
+        "metadata": {
+          "assetCount": 58,
+          "classificationRules": 18
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-cls-001",
+        "name": "PII_Classification_Policy",
+        "type": "data_classification",
+        "description": "Automatic classification of PII fields (SSN, email, phone, address)",
+        "created_by": "security_admin",
+        "updated_at": "2026-02-20T16:00:00Z",
+        "tags": [
+          "pii",
+          "classification",
+          "security"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "patterns": [
+            "SSN",
+            "EMAIL",
+            "PHONE",
+            "ADDRESS",
+            "DOB",
+            "NATIONAL_ID"
+          ],
+          "sensitivity_level": "high"
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-lin-001",
+        "name": "CRM_to_DWH_Lineage",
+        "type": "lineage_link",
+        "description": "End-to-end lineage from CRM source to DWH reporting layer",
+        "created_by": "data_governance_lead",
+        "updated_at": "2026-03-15T12:00:00Z",
+        "tags": [
+          "lineage",
+          "crm",
+          "dwh"
+        ],
+        "dependencies": [
+          {
+            "component": "cdi",
+            "name": "m_Customer_Load_Daily"
+          }
+        ],
+        "metadata": {
+          "sourceSystem": "Oracle_CRM",
+          "targetSystem": "Snowflake_DWH",
+          "columnMappings": 156
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-asset-001",
+        "name": "DIM_CUSTOMER",
+        "type": "data_asset",
+        "description": "Customer dimension table — cataloged data asset with quality scores",
+        "created_by": "data_steward_01",
+        "updated_at": "2026-03-14T09:00:00Z",
+        "tags": [
+          "dimension",
+          "customer",
+          "gold"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          }
+        ],
+        "metadata": {
+          "qualityScore": 94.5,
+          "columnCount": 42,
+          "rowCountEstimate": 2500000
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-asset-002",
+        "name": "FACT_ORDERS",
+        "type": "data_asset",
+        "description": "Order fact table — primary transactional dataset",
+        "created_by": "data_steward_01",
+        "updated_at": "2026-03-13T11:00:00Z",
+        "tags": [
+          "fact",
+          "orders",
+          "gold"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Finance_Domain"
+          }
+        ],
+        "metadata": {
+          "qualityScore": 91.2,
+          "columnCount": 28,
+          "rowCountEstimate": 45000000
+        }
+      },
+      {
+        "component": "cdgc",
+        "component_name": "Cloud Data Governance & Catalog",
+        "object_id": "cdgc-ref-001",
+        "name": "Country_Codes_ISO3166",
+        "type": "reference_data",
+        "description": "ISO 3166 country codes reference dataset",
+        "created_by": "ref_data_admin",
+        "updated_at": "2026-01-05T10:00:00Z",
+        "tags": [
+          "reference",
+          "country",
+          "iso"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "recordCount": 249
+        }
+      }
+    ],
+    "artifact_types": [
+      "business_glossary",
+      "data_domain",
+      "data_classification",
+      "lineage_link",
+      "data_asset",
+      "reference_data"
+    ]
+  },
+  "cdq": {
+    "component_name": "Cloud Data Quality",
+    "object_count": 7,
+    "objects": [
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-rule-001",
+        "name": "DQ_Customer_Email_Check",
+        "type": "dq_rule",
+        "description": "Validates customer email format and domain existence",
+        "created_by": "dq_admin",
+        "updated_at": "2026-03-10T09:00:00Z",
+        "tags": [
+          "email",
+          "customer",
+          "validity"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          }
+        ],
+        "metadata": {
+          "ruleType": "validity",
+          "expression": "REGEXP_LIKE(email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')",
+          "threshold": 98.0,
+          "dimensions": [
+            "validity",
+            "completeness"
+          ],
+          "targetObjects": [
+            "DIM_CUSTOMER.email"
+          ]
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-rule-002",
+        "name": "DQ_Order_Amount_Range",
+        "type": "dq_rule",
+        "description": "Ensures order amounts are within acceptable range (0.01–10,000,000)",
+        "created_by": "dq_admin",
+        "updated_at": "2026-03-08T14:00:00Z",
+        "tags": [
+          "orders",
+          "amount",
+          "range"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "ruleType": "validity",
+          "expression": "order_amount BETWEEN 0.01 AND 10000000",
+          "threshold": 99.5,
+          "dimensions": [
+            "validity"
+          ],
+          "targetObjects": [
+            "FACT_ORDERS.order_amount"
+          ]
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-rule-003",
+        "name": "DQ_Email_Format",
+        "type": "dq_rule",
+        "description": "Generic email format validation across all string columns tagged as email",
+        "created_by": "dq_admin",
+        "updated_at": "2026-02-15T11:00:00Z",
+        "tags": [
+          "email",
+          "format",
+          "generic"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "ruleType": "validity",
+          "expression": "email IS NOT NULL AND LENGTH(email) > 5",
+          "threshold": 95.0,
+          "dimensions": [
+            "completeness",
+            "validity"
+          ],
+          "targetObjects": []
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-sc-001",
+        "name": "Customer_Quality_Scorecard",
+        "type": "dq_scorecard",
+        "description": "Composite quality scorecard for all customer data assets",
+        "created_by": "dq_admin",
+        "updated_at": "2026-03-15T08:00:00Z",
+        "tags": [
+          "customer",
+          "scorecard"
+        ],
+        "dependencies": [
+          {
+            "component": "cdq",
+            "name": "DQ_Customer_Email_Check"
+          }
+        ],
+        "metadata": {
+          "overallScore": 96.3,
+          "dimensions": {
+            "completeness": 98.1,
+            "validity": 95.2,
+            "uniqueness": 99.8,
+            "timeliness": 92.0
+          }
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-prof-001",
+        "name": "Customer_Table_Profile",
+        "type": "dq_profile",
+        "description": "Column profiling results for DIM_CUSTOMER table",
+        "created_by": "dq_analyst",
+        "updated_at": "2026-03-14T16:00:00Z",
+        "tags": [
+          "profile",
+          "customer"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "totalRows": 2500000,
+          "columnCount": 42,
+          "nullPercentAvg": 3.2,
+          "distinctCountAvg": 85400
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-rule-004",
+        "name": "DQ_Phone_Format_US",
+        "type": "dq_rule",
+        "description": "US phone number format validation (10 digits, optional +1 prefix)",
+        "created_by": "dq_admin",
+        "updated_at": "2026-02-20T10:00:00Z",
+        "tags": [
+          "phone",
+          "format",
+          "us"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "ruleType": "validity",
+          "expression": "REGEXP_LIKE(phone, '^\\+?1?[2-9]\\d{2}[2-9]\\d{6}$')",
+          "threshold": 90.0,
+          "dimensions": [
+            "validity"
+          ],
+          "targetObjects": [
+            "DIM_CUSTOMER.phone"
+          ]
+        }
+      },
+      {
+        "component": "cdq",
+        "component_name": "Cloud Data Quality",
+        "object_id": "cdq-rule-005",
+        "name": "DQ_Date_Not_Future",
+        "type": "dq_rule",
+        "description": "Ensures dates are not in the future (order_date, ship_date)",
+        "created_by": "dq_admin",
+        "updated_at": "2026-03-01T09:00:00Z",
+        "tags": [
+          "date",
+          "validity"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "ruleType": "validity",
+          "expression": "order_date <= CURRENT_DATE",
+          "threshold": 99.9,
+          "dimensions": [
+            "validity"
+          ],
+          "targetObjects": [
+            "FACT_ORDERS.order_date",
+            "FACT_ORDERS.ship_date"
+          ]
+        }
+      }
+    ],
+    "artifact_types": [
+      "dq_rule",
+      "dq_scorecard",
+      "dq_profile",
+      "dq_exception",
+      "address_validation",
+      "identity_resolution"
+    ]
+  },
+  "mdm": {
+    "component_name": "Master Data Management",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "mdm",
+        "component_name": "Master Data Management",
+        "object_id": "mdm-ent-001",
+        "name": "Customer_Master",
+        "type": "business_entity",
+        "description": "Golden customer record — unified across CRM, ERP, and marketing",
+        "created_by": "mdm_admin",
+        "updated_at": "2026-03-12T10:00:00Z",
+        "tags": [
+          "customer",
+          "master",
+          "golden-record"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          },
+          {
+            "component": "cdq",
+            "name": "DQ_Customer_Email_Check"
+          }
+        ],
+        "metadata": {
+          "attributes": [
+            {
+              "name": "customer_id",
+              "type": "STRING",
+              "key": true
+            },
+            {
+              "name": "first_name",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "last_name",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "email",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "phone",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "address_line1",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "city",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "state",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "postal_code",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "country_code",
+              "type": "STRING",
+              "key": false
+            }
+          ],
+          "matchRules": [
+            {
+              "name": "Exact_Email",
+              "type": "exact",
+              "fields": [
+                "email"
+              ],
+              "weight": 100
+            },
+            {
+              "name": "Fuzzy_Name_Address",
+              "type": "fuzzy",
+              "fields": [
+                "first_name",
+                "last_name",
+                "postal_code"
+              ],
+              "weight": 85
+            },
+            {
+              "name": "Phone_Match",
+              "type": "exact",
+              "fields": [
+                "phone"
+              ],
+              "weight": 70
+            }
+          ],
+          "trustSettings": {
+            "CRM": 95,
+            "ERP": 80,
+            "Marketing": 60
+          }
+        }
+      },
+      {
+        "component": "mdm",
+        "component_name": "Master Data Management",
+        "object_id": "mdm-ent-002",
+        "name": "Product_Master",
+        "type": "business_entity",
+        "description": "Canonical product record across supply chain, catalog, and pricing",
+        "created_by": "mdm_admin",
+        "updated_at": "2026-03-08T14:00:00Z",
+        "tags": [
+          "product",
+          "master"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "attributes": [
+            {
+              "name": "product_id",
+              "type": "STRING",
+              "key": true
+            },
+            {
+              "name": "product_name",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "category",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "brand",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "sku",
+              "type": "STRING",
+              "key": false
+            },
+            {
+              "name": "unit_price",
+              "type": "DECIMAL",
+              "key": false
+            }
+          ],
+          "matchRules": [
+            {
+              "name": "Exact_SKU",
+              "type": "exact",
+              "fields": [
+                "sku"
+              ],
+              "weight": 100
+            },
+            {
+              "name": "Fuzzy_Name_Brand",
+              "type": "fuzzy",
+              "fields": [
+                "product_name",
+                "brand"
+              ],
+              "weight": 75
+            }
+          ],
+          "trustSettings": {
+            "ERP": 100,
+            "Catalog": 90,
+            "PricingEngine": 70
+          }
+        }
+      },
+      {
+        "component": "mdm",
+        "component_name": "Master Data Management",
+        "object_id": "mdm-hier-001",
+        "name": "Product_Category_Hierarchy",
+        "type": "hierarchy",
+        "description": "4-level product category hierarchy for analytics roll-up",
+        "created_by": "mdm_admin",
+        "updated_at": "2026-02-28T10:00:00Z",
+        "tags": [
+          "product",
+          "hierarchy"
+        ],
+        "dependencies": [
+          {
+            "component": "mdm",
+            "name": "Product_Master"
+          }
+        ],
+        "metadata": {
+          "levels": [
+            "Division",
+            "Department",
+            "Category",
+            "Subcategory"
+          ],
+          "nodeCount": 342
+        }
+      },
+      {
+        "component": "mdm",
+        "component_name": "Master Data Management",
+        "object_id": "mdm-merge-001",
+        "name": "Customer_Merge_Policy",
+        "type": "merge_policy",
+        "description": "Survivorship rules for merging duplicate customer records",
+        "created_by": "mdm_admin",
+        "updated_at": "2026-03-05T16:00:00Z",
+        "tags": [
+          "customer",
+          "merge",
+          "survivorship"
+        ],
+        "dependencies": [
+          {
+            "component": "mdm",
+            "name": "Customer_Master"
+          }
+        ],
+        "metadata": {
+          "strategy": "trust_based",
+          "autoMergeThreshold": 95,
+          "reviewThreshold": 75
+        }
+      }
+    ],
+    "artifact_types": [
+      "business_entity",
+      "match_rule",
+      "merge_policy",
+      "hierarchy",
+      "trust_rule",
+      "bvt_config"
+    ]
+  },
+  "b2b": {
+    "component_name": "B2B Gateway",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "b2b",
+        "component_name": "B2B Gateway",
+        "object_id": "b2b-partner-001",
+        "name": "Acme_Corp_EDI",
+        "type": "partner_profile",
+        "description": "EDI trading partner profile for Acme Corporation — X12 850/856/810",
+        "created_by": "b2b_admin",
+        "updated_at": "2026-03-01T10:00:00Z",
+        "tags": [
+          "edi",
+          "partner",
+          "x12"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "partnerId": "ACME-001",
+          "protocol": "AS2",
+          "documentTypes": [
+            "850-PurchaseOrder",
+            "856-ASN",
+            "810-Invoice"
+          ]
+        }
+      },
+      {
+        "component": "b2b",
+        "component_name": "B2B Gateway",
+        "object_id": "b2b-partner-002",
+        "name": "GlobalTech_EDIFACT",
+        "type": "partner_profile",
+        "description": "EDIFACT trading partner for GlobalTech — ORDERS/DESADV/INVOIC",
+        "created_by": "b2b_admin",
+        "updated_at": "2026-02-20T14:00:00Z",
+        "tags": [
+          "edifact",
+          "partner",
+          "europe"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "partnerId": "GTECH-001",
+          "protocol": "SFTP",
+          "documentTypes": [
+            "ORDERS",
+            "DESADV",
+            "INVOIC"
+          ]
+        }
+      },
+      {
+        "component": "b2b",
+        "component_name": "B2B Gateway",
+        "object_id": "b2b-map-001",
+        "name": "X12_850_to_SalesOrder",
+        "type": "edi_mapping",
+        "description": "Maps X12 850 Purchase Order segments to internal sales order format",
+        "created_by": "b2b_dev",
+        "updated_at": "2026-03-05T11:00:00Z",
+        "tags": [
+          "mapping",
+          "850",
+          "sales-order"
+        ],
+        "dependencies": [
+          {
+            "component": "b2b",
+            "name": "Acme_Corp_EDI"
+          }
+        ],
+        "metadata": {
+          "sourceFormat": "X12_850",
+          "targetFormat": "JSON_SalesOrder",
+          "segmentMappings": 24
+        }
+      },
+      {
+        "component": "b2b",
+        "component_name": "B2B Gateway",
+        "object_id": "b2b-chan-001",
+        "name": "AS2_Channel_Acme",
+        "type": "communication_channel",
+        "description": "AS2 communication channel for Acme Corp with MDN receipts",
+        "created_by": "b2b_admin",
+        "updated_at": "2026-01-15T09:00:00Z",
+        "tags": [
+          "as2",
+          "channel",
+          "acme"
+        ],
+        "dependencies": [
+          {
+            "component": "b2b",
+            "name": "Acme_Corp_EDI"
+          }
+        ],
+        "metadata": {
+          "protocol": "AS2",
+          "encryption": "3DES",
+          "signing": "SHA256"
+        }
+      }
+    ],
+    "artifact_types": [
+      "partner_profile",
+      "edi_mapping",
+      "communication_channel",
+      "document_type",
+      "acknowledgment_config"
+    ]
+  },
+  "privacy": {
+    "component_name": "Data Privacy Management",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "privacy",
+        "component_name": "Data Privacy Management",
+        "object_id": "priv-reg-001",
+        "name": "Customer_Subject_Registry",
+        "type": "subject_registry",
+        "description": "Registry of data subjects (customers) for GDPR/CCPA compliance tracking",
+        "created_by": "privacy_officer",
+        "updated_at": "2026-03-10T08:00:00Z",
+        "tags": [
+          "gdpr",
+          "ccpa",
+          "customer",
+          "registry"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          },
+          {
+            "component": "mdm",
+            "name": "Customer_Master"
+          }
+        ],
+        "metadata": {
+          "subjectCount": 2500000,
+          "jurisdiction": [
+            "EU-GDPR",
+            "US-CCPA",
+            "US-CPRA"
+          ]
+        }
+      },
+      {
+        "component": "privacy",
+        "component_name": "Data Privacy Management",
+        "object_id": "priv-store-001",
+        "name": "Oracle_CRM_DataStore_Registration",
+        "type": "data_store_registration",
+        "description": "Registration of Oracle CRM as a data store containing PII",
+        "created_by": "privacy_officer",
+        "updated_at": "2026-02-01T12:00:00Z",
+        "tags": [
+          "oracle",
+          "pii",
+          "registered"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "storeType": "database",
+          "piiCategories": [
+            "name",
+            "email",
+            "phone",
+            "address",
+            "date_of_birth"
+          ],
+          "retentionPolicy": "7_years"
+        }
+      },
+      {
+        "component": "privacy",
+        "component_name": "Data Privacy Management",
+        "object_id": "priv-wf-001",
+        "name": "DSAR_Fulfillment_Workflow",
+        "type": "privacy_workflow",
+        "description": "Automated Data Subject Access Request (DSAR) fulfillment workflow",
+        "created_by": "privacy_officer",
+        "updated_at": "2026-03-05T14:00:00Z",
+        "tags": [
+          "dsar",
+          "workflow",
+          "automation"
+        ],
+        "dependencies": [
+          {
+            "component": "privacy",
+            "name": "Customer_Subject_Registry"
+          }
+        ],
+        "metadata": {
+          "steps": [
+            "locate_data",
+            "compile_report",
+            "redact_sensitive",
+            "deliver_to_subject"
+          ],
+          "slaHours": 72
+        }
+      },
+      {
+        "component": "privacy",
+        "component_name": "Data Privacy Management",
+        "object_id": "priv-del-001",
+        "name": "Right_To_Erasure_Policy",
+        "type": "deletion_policy",
+        "description": "GDPR Article 17 right to erasure — automated deletion across all registered stores",
+        "created_by": "privacy_officer",
+        "updated_at": "2026-02-15T10:00:00Z",
+        "tags": [
+          "erasure",
+          "gdpr",
+          "deletion"
+        ],
+        "dependencies": [
+          {
+            "component": "privacy",
+            "name": "Oracle_CRM_DataStore_Registration"
+          }
+        ],
+        "metadata": {
+          "scope": "all_registered_stores",
+          "verificationRequired": true,
+          "auditTrail": true
+        }
+      }
+    ],
+    "artifact_types": [
+      "subject_registry",
+      "data_store_registration",
+      "privacy_workflow",
+      "deletion_policy",
+      "consent_rule"
+    ]
+  },
+  "marketplace": {
+    "component_name": "Data Marketplace",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "marketplace",
+        "component_name": "Data Marketplace",
+        "object_id": "mkt-coll-001",
+        "name": "Customer_Analytics_Collection",
+        "type": "data_collection",
+        "description": "Curated dataset collection for customer analytics — demographics, behavior, scoring",
+        "created_by": "data_product_owner",
+        "updated_at": "2026-03-12T10:00:00Z",
+        "tags": [
+          "analytics",
+          "customer",
+          "curated"
+        ],
+        "dependencies": [
+          {
+            "component": "cdgc",
+            "name": "Customer_Domain"
+          },
+          {
+            "component": "cdgc",
+            "name": "DIM_CUSTOMER"
+          }
+        ],
+        "metadata": {
+          "datasetCount": 8,
+          "subscribers": 12,
+          "refreshSchedule": "daily"
+        }
+      },
+      {
+        "component": "marketplace",
+        "component_name": "Data Marketplace",
+        "object_id": "mkt-list-001",
+        "name": "Sales_Performance_Dataset",
+        "type": "data_listing",
+        "description": "Published dataset: aggregated sales performance by region and product",
+        "created_by": "data_product_owner",
+        "updated_at": "2026-03-08T16:00:00Z",
+        "tags": [
+          "sales",
+          "performance",
+          "published"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "format": "delta",
+          "sizeGB": 12.5,
+          "accessLevel": "department"
+        }
+      },
+      {
+        "component": "marketplace",
+        "component_name": "Data Marketplace",
+        "object_id": "mkt-sub-001",
+        "name": "Finance_Team_Subscription",
+        "type": "subscription",
+        "description": "Finance team subscription to sales performance and customer analytics",
+        "created_by": "finance_analyst",
+        "updated_at": "2026-03-14T09:00:00Z",
+        "tags": [
+          "finance",
+          "subscription"
+        ],
+        "dependencies": [
+          {
+            "component": "marketplace",
+            "name": "Customer_Analytics_Collection"
+          },
+          {
+            "component": "marketplace",
+            "name": "Sales_Performance_Dataset"
+          }
+        ],
+        "metadata": {
+          "subscriberTeam": "Finance",
+          "accessGranted": "2026-03-14"
+        }
+      },
+      {
+        "component": "marketplace",
+        "component_name": "Data Marketplace",
+        "object_id": "mkt-contract-001",
+        "name": "Customer_Data_SLA_Contract",
+        "type": "data_contract",
+        "description": "SLA contract guaranteeing daily refresh and 99.5% completeness for customer data",
+        "created_by": "data_product_owner",
+        "updated_at": "2026-02-28T11:00:00Z",
+        "tags": [
+          "sla",
+          "contract",
+          "customer"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "freshnessTarget": "24h",
+          "completenessTarget": 99.5,
+          "availabilityTarget": 99.9
+        }
+      }
+    ],
+    "artifact_types": [
+      "data_collection",
+      "data_listing",
+      "subscription",
+      "access_policy",
+      "data_contract"
+    ]
+  },
+  "api_center": {
+    "component_name": "API Center",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "api_center",
+        "component_name": "API Center",
+        "object_id": "api-def-001",
+        "name": "Customer_Lookup_API",
+        "type": "api_definition",
+        "description": "REST API for customer master lookup by ID, email, or phone — backed by MDM golden record",
+        "created_by": "api_dev",
+        "updated_at": "2026-03-10T11:00:00Z",
+        "tags": [
+          "rest",
+          "customer",
+          "lookup"
+        ],
+        "dependencies": [
+          {
+            "component": "mdm",
+            "name": "Customer_Master"
+          }
+        ],
+        "metadata": {
+          "version": "2.1.0",
+          "protocol": "REST",
+          "operations": [
+            "GET /customers/{id}",
+            "GET /customers/search",
+            "POST /customers/match"
+          ],
+          "authType": "OAuth2"
+        }
+      },
+      {
+        "component": "api_center",
+        "component_name": "API Center",
+        "object_id": "api-def-002",
+        "name": "Order_Submission_API",
+        "type": "api_definition",
+        "description": "API for submitting new orders — validates against product master and DQ rules",
+        "created_by": "api_dev",
+        "updated_at": "2026-03-05T14:00:00Z",
+        "tags": [
+          "rest",
+          "orders",
+          "submission"
+        ],
+        "dependencies": [
+          {
+            "component": "mdm",
+            "name": "Product_Master"
+          },
+          {
+            "component": "cdq",
+            "name": "DQ_Order_Amount_Range"
+          }
+        ],
+        "metadata": {
+          "version": "1.3.0",
+          "protocol": "REST",
+          "operations": [
+            "POST /orders",
+            "GET /orders/{id}",
+            "PUT /orders/{id}/status"
+          ],
+          "authType": "API_Key"
+        }
+      },
+      {
+        "component": "api_center",
+        "component_name": "API Center",
+        "object_id": "api-coll-001",
+        "name": "Enterprise_Data_APIs",
+        "type": "api_collection",
+        "description": "Collection of all enterprise data service APIs",
+        "created_by": "api_admin",
+        "updated_at": "2026-03-12T16:00:00Z",
+        "tags": [
+          "collection",
+          "enterprise"
+        ],
+        "dependencies": [
+          {
+            "component": "api_center",
+            "name": "Customer_Lookup_API"
+          },
+          {
+            "component": "api_center",
+            "name": "Order_Submission_API"
+          }
+        ],
+        "metadata": {
+          "apiCount": 12,
+          "activeDeployments": 8
+        }
+      },
+      {
+        "component": "api_center",
+        "component_name": "API Center",
+        "object_id": "api-policy-001",
+        "name": "Rate_Limit_Standard",
+        "type": "api_policy",
+        "description": "Standard rate limiting: 1000 req/min for internal, 100 req/min for external",
+        "created_by": "api_admin",
+        "updated_at": "2026-01-20T09:00:00Z",
+        "tags": [
+          "rate-limit",
+          "policy"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "internalLimit": 1000,
+          "externalLimit": 100,
+          "windowSeconds": 60
+        }
+      }
+    ],
+    "artifact_types": [
+      "api_definition",
+      "api_collection",
+      "api_group",
+      "api_policy",
+      "api_deployment"
+    ]
+  },
+  "dih": {
+    "component_name": "Data Integration Hub",
+    "object_count": 4,
+    "objects": [
+      {
+        "component": "dih",
+        "component_name": "Data Integration Hub",
+        "object_id": "dih-pub-001",
+        "name": "Customer_CDC_Publication",
+        "type": "publication",
+        "description": "CDC publication streaming customer changes from Oracle CRM to downstream subscribers",
+        "created_by": "dih_admin",
+        "updated_at": "2026-03-10T08:00:00Z",
+        "tags": [
+          "cdc",
+          "customer",
+          "publication"
+        ],
+        "dependencies": [
+          {
+            "component": "cdi",
+            "name": "Oracle_CRM_Prod"
+          }
+        ],
+        "metadata": {
+          "sourceTable": "CUSTOMERS",
+          "changeTypes": [
+            "INSERT",
+            "UPDATE",
+            "DELETE"
+          ],
+          "format": "AVRO",
+          "latencyTarget": "< 5 min"
+        }
+      },
+      {
+        "component": "dih",
+        "component_name": "Data Integration Hub",
+        "object_id": "dih-sub-001",
+        "name": "DWH_Customer_Subscriber",
+        "type": "subscription",
+        "description": "DWH subscription consuming customer CDC events for near-real-time updates",
+        "created_by": "dih_admin",
+        "updated_at": "2026-03-10T08:30:00Z",
+        "tags": [
+          "dwh",
+          "subscription",
+          "customer"
+        ],
+        "dependencies": [
+          {
+            "component": "dih",
+            "name": "Customer_CDC_Publication"
+          }
+        ],
+        "metadata": {
+          "targetSystem": "Snowflake_DWH",
+          "deliveryMode": "batch_micro",
+          "batchIntervalMinutes": 5
+        }
+      },
+      {
+        "component": "dih",
+        "component_name": "Data Integration Hub",
+        "object_id": "dih-topic-001",
+        "name": "Order_Events_Topic",
+        "type": "topic",
+        "description": "Central topic for order lifecycle events (created, shipped, delivered, returned)",
+        "created_by": "dih_admin",
+        "updated_at": "2026-03-05T12:00:00Z",
+        "tags": [
+          "orders",
+          "events",
+          "topic"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "partitions": 12,
+          "retentionDays": 30,
+          "format": "JSON"
+        }
+      },
+      {
+        "component": "dih",
+        "component_name": "Data Integration Hub",
+        "object_id": "dih-chan-001",
+        "name": "Kafka_Bridge_Channel",
+        "type": "delivery_channel",
+        "description": "Kafka bridge delivery channel for high-throughput event streaming",
+        "created_by": "dih_admin",
+        "updated_at": "2026-02-15T10:00:00Z",
+        "tags": [
+          "kafka",
+          "streaming"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "protocol": "Kafka",
+          "brokers": "kafka-cluster.corp.internal:9092",
+          "maxThroughputMBps": 100
+        }
+      }
+    ],
+    "artifact_types": [
+      "publication",
+      "subscription",
+      "topic",
+      "delivery_channel",
+      "processing_rule"
+    ]
+  },
+  "opinsights": {
+    "component_name": "Operational Insights",
+    "object_count": 5,
+    "objects": [
+      {
+        "component": "opinsights",
+        "component_name": "Operational Insights",
+        "object_id": "ops-mon-001",
+        "name": "Daily_ETL_Monitor",
+        "type": "monitor_config",
+        "description": "Monitors daily ETL pipeline health — alerts on failures, SLA breaches, and data anomalies",
+        "created_by": "ops_admin",
+        "updated_at": "2026-03-12T09:00:00Z",
+        "tags": [
+          "etl",
+          "daily",
+          "monitor"
+        ],
+        "dependencies": [
+          {
+            "component": "cdi",
+            "name": "tf_Daily_Sales_ETL"
+          }
+        ],
+        "metadata": {
+          "monitoredTasks": [
+            "tf_Daily_Sales_ETL",
+            "m_Customer_Load_Daily",
+            "m_Order_Fact_Full"
+          ],
+          "checkIntervalMinutes": 15,
+          "slaDeadline": "08:00 UTC"
+        }
+      },
+      {
+        "component": "opinsights",
+        "component_name": "Operational Insights",
+        "object_id": "ops-alert-001",
+        "name": "ETL_Failure_Alert",
+        "type": "alert_rule",
+        "description": "Sends PagerDuty + email alerts when any production ETL task fails",
+        "created_by": "ops_admin",
+        "updated_at": "2026-03-10T11:00:00Z",
+        "tags": [
+          "alert",
+          "failure",
+          "pagerduty"
+        ],
+        "dependencies": [
+          {
+            "component": "opinsights",
+            "name": "Daily_ETL_Monitor"
+          }
+        ],
+        "metadata": {
+          "condition": "task_status == 'FAILED'",
+          "severity": "critical",
+          "channels": [
+            "pagerduty",
+            "email:data-ops@corp.com"
+          ],
+          "cooldownMinutes": 30
+        }
+      },
+      {
+        "component": "opinsights",
+        "component_name": "Operational Insights",
+        "object_id": "ops-alert-002",
+        "name": "SLA_Breach_Warning",
+        "type": "alert_rule",
+        "description": "Warning alert when ETL tasks approach SLA deadline (within 30 min)",
+        "created_by": "ops_admin",
+        "updated_at": "2026-03-10T11:30:00Z",
+        "tags": [
+          "alert",
+          "sla",
+          "warning"
+        ],
+        "dependencies": [
+          {
+            "component": "opinsights",
+            "name": "Daily_ETL_Monitor"
+          }
+        ],
+        "metadata": {
+          "condition": "minutes_to_sla < 30 AND task_status == 'RUNNING'",
+          "severity": "warning",
+          "channels": [
+            "slack:#data-ops-alerts"
+          ],
+          "cooldownMinutes": 15
+        }
+      },
+      {
+        "component": "opinsights",
+        "component_name": "Operational Insights",
+        "object_id": "ops-sched-001",
+        "name": "Nightly_Maintenance_Window",
+        "type": "schedule",
+        "description": "Nightly maintenance window definition for non-critical batch jobs",
+        "created_by": "ops_admin",
+        "updated_at": "2026-01-15T10:00:00Z",
+        "tags": [
+          "schedule",
+          "maintenance"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "startTime": "02:00 UTC",
+          "endTime": "05:00 UTC",
+          "daysOfWeek": [
+            "MON",
+            "TUE",
+            "WED",
+            "THU",
+            "FRI"
+          ]
+        }
+      },
+      {
+        "component": "opinsights",
+        "component_name": "Operational Insights",
+        "object_id": "ops-perf-001",
+        "name": "ETL_Performance_Baseline",
+        "type": "performance_baseline",
+        "description": "30-day rolling performance baseline for all CDI mappings",
+        "created_by": "ops_analyst",
+        "updated_at": "2026-03-15T08:00:00Z",
+        "tags": [
+          "performance",
+          "baseline"
+        ],
+        "dependencies": [],
+        "metadata": {
+          "baselinePeriodDays": 30,
+          "metrics": [
+            "duration_seconds",
+            "rows_processed",
+            "error_count"
+          ],
+          "anomalyThreshold": 2.0
+        }
+      }
+    ],
+    "artifact_types": [
+      "monitor_config",
+      "alert_rule",
+      "schedule",
+      "performance_baseline",
+      "capacity_plan"
+    ]
+  }
+}

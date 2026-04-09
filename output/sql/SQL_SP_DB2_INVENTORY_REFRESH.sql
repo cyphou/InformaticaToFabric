@@ -2,7 +2,7 @@
 -- Converted from: C:\Users\pidoudet\OneDrive - Microsoft\Boulot\PBI SME\OracleToPostgre\InformaticaToDBFabric\input\sql\SP_DB2_INVENTORY_REFRESH.sql
 -- DB Type: DB2
 -- Conversion: DB2 → Spark SQL
--- Date: 2026-04-07
+-- Date: 2026-04-08
 -- Agent: sql-migration (automated)
 -- ============================================================================
 -- Review all TODO comments before deploying to Fabric.

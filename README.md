@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/79%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="79/100 sprints complete"/>
-  <img src="https://img.shields.io/badge/1489%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1489 tests"/>
+  <img src="https://img.shields.io/badge/97%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="97/100 sprints complete"/>
+  <img src="https://img.shields.io/badge/1843%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1843 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
   <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT"/>
   <img src="https://img.shields.io/badge/AutoSys-JIL%20support-9B59B6?style=flat-square&logo=clockify&logoColor=white" alt="AutoSys JIL"/>
@@ -29,6 +29,9 @@
   <img src="https://img.shields.io/badge/audit%20log-JSON-F39C12?style=flat-square&logo=json&logoColor=white" alt="Audit log"/>
   <img src="https://img.shields.io/badge/credential%20sanitization-secure-2ECC71?style=flat-square&logo=letsencrypt&logoColor=white" alt="Credential sanitization"/>
   <img src="https://img.shields.io/badge/Medallion-Bronze%20%C2%B7%20Silver%20%C2%B7%20Gold-FFD700?style=flat-square&logo=stackblitz&logoColor=black" alt="Medallion architecture"/>
+  <img src="https://img.shields.io/badge/Datadog-observability-632CA6?style=flat-square&logo=datadog&logoColor=white" alt="Datadog observability"/>
+  <img src="https://img.shields.io/badge/Agentic-auto--remediation-E67E22?style=flat-square&logo=robot&logoColor=white" alt="Agentic alerting"/>
+  <img src="https://img.shields.io/badge/IDMC-full%20coverage-27AE60?style=flat-square&logo=informatica&logoColor=white" alt="IDMC full coverage"/>
 </p>
 
 <p align="center">
@@ -548,11 +551,30 @@ InformaticaToDBFabric/
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
 ├── generate_html_reports.py             # 📊 HTML report generator (assessment + migration + lineage)
 ├── deploy_dbt_project.py                # 🚀 DBT project deployment to Databricks Repos
+├── datadog_integration.py               # 📊 Datadog observability (logs, metrics, APM tracing)
+├── agentic_alerting.py                  # 🤖 Agentic auto-remediation & learning loop
+├── monitoring_platform.py               # 🌐 Global monitoring platform & escalation chains
+├── idmc_client.py                       # 🔗 IDMC full component assessment & REST API
+├── migration_review.py                  # 📋 Migration review workflow (merge, optimize, rework)
+├── iac_generator.py                     # 🏗️ Terraform & Bicep IaC generation
+├── cicd_generator.py                    # 🔄 CI/CD pipeline generation (GitHub Actions + Azure DevOps)
+├── Dockerfile                           # 🐳 Production container
+├── docker-compose.yml                   # 🐳 Docker Compose (API + Web + Redis)
+├── k8s/                                 # ☸️ Kubernetes manifests
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── secret.yaml
+├── charts/                              # ⎈ Helm chart
+│   └── informatica-migration/
+├── benchmarks/                          # 📊 Benchmark suite
+│   ├── generate_mappings.py
+│   └── run_benchmark.py
 ├── migration.yaml                       # ⚙️ Configuration template (workspace, sources, logging)
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 1,227 tests
+├── tests/                               # 🧪 1,843 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -567,16 +589,29 @@ InformaticaToDBFabric/
 │   ├── test_databricks_target.py        # Sprint 40–41: Databricks target
 │   ├── test_dbt_target.py               # Sprint 51: DBT target
 │   ├── test_autosys.py                  # Sprint 61: AutoSys JIL
+│   ├── test_sprint45.py                 # Sprint 45: Cross-platform comparison
+│   ├── test_phase3_5.py                 # Sprints 47–65: DLT, UC lineage, DBT advanced, AutoSys
+│   ├── test_artifact_validation.py      # Artifact validation: pipeline, DBT, notebook
 │   ├── test_sprint66.py                 # Sprint 66: Gap closure & lineage reports
 │   ├── test_dbt_enhancements.py         # Sprint 67: DBT enhancements
-│   └── test_sprint68_70.py              # Phase 7: DevOps, Platform-Native, Observability
+│   ├── test_sprint68_70.py              # Phase 7: DevOps, Platform-Native, Observability
+│   ├── test_sprint71_73.py              # Phase 8: Query Optimization, PL/SQL, Dynamic SQL
+│   ├── test_sprint74_76.py              # Phase 9: Plugins, SDK, Rule Engine
+│   ├── test_sprint77_79.py              # Phase 10: Validation, Catalog Integration
+│   ├── test_datadog.py                  # DD1–DD3: Datadog logging, metrics, APM tracing
+│   ├── test_agentic_alerting.py         # DD4–DD6: Agentic signal processing & auto-remediation
+│   ├── test_monitoring_platform.py      # DD7–DD9: Global monitoring platform & dashboards
+│   └── test_idmc_review.py              # DD10–DD12: IDMC full coverage & migration review
+│   ├── test_sprint92_94.py              # Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD
+│   ├── test_sprint95_97.py              # Phase 16: Benchmarks, Parallel/Memory, Regression/Golden
+│   └── update_golden.py                 # Golden snapshot updater script
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
 │   ├── TROUBLESHOOTING.md               # Common issues & solutions
 │   └── ADR/                             # Architecture Decision Records
 ├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (61/67 complete)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (97/100 complete)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -674,7 +709,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 1,227 tests
+# Run all 1,843 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -711,8 +746,17 @@ python run_artifact_validation.py --notebooks  # Notebooks only
 | `test_sprint66.py` | 42 | Sprint 66: ULKP promotion, TC template, Event Wait/Raise, session config, ADRs, SVG lineage, HTML lineage reports |
 | `test_dbt_enhancements.py` | 42 | Sprint 67: DECODE→CASE expansion, SCD2 snapshots, mixed workflows, enriched CTEs, Router split, deploy script |
 | `test_sprint68_70.py` | 109 | Phase 7: env configs, deployment pipelines, pre-deployment validation, promotion, DAB bundles, Lakehouse/Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring, CU cost estimator, Azure Monitor metrics, webhook alerting |
+| `test_sprint71_73.py` | ~55 | Phase 8: Query optimization, partition strategy, Spark config tuning, broadcast join detection, materialization advisor, advanced PL/SQL, dynamic SQL |
+| `test_sprint74_76.py` | ~50 | Phase 9: Plugin system, Python SDK, REST API, configurable rule engine |
+| `test_sprint77_79.py` | ~50 | Phase 10: Statistical validation, SCD2 verification, RI checks, A/B testing, data catalog (Purview/Unity) |
+| `test_datadog.py` | 42 | DD1–DD3: Datadog logging handler, metrics emitter, APM tracing, config loading, graceful degradation |
+| `test_agentic_alerting.py` | 55 | DD4–DD6: Agentic signal processor, auto-remediation, learning loop, confidence scoring |
+| `test_monitoring_platform.py` | 46 | DD7–DD9: Unified control plane, escalation chains, SLO tracking, enterprise dashboards |
+| `test_idmc_review.py` | 54 | DD10–DD12: IDMC full component parser, migration review workflow, readiness gate, IDMC monitoring |
+| `test_sprint92_94.py` | 87 | Phase 15: Terraform/Bicep IaC generation, Dockerfile/Compose/K8s manifests, Helm chart, GitHub Actions/Azure DevOps CI/CD |
+| `test_sprint95_97.py` | 69 | Phase 16: Synthetic mapping generator, benchmark harness, memory profiling, parallel execution, golden snapshots, regression suite |
 
-**Overall:** 1,336 tests, all passing, ~27s on Python 3.14
+**Overall:** 1,843 tests, all passing, ~50s on Python 3.14
 
 ### Configuration
 
@@ -838,7 +882,7 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (30/30 complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (97/100 complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [docs/ADR/](docs/ADR/) | Architecture Decision Records |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
@@ -882,15 +926,16 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | **5** | 61–65 | AutoSys JIL Migration | ✅ Complete |
 | **6** | 66–67 | Gap Closure & DBT Enhancements | ✅ Complete |
 | **7** | 68–70 | DevOps, Platform-Native, Observability | ✅ Complete |
-| **8** | 71–73 | Performance & Advanced SQL | ⏳ Planned |
-| **9** | 74–76 | Extensibility & SDK | ⏳ Planned |
-| **10** | 77–79 | Validation Maturity & Data Catalog | ⏳ Planned |
+| **8** | 71–73 | Performance & Advanced SQL | ✅ Complete |
+| **9** | 74–76 | Extensibility & SDK | ✅ Complete |
+| **10** | 77–79 | Validation Maturity & Data Catalog | ✅ Complete |
+| **DD** | DD1–DD12 | Datadog Observability, Agentic Alerting, Global Monitoring, IDMC & Review | ✅ Complete |
 | **11** | 80–82 | Streaming & Real-Time | ⏳ Planned |
 | **12** | 83–85 | Governance & Compliance | ⏳ Planned |
 | **13** | 86–88 | AI-Assisted Migration | ⏳ Planned |
 | **14** | 89–91 | Web UI & Developer Experience | ⏳ Planned |
-| **15** | 92–94 | Cloud-Native & IaC | ⏳ Planned |
-| **16** | 95–97 | Scale & Performance Testing | ⏳ Planned |
+| **15** | 92–94 | Cloud-Native & IaC | ✅ Complete |
+| **16** | 95–97 | Scale & Performance Testing | ✅ Complete |
 | **17** | 98–100 | GA Release & ML Pipelines | ⏳ Planned |
 
 See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for detailed sprint breakdowns.

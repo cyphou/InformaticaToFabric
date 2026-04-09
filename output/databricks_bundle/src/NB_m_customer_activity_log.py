@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_customer_activity_log
@@ -10,7 +10,7 @@
 # Sources: src_kafka_events
 # Targets: tgt_bronze_events
 # Flow: EXP → port → FIL
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,12 +19,18 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "200")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "10485760")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: src_kafka_events ---
 # Oracle: SELECT * FROM src_kafka_events
-df_source = spark.table("main.bronze.src_kafka_events")
+df_source = spark.table("bronze.src_kafka_events")
 
 # COMMAND ----------
 
@@ -52,9 +58,9 @@ df = df.filter(
 # COMMAND ----------
 
 # CELL 6 — Target Write
-# --- Target: tgt_bronze_events → main.silver.tgt_bronze_events ---
+# --- Target: tgt_bronze_events → silver.tgt_bronze_events ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.tgt_bronze_events")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.tgt_bronze_events")
 
 # COMMAND ----------
 

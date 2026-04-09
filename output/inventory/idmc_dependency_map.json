@@ -1,0 +1,284 @@
+{
+  "nodes": [
+    {
+      "id": "cdi",
+      "name": "Cloud Data Integration",
+      "count": 12
+    },
+    {
+      "id": "cdgc",
+      "name": "Cloud Data Governance & Catalog",
+      "count": 8
+    },
+    {
+      "id": "cdq",
+      "name": "Cloud Data Quality",
+      "count": 7
+    },
+    {
+      "id": "mdm",
+      "name": "Master Data Management",
+      "count": 4
+    },
+    {
+      "id": "b2b",
+      "name": "B2B Gateway",
+      "count": 4
+    },
+    {
+      "id": "privacy",
+      "name": "Data Privacy Management",
+      "count": 4
+    },
+    {
+      "id": "marketplace",
+      "name": "Data Marketplace",
+      "count": 4
+    },
+    {
+      "id": "api_center",
+      "name": "API Center",
+      "count": 4
+    },
+    {
+      "id": "dih",
+      "name": "Data Integration Hub",
+      "count": 4
+    },
+    {
+      "id": "opinsights",
+      "name": "Operational Insights",
+      "count": 5
+    }
+  ],
+  "edges": [
+    {
+      "source": "cdi",
+      "target": "cdgc",
+      "object": "m_Customer_Load_Daily",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "cdi",
+      "target": "cdq",
+      "object": "m_Customer_Load_Daily",
+      "dependency": "DQ_Customer_Email_Check"
+    },
+    {
+      "source": "cdi",
+      "target": "cdq",
+      "object": "m_Order_Fact_Full",
+      "dependency": "DQ_Order_Amount_Range"
+    },
+    {
+      "source": "cdi",
+      "target": "cdi",
+      "object": "tf_Daily_Sales_ETL",
+      "dependency": "m_Customer_Load_Daily"
+    },
+    {
+      "source": "cdi",
+      "target": "cdi",
+      "object": "tf_Daily_Sales_ETL",
+      "dependency": "m_Order_Fact_Full"
+    },
+    {
+      "source": "cdi",
+      "target": "privacy",
+      "object": "m_Employee_HR_Sync",
+      "dependency": "Employee_PII_Policy"
+    },
+    {
+      "source": "cdi",
+      "target": "cdq",
+      "object": "m_Employee_HR_Sync",
+      "dependency": "DQ_Email_Format"
+    },
+    {
+      "source": "cdgc",
+      "target": "cdgc",
+      "object": "Customer_Domain",
+      "dependency": "Enterprise_Business_Glossary"
+    },
+    {
+      "source": "cdgc",
+      "target": "cdgc",
+      "object": "Finance_Domain",
+      "dependency": "Enterprise_Business_Glossary"
+    },
+    {
+      "source": "cdgc",
+      "target": "cdi",
+      "object": "CRM_to_DWH_Lineage",
+      "dependency": "m_Customer_Load_Daily"
+    },
+    {
+      "source": "cdgc",
+      "target": "cdgc",
+      "object": "DIM_CUSTOMER",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "cdgc",
+      "target": "cdgc",
+      "object": "FACT_ORDERS",
+      "dependency": "Finance_Domain"
+    },
+    {
+      "source": "cdq",
+      "target": "cdgc",
+      "object": "DQ_Customer_Email_Check",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "cdq",
+      "target": "cdq",
+      "object": "Customer_Quality_Scorecard",
+      "dependency": "DQ_Customer_Email_Check"
+    },
+    {
+      "source": "mdm",
+      "target": "cdgc",
+      "object": "Customer_Master",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "mdm",
+      "target": "cdq",
+      "object": "Customer_Master",
+      "dependency": "DQ_Customer_Email_Check"
+    },
+    {
+      "source": "mdm",
+      "target": "mdm",
+      "object": "Product_Category_Hierarchy",
+      "dependency": "Product_Master"
+    },
+    {
+      "source": "mdm",
+      "target": "mdm",
+      "object": "Customer_Merge_Policy",
+      "dependency": "Customer_Master"
+    },
+    {
+      "source": "b2b",
+      "target": "b2b",
+      "object": "X12_850_to_SalesOrder",
+      "dependency": "Acme_Corp_EDI"
+    },
+    {
+      "source": "b2b",
+      "target": "b2b",
+      "object": "AS2_Channel_Acme",
+      "dependency": "Acme_Corp_EDI"
+    },
+    {
+      "source": "privacy",
+      "target": "cdgc",
+      "object": "Customer_Subject_Registry",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "privacy",
+      "target": "mdm",
+      "object": "Customer_Subject_Registry",
+      "dependency": "Customer_Master"
+    },
+    {
+      "source": "privacy",
+      "target": "privacy",
+      "object": "DSAR_Fulfillment_Workflow",
+      "dependency": "Customer_Subject_Registry"
+    },
+    {
+      "source": "privacy",
+      "target": "privacy",
+      "object": "Right_To_Erasure_Policy",
+      "dependency": "Oracle_CRM_DataStore_Registration"
+    },
+    {
+      "source": "marketplace",
+      "target": "cdgc",
+      "object": "Customer_Analytics_Collection",
+      "dependency": "Customer_Domain"
+    },
+    {
+      "source": "marketplace",
+      "target": "cdgc",
+      "object": "Customer_Analytics_Collection",
+      "dependency": "DIM_CUSTOMER"
+    },
+    {
+      "source": "marketplace",
+      "target": "marketplace",
+      "object": "Finance_Team_Subscription",
+      "dependency": "Customer_Analytics_Collection"
+    },
+    {
+      "source": "marketplace",
+      "target": "marketplace",
+      "object": "Finance_Team_Subscription",
+      "dependency": "Sales_Performance_Dataset"
+    },
+    {
+      "source": "api_center",
+      "target": "mdm",
+      "object": "Customer_Lookup_API",
+      "dependency": "Customer_Master"
+    },
+    {
+      "source": "api_center",
+      "target": "mdm",
+      "object": "Order_Submission_API",
+      "dependency": "Product_Master"
+    },
+    {
+      "source": "api_center",
+      "target": "cdq",
+      "object": "Order_Submission_API",
+      "dependency": "DQ_Order_Amount_Range"
+    },
+    {
+      "source": "api_center",
+      "target": "api_center",
+      "object": "Enterprise_Data_APIs",
+      "dependency": "Customer_Lookup_API"
+    },
+    {
+      "source": "api_center",
+      "target": "api_center",
+      "object": "Enterprise_Data_APIs",
+      "dependency": "Order_Submission_API"
+    },
+    {
+      "source": "dih",
+      "target": "cdi",
+      "object": "Customer_CDC_Publication",
+      "dependency": "Oracle_CRM_Prod"
+    },
+    {
+      "source": "dih",
+      "target": "dih",
+      "object": "DWH_Customer_Subscriber",
+      "dependency": "Customer_CDC_Publication"
+    },
+    {
+      "source": "opinsights",
+      "target": "cdi",
+      "object": "Daily_ETL_Monitor",
+      "dependency": "tf_Daily_Sales_ETL"
+    },
+    {
+      "source": "opinsights",
+      "target": "opinsights",
+      "object": "ETL_Failure_Alert",
+      "dependency": "Daily_ETL_Monitor"
+    },
+    {
+      "source": "opinsights",
+      "target": "opinsights",
+      "object": "SLA_Breach_Warning",
+      "dependency": "Daily_ETL_Monitor"
+    }
+  ]
+}

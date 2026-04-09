@@ -1,0 +1,61 @@
+{
+  "objects": [
+    {
+      "id": "mkt-coll-001",
+      "name": "Customer_Analytics_Collection",
+      "type": "data_collection",
+      "description": "Curated dataset collection for customer analytics — demographics, behavior, scoring",
+      "createdBy": "data_product_owner",
+      "updateTime": "2026-03-12T10:00:00Z",
+      "tags": ["analytics", "customer", "curated"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"},
+        {"component": "cdgc", "name": "DIM_CUSTOMER"}
+      ],
+      "datasetCount": 8,
+      "subscribers": 12,
+      "refreshSchedule": "daily"
+    },
+    {
+      "id": "mkt-list-001",
+      "name": "Sales_Performance_Dataset",
+      "type": "data_listing",
+      "description": "Published dataset: aggregated sales performance by region and product",
+      "createdBy": "data_product_owner",
+      "updateTime": "2026-03-08T16:00:00Z",
+      "tags": ["sales", "performance", "published"],
+      "dependencies": [],
+      "format": "delta",
+      "sizeGB": 12.5,
+      "accessLevel": "department"
+    },
+    {
+      "id": "mkt-sub-001",
+      "name": "Finance_Team_Subscription",
+      "type": "subscription",
+      "description": "Finance team subscription to sales performance and customer analytics",
+      "createdBy": "finance_analyst",
+      "updateTime": "2026-03-14T09:00:00Z",
+      "tags": ["finance", "subscription"],
+      "dependencies": [
+        {"component": "marketplace", "name": "Customer_Analytics_Collection"},
+        {"component": "marketplace", "name": "Sales_Performance_Dataset"}
+      ],
+      "subscriberTeam": "Finance",
+      "accessGranted": "2026-03-14"
+    },
+    {
+      "id": "mkt-contract-001",
+      "name": "Customer_Data_SLA_Contract",
+      "type": "data_contract",
+      "description": "SLA contract guaranteeing daily refresh and 99.5% completeness for customer data",
+      "createdBy": "data_product_owner",
+      "updateTime": "2026-02-28T11:00:00Z",
+      "tags": ["sla", "contract", "customer"],
+      "dependencies": [],
+      "freshnessTarget": "24h",
+      "completenessTarget": 99.5,
+      "availabilityTarget": 99.9
+    }
+  ]
+}

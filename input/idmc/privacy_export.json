@@ -1,0 +1,61 @@
+{
+  "objects": [
+    {
+      "id": "priv-reg-001",
+      "name": "Customer_Subject_Registry",
+      "type": "subject_registry",
+      "description": "Registry of data subjects (customers) for GDPR/CCPA compliance tracking",
+      "createdBy": "privacy_officer",
+      "updateTime": "2026-03-10T08:00:00Z",
+      "tags": ["gdpr", "ccpa", "customer", "registry"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"},
+        {"component": "mdm", "name": "Customer_Master"}
+      ],
+      "subjectCount": 2500000,
+      "jurisdiction": ["EU-GDPR", "US-CCPA", "US-CPRA"]
+    },
+    {
+      "id": "priv-store-001",
+      "name": "Oracle_CRM_DataStore_Registration",
+      "type": "data_store_registration",
+      "description": "Registration of Oracle CRM as a data store containing PII",
+      "createdBy": "privacy_officer",
+      "updateTime": "2026-02-01T12:00:00Z",
+      "tags": ["oracle", "pii", "registered"],
+      "dependencies": [],
+      "storeType": "database",
+      "piiCategories": ["name", "email", "phone", "address", "date_of_birth"],
+      "retentionPolicy": "7_years"
+    },
+    {
+      "id": "priv-wf-001",
+      "name": "DSAR_Fulfillment_Workflow",
+      "type": "privacy_workflow",
+      "description": "Automated Data Subject Access Request (DSAR) fulfillment workflow",
+      "createdBy": "privacy_officer",
+      "updateTime": "2026-03-05T14:00:00Z",
+      "tags": ["dsar", "workflow", "automation"],
+      "dependencies": [
+        {"component": "privacy", "name": "Customer_Subject_Registry"}
+      ],
+      "steps": ["locate_data", "compile_report", "redact_sensitive", "deliver_to_subject"],
+      "slaHours": 72
+    },
+    {
+      "id": "priv-del-001",
+      "name": "Right_To_Erasure_Policy",
+      "type": "deletion_policy",
+      "description": "GDPR Article 17 right to erasure — automated deletion across all registered stores",
+      "createdBy": "privacy_officer",
+      "updateTime": "2026-02-15T10:00:00Z",
+      "tags": ["erasure", "gdpr", "deletion"],
+      "dependencies": [
+        {"component": "privacy", "name": "Oracle_CRM_DataStore_Registration"}
+      ],
+      "scope": "all_registered_stores",
+      "verificationRequired": true,
+      "auditTrail": true
+    }
+  ]
+}

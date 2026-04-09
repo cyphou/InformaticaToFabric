@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_M_LOAD_CUSTOMERS
@@ -10,7 +10,7 @@
 # Sources: Oracle.SALES.CUSTOMERS
 # Targets: DIM_CUSTOMER
 # Flow: SQ → EXP → FIL
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,12 +19,18 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "200")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "10485760")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: Oracle.SALES.CUSTOMERS ---
 # Oracle: SELECT * FROM SALES.CUSTOMERS
-df_source = spark.table("main.bronze.customers")
+df_source = spark.table("bronze.customers")
 
 # COMMAND ----------
 
@@ -45,9 +51,9 @@ df = df.filter(
 # COMMAND ----------
 
 # CELL 5 — Target Write
-# --- Target: DIM_CUSTOMER → main.silver.dim_customer ---
+# --- Target: DIM_CUSTOMER → silver.dim_customer ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.dim_customer")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.dim_customer")
 
 # COMMAND ----------
 

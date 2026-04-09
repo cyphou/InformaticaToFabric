@@ -154,6 +154,27 @@ informatica-to-fabric --dry-run --verbose
 informatica-to-fabric --resume
 ```
 
+### Observability & Monitoring Options
+
+```bash
+# Enable Datadog integration (logs, metrics, APM tracing)
+informatica-to-fabric --datadog
+
+# Enable agentic alerting (auto-remediation)
+informatica-to-fabric --agent monitor       # Observe-only mode
+informatica-to-fabric --agent auto_fix      # Auto-fix with approval
+informatica-to-fabric --agent full_auto     # Fully autonomous
+
+# Check global monitoring platform status
+informatica-to-fabric --platform-status
+
+# Generate monitoring platform report
+informatica-to-fabric --platform-report
+
+# Run migration review workflow (merge, optimize, rework)
+informatica-to-fabric --review
+```
+
 ## 5. Understanding the Output
 
 After a full run, `output/` contains:
@@ -298,6 +319,11 @@ done
 | `--parallel-waves N` | Max parallel wave executions |
 | `--profile` | Enable per-phase memory and timing profiling |
 | `--reset` | Clear checkpoint and start fresh |
+| `--datadog` | Enable Datadog observability (logs, metrics, APM tracing) |
+| `--agent MODE` | Agentic alerting mode: `monitor`, `auto_fix`, or `full_auto` |
+| `--platform-status` | Show global monitoring platform status |
+| `--platform-report` | Generate monitoring platform report |
+| `--review` | Run migration review workflow (merge, optimize, rework) |
 
 ### Interactive Dashboard
 
@@ -307,3 +333,79 @@ python dashboard.py --open
 ```
 
 The dashboard provides a visual overview of migration progress, complexity distribution, and test results.
+
+## 10. Datadog Observability
+
+### Setup
+
+1. Install Datadog dependencies:
+   ```bash
+   pip install informatica-to-fabric[datadog]
+   ```
+
+2. Set your Datadog API key:
+   ```bash
+   export DD_API_KEY="your-api-key"
+   ```
+
+3. Configure in `migration.yaml`:
+   ```yaml
+   datadog:
+     enabled: true
+     site: "datadoghq.com"        # or datadoghq.eu, us3.datadoghq.com
+     service: "informatica-migration"
+     env: "production"
+     logs:
+       enabled: true
+       source: "informatica-migration"
+     metrics:
+       enabled: true
+       prefix: "informatica.migration"
+     tracing:
+       enabled: false              # Requires ddtrace
+       sample_rate: 1.0
+   ```
+
+4. Run with Datadog enabled:
+   ```bash
+   informatica-to-fabric --datadog
+   ```
+
+### What Gets Sent
+
+- **Logs:** Structured migration logs to Datadog Log Explorer (phase, mapping name, duration)
+- **Metrics:** Per-phase duration, artifact counts, conversion scores, deployment status
+- **APM Traces:** Distributed traces per phase for performance profiling (when tracing enabled)
+- **Monitors:** Alert definitions for migration failures and SLA breaches
+
+### Graceful Degradation
+
+If `datadog-api-client` is not installed, the tool logs a warning and continues without Datadog integration — no crash.
+
+## 11. Agentic Alerting & Auto-Remediation
+
+The agentic alerting system processes migration signals and can automatically remediate common issues:
+
+```bash
+# Monitor mode — observe and alert but don't auto-fix
+informatica-to-fabric --agent monitor
+
+# Auto-fix mode — fix known issues with approval
+informatica-to-fabric --agent auto_fix
+
+# Full auto — autonomous remediation with learning loop
+informatica-to-fabric --agent full_auto
+```
+
+The agent builds a learning database (`output/agent_learning.db`) that improves remediation confidence over time.
+
+## 12. IDMC Full Component Assessment
+
+For environments with Informatica Intelligent Data Management Cloud (IDMC):
+
+```bash
+# Assess all IDMC components via REST API
+informatica-to-fabric --review
+```
+
+Covers: CDI, CDGC, CDQ, MDM, DI, B2B, API Manager, Connector, EDC, Axon, Marketplace, and Test Data Management.

@@ -1,0 +1,111 @@
+{
+  "objects": [
+    {
+      "id": "cdgc-gl-001",
+      "name": "Enterprise_Business_Glossary",
+      "type": "business_glossary",
+      "description": "Organization-wide glossary of business terms, KPIs, and data definitions",
+      "createdBy": "data_governance_lead",
+      "updateTime": "2026-03-10T08:00:00Z",
+      "tags": ["governance", "glossary", "enterprise"],
+      "dependencies": [],
+      "termCount": 245
+    },
+    {
+      "id": "cdgc-dom-001",
+      "name": "Customer_Domain",
+      "type": "data_domain",
+      "description": "Customer data domain covering demographics, contacts, and preferences",
+      "createdBy": "data_governance_lead",
+      "updateTime": "2026-03-12T10:30:00Z",
+      "tags": ["customer", "domain", "core"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Enterprise_Business_Glossary"}
+      ],
+      "assetCount": 34,
+      "classificationRules": 12
+    },
+    {
+      "id": "cdgc-dom-002",
+      "name": "Finance_Domain",
+      "type": "data_domain",
+      "description": "Financial data domain — transactions, accounts, GL entries",
+      "createdBy": "finance_steward",
+      "updateTime": "2026-03-11T14:00:00Z",
+      "tags": ["finance", "domain", "regulated"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Enterprise_Business_Glossary"}
+      ],
+      "assetCount": 58,
+      "classificationRules": 18
+    },
+    {
+      "id": "cdgc-cls-001",
+      "name": "PII_Classification_Policy",
+      "type": "data_classification",
+      "description": "Automatic classification of PII fields (SSN, email, phone, address)",
+      "createdBy": "security_admin",
+      "updateTime": "2026-02-20T16:00:00Z",
+      "tags": ["pii", "classification", "security"],
+      "dependencies": [],
+      "patterns": ["SSN", "EMAIL", "PHONE", "ADDRESS", "DOB", "NATIONAL_ID"],
+      "sensitivity_level": "high"
+    },
+    {
+      "id": "cdgc-lin-001",
+      "name": "CRM_to_DWH_Lineage",
+      "type": "lineage_link",
+      "description": "End-to-end lineage from CRM source to DWH reporting layer",
+      "createdBy": "data_governance_lead",
+      "updateTime": "2026-03-15T12:00:00Z",
+      "tags": ["lineage", "crm", "dwh"],
+      "dependencies": [
+        {"component": "cdi", "name": "m_Customer_Load_Daily"}
+      ],
+      "sourceSystem": "Oracle_CRM",
+      "targetSystem": "Snowflake_DWH",
+      "columnMappings": 156
+    },
+    {
+      "id": "cdgc-asset-001",
+      "name": "DIM_CUSTOMER",
+      "type": "data_asset",
+      "description": "Customer dimension table — cataloged data asset with quality scores",
+      "createdBy": "data_steward_01",
+      "updateTime": "2026-03-14T09:00:00Z",
+      "tags": ["dimension", "customer", "gold"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Customer_Domain"}
+      ],
+      "qualityScore": 94.5,
+      "columnCount": 42,
+      "rowCountEstimate": 2500000
+    },
+    {
+      "id": "cdgc-asset-002",
+      "name": "FACT_ORDERS",
+      "type": "data_asset",
+      "description": "Order fact table — primary transactional dataset",
+      "createdBy": "data_steward_01",
+      "updateTime": "2026-03-13T11:00:00Z",
+      "tags": ["fact", "orders", "gold"],
+      "dependencies": [
+        {"component": "cdgc", "name": "Finance_Domain"}
+      ],
+      "qualityScore": 91.2,
+      "columnCount": 28,
+      "rowCountEstimate": 45000000
+    },
+    {
+      "id": "cdgc-ref-001",
+      "name": "Country_Codes_ISO3166",
+      "type": "reference_data",
+      "description": "ISO 3166 country codes reference dataset",
+      "createdBy": "ref_data_admin",
+      "updateTime": "2026-01-05T10:00:00Z",
+      "tags": ["reference", "country", "iso"],
+      "dependencies": [],
+      "recordCount": 249
+    }
+  ]
+}

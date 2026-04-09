@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_M_LOAD_ORDERS
@@ -10,7 +10,7 @@
 # Sources: Oracle.SALES.ORDERS, Oracle.SALES.PRODUCTS
 # Targets: FACT_ORDERS, AGG_ORDERS_BY_CUSTOMER
 # Flow: SQ → LKP → EXP → AGG
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -21,17 +21,25 @@ from pyspark.sql.window import Window
 from delta.tables import DeltaTable
 
 # Parameters (from Informatica $$params / pipeline)
-load_date = dbutils.widgets.get("load_date")
+load_date = notebookutils.widgets.get("load_date")
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "800")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "104857600")
+spark.conf.set("spark.executor.memory", "4g")
+spark.conf.set("spark.executor.cores", "4")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: Oracle.SALES.ORDERS ---
 # Oracle: SELECT * FROM SALES.ORDERS
-df_source = spark.table("main.bronze.orders")
+df_source = spark.table("bronze.orders")
 
 # --- Source: Oracle.SALES.PRODUCTS ---
 # Oracle: SELECT * FROM SALES.PRODUCTS
-df_source_2 = spark.table("main.bronze.products")
+df_source_2 = spark.table("bronze.products")
 
 # SQL Override detected — review converted SQL in output/sql/
 # See: SQL_OVERRIDES_M_LOAD_ORDERS.sql
@@ -40,7 +48,7 @@ df_source_2 = spark.table("main.bronze.products")
 # CELL 3 — Transformation: LKP
 # --- Lookup: LKP_PRODUCTS ---
 # Using broadcast join for lookup table (< 100MB)
-df_lookup = spark.table("main.bronze.lookup_table")  # TODO: Replace with actual lookup table
+df_lookup = spark.table("bronze.lookup_table")  # TODO: Replace with actual lookup table
 df = df.join(
     broadcast(df_lookup),
     on="LOOKUP_KEY",  # TODO: Replace with actual lookup condition
@@ -69,13 +77,13 @@ df = df_agg
 # COMMAND ----------
 
 # CELL 6 — Target Write
-# --- Target: FACT_ORDERS → main.silver.fact_orders ---
+# --- Target: FACT_ORDERS → silver.fact_orders ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.silver.fact_orders")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver.fact_orders")
 
-# --- Target: AGG_ORDERS_BY_CUSTOMER → main.gold.agg_orders_by_customer ---
+# --- Target: AGG_ORDERS_BY_CUSTOMER → gold.agg_orders_by_customer ---
 df_target_2 = df
-df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.gold.agg_orders_by_customer")
+df_target_2.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold.agg_orders_by_customer")
 
 # COMMAND ----------
 

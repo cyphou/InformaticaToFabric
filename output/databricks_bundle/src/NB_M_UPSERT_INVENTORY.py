@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_M_UPSERT_INVENTORY
@@ -10,7 +10,7 @@
 # Sources: Oracle.SALES.STG_INVENTORY
 # Targets: DIM_INVENTORY
 # Flow: SQ → EXP → UPD
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,12 +19,20 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "800")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "104857600")
+spark.conf.set("spark.executor.memory", "4g")
+spark.conf.set("spark.executor.cores", "4")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: Oracle.SALES.STG_INVENTORY ---
 # Oracle: SELECT * FROM SALES.STG_INVENTORY
-df_source = spark.table("main.bronze.stg_inventory")
+df_source = spark.table("bronze.stg_inventory")
 
 # COMMAND ----------
 
@@ -39,7 +47,7 @@ df = df.withColumn(
 
 # CELL 4 — Transformation: UPD
 # --- Update Strategy → Delta MERGE ---
-target_table = DeltaTable.forName(spark, "main.silver.dim_inventory")
+target_table = DeltaTable.forName(spark, "silver.dim_inventory")
 target_table.alias('tgt').merge(
     df.alias('src'),
     'tgt.ID = src.ID'  # TODO: Replace with actual merge key
@@ -48,7 +56,7 @@ df = df  # Pass through for downstream
 # COMMAND ----------
 
 # CELL 5 — Target Write
-# MERGE handled in Update Strategy cell above → main.silver.dim_inventory
+# MERGE handled in Update Strategy cell above → silver.dim_inventory
 # COMMAND ----------
 
 # CELL 6 — Audit Log

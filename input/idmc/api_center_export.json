@@ -1,0 +1,65 @@
+{
+  "objects": [
+    {
+      "id": "api-def-001",
+      "name": "Customer_Lookup_API",
+      "type": "api_definition",
+      "description": "REST API for customer master lookup by ID, email, or phone — backed by MDM golden record",
+      "createdBy": "api_dev",
+      "updateTime": "2026-03-10T11:00:00Z",
+      "tags": ["rest", "customer", "lookup"],
+      "dependencies": [
+        {"component": "mdm", "name": "Customer_Master"}
+      ],
+      "version": "2.1.0",
+      "protocol": "REST",
+      "operations": ["GET /customers/{id}", "GET /customers/search", "POST /customers/match"],
+      "authType": "OAuth2"
+    },
+    {
+      "id": "api-def-002",
+      "name": "Order_Submission_API",
+      "type": "api_definition",
+      "description": "API for submitting new orders — validates against product master and DQ rules",
+      "createdBy": "api_dev",
+      "updateTime": "2026-03-05T14:00:00Z",
+      "tags": ["rest", "orders", "submission"],
+      "dependencies": [
+        {"component": "mdm", "name": "Product_Master"},
+        {"component": "cdq", "name": "DQ_Order_Amount_Range"}
+      ],
+      "version": "1.3.0",
+      "protocol": "REST",
+      "operations": ["POST /orders", "GET /orders/{id}", "PUT /orders/{id}/status"],
+      "authType": "API_Key"
+    },
+    {
+      "id": "api-coll-001",
+      "name": "Enterprise_Data_APIs",
+      "type": "api_collection",
+      "description": "Collection of all enterprise data service APIs",
+      "createdBy": "api_admin",
+      "updateTime": "2026-03-12T16:00:00Z",
+      "tags": ["collection", "enterprise"],
+      "dependencies": [
+        {"component": "api_center", "name": "Customer_Lookup_API"},
+        {"component": "api_center", "name": "Order_Submission_API"}
+      ],
+      "apiCount": 12,
+      "activeDeployments": 8
+    },
+    {
+      "id": "api-policy-001",
+      "name": "Rate_Limit_Standard",
+      "type": "api_policy",
+      "description": "Standard rate limiting: 1000 req/min for internal, 100 req/min for external",
+      "createdBy": "api_admin",
+      "updateTime": "2026-01-20T09:00:00Z",
+      "tags": ["rate-limit", "policy"],
+      "dependencies": [],
+      "internalLimit": 1000,
+      "externalLimit": 100,
+      "windowSeconds": 60
+    }
+  ]
+}

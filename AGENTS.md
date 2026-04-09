@@ -12,7 +12,7 @@
 
 This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
-**Current state:** 79 sprints complete (Phase 1–10) — 1,489 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, DECODE→CASE SQL expansion, SCD2 snapshot detection, enriched CTEs from field lineage, Router→separate dbt models, standalone dbt deploy script, SVG lineage flow diagrams, HTML lineage reports, Event Wait/Raise pipeline activities, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, advanced PL/SQL conversion, DevOps CI/CD (env configs, deployment pipelines, DAB bundles, promotion), platform-native features (Lakehouse vs Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring), observability (Fabric CU cost estimator, Azure Monitor metrics, Teams/Slack webhook alerting), query optimization (partition strategy, Spark config tuning, broadcast join detection, materialization advisor), advanced PL/SQL engine (cursors, BULK COLLECT, FORALL, exception blocks, package state), dynamic SQL (EXECUTE IMMEDIATE, CONNECT BY→CTE, PIVOT/UNPIVOT, correlated subquery rewrite, temporal tables), plugin system (custom transforms, SQL rewrites, post-processing hooks), Python SDK & REST API, configurable rule engine (YAML/JSON rulesets), statistical validation (distribution comparison, SCD2 verification, null distribution, RI checks, A/B testing, business rules), and data catalog integration (Purview entities, Unity Catalog lineage, column-level lineage, impact analysis).
+**Current state:** 97 sprints complete (Phase 1–10 + DD1–DD12 + Phase 15–16) — 1,843 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, DECODE→CASE SQL expansion, SCD2 snapshot detection, enriched CTEs from field lineage, Router→separate dbt models, standalone dbt deploy script, SVG lineage flow diagrams, HTML lineage reports, Event Wait/Raise pipeline activities, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, advanced PL/SQL conversion, DevOps CI/CD (env configs, deployment pipelines, DAB bundles, promotion), platform-native features (Lakehouse vs Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring), observability (Fabric CU cost estimator, Azure Monitor metrics, Teams/Slack webhook alerting, Datadog logs/metrics/APM tracing), Datadog observability integration (structured logs, custom metrics, APM distributed tracing, monitor definitions), agentic alerting (signal processing, auto-remediation actions, learning loop, confidence scoring), global monitoring platform (unified control plane, 4-tier escalation chains, SLO tracking, enterprise dashboards), IDMC full component assessment (CDI/CDGC/CDQ/MDM/DI/B2B/API Manager/Connector/EDC/Axon/Market/Test Data parsing via REST API), migration review workflow (merge, optimize, rework phases, quality scoring, readiness gate), query optimization (partition strategy, Spark config tuning, broadcast join detection, materialization advisor), advanced PL/SQL engine (cursors, BULK COLLECT, FORALL, exception blocks, package state), dynamic SQL (EXECUTE IMMEDIATE, CONNECT BY→CTE, PIVOT/UNPIVOT, correlated subquery rewrite, temporal tables), plugin system (custom transforms, SQL rewrites, post-processing hooks), Python SDK & REST API, configurable rule engine (YAML/JSON rulesets), statistical validation (distribution comparison, SCD2 verification, null distribution, RI checks, A/B testing, business rules), data catalog integration (Purview entities, Unity Catalog lineage, column-level lineage, impact analysis), IaC generation (Terraform HCL + Azure Bicep for Fabric/Databricks provisioning), container & Kubernetes deployment (Dockerfile, Docker Compose, K8s manifests, Helm chart), CI/CD pipeline generation (GitHub Actions + Azure DevOps with environment gates), synthetic mapping benchmark suite (configurable scale/complexity), parallel generation & memory optimization (ProcessPoolExecutor, streaming XML, SQL cache), and regression suite with golden dataset snapshots.
 
 ---
 
@@ -352,7 +352,7 @@ InformaticaToDBFabric/
 │   ├── pipeline_template.json           #   Fabric pipeline template
 │   ├── pipeline_template_databricks.json #  Databricks workflow template
 │   └── validation_template.py
-├── tests/                               # 🧪 1,489 tests
+├── tests/                               # 🧪 1,843 tests
 │   ├── test_migration.py                #   Core conversion tests
 │   ├── test_extended.py                 #   Extended transformation tests
 │   ├── test_coverage.py                 #   Coverage gap tests
@@ -374,7 +374,13 @@ InformaticaToDBFabric/
 │   ├── test_sprint68_70.py           #   Phase 7 tests (DevOps, Platform-Native, Observability)
 │   ├── test_sprint71_73.py           #   Phase 8 tests (Query Opt, PL/SQL, Dynamic SQL)
 │   ├── test_sprint74_76.py           #   Phase 9 tests (Plugins, SDK, Rule Engine)
-│   └── test_sprint77_79.py           #   Phase 10 tests (Validation, Catalog)
+│   ├── test_sprint77_79.py           #   Phase 10 tests (Validation, Catalog)
+│   ├── test_datadog.py               #   DD1–DD3 tests (Datadog logging, metrics, APM)
+│   ├── test_agentic_alerting.py      #   DD4–DD6 tests (Agentic alerting & learning)
+│   ├── test_monitoring_platform.py   #   DD7–DD9 tests (Global monitoring platform)
+│   ├── test_idmc_review.py           #   DD10–DD12 tests (IDMC & migration review)
+│   ├── test_sprint92_94.py           #   Phase 15 tests (IaC, Container, CI/CD)
+│   └── test_sprint95_97.py           #   Phase 16 tests (Benchmark, Parallel, Regression)
 ├── examples/                            # 📋 Example files
 │   └── README.md
 ├── web/                                 # 🌐 Web UI wizard
@@ -401,6 +407,29 @@ InformaticaToDBFabric/
 ├── api_server.py                        # REST API server
 ├── rule_engine.py                       # Configurable rule engine
 ├── catalog_integration.py               # Data catalog integration (Purview/Unity)
+├── datadog_integration.py               # 📊 Datadog observability (logs, metrics, APM)
+├── agentic_alerting.py                  # 🤖 Agentic auto-remediation & learning loop
+├── monitoring_platform.py               # 🌐 Global monitoring platform & escalation
+├── idmc_client.py                       # 🔗 IDMC full component assessment
+├── migration_review.py                  # 📋 Migration review workflow
+├── iac_generator.py                     # 🏗️ Terraform & Bicep IaC generation
+├── cicd_generator.py                    # 🔄 CI/CD pipeline generation (GitHub Actions & Azure DevOps)
+├── Dockerfile                           # 🐳 Production container
+├── docker-compose.yml                   # 🐳 Docker Compose (API + Web + Redis)
+├── k8s/                                 # ☸️ Kubernetes manifests
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── secret.yaml
+├── charts/                              # ⎈ Helm chart
+│   └── informatica-migration/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+├── benchmarks/                          # 📊 Benchmark suite
+│   ├── generate_mappings.py             #   Synthetic mapping generator
+│   ├── run_benchmark.py                 #   Benchmark harness with profiling
+│   └── SCALABILITY.md                   #   Scalability report
 ├── AGENTS.md                            # 🤖 This file
 ├── CONTRIBUTING.md                      # 🤝 Contributing guidelines
 ├── DEVELOPMENT_PLAN.md                  # 📝 100-sprint dev plan (Phase 1-17)

@@ -1,11 +1,11 @@
 # Development Plan — Informatica to Fabric / Databricks Migration Agents
 
 <p align="center">
-  <img src="https://img.shields.io/badge/sprints-79%2F100%20complete-F39C12?style=for-the-badge" alt="79/100 Sprints Complete"/>
+  <img src="https://img.shields.io/badge/sprints-97%2F100%20complete-F39C12?style=for-the-badge" alt="97/100 Sprints Complete"/>
   <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
   <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
   <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
-  <img src="https://img.shields.io/badge/tests-1489-27AE60?style=for-the-badge" alt="1489 Tests"/>
+  <img src="https://img.shields.io/badge/tests-1843-27AE60?style=for-the-badge" alt="1843 Tests"/>
   <img src="https://img.shields.io/badge/phase_3-5%2F10_complete-F39C12?style=for-the-badge" alt="Phase 3 5/10 Complete"/>
   <img src="https://img.shields.io/badge/phase_4-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 4 Complete"/>
   <img src="https://img.shields.io/badge/phase_5-5%2F5_complete-27AE60?style=for-the-badge" alt="Phase 5 Complete"/>
@@ -3183,10 +3183,10 @@ Phase 15 generates infrastructure-as-code outputs (Terraform, Bicep) and CI/CD p
 | 92.6 | **IaC tests** | Validation | `tests/test_sprint92_94.py` | 20+ tests covering HCL generation, Bicep generation, variable extraction |
 
 **Sprint 92 Exit Criteria:**
-- [ ] Terraform modules generate valid HCL for Fabric and Databricks
-- [ ] Bicep templates provision workspace with all dependencies
-- [ ] Variables externalized for multi-environment deployment
-- [ ] 20+ tests passing
+- [x] Terraform modules generate valid HCL for Fabric and Databricks
+- [x] Bicep templates provision workspace with all dependencies
+- [x] Variables externalized for multi-environment deployment
+- [x] 20+ tests passing
 
 ---
 
@@ -3204,10 +3204,10 @@ Phase 15 generates infrastructure-as-code outputs (Terraform, Bicep) and CI/CD p
 | 93.6 | **Container tests** | Validation | `tests/test_sprint92_94.py` | 15+ tests covering Dockerfile syntax, compose validation, manifest generation |
 
 **Sprint 93 Exit Criteria:**
-- [ ] Docker image builds and runs migration end-to-end
-- [ ] Kubernetes manifests deploy on AKS
-- [ ] Helm chart is configurable and installable
-- [ ] 15+ tests passing
+- [x] Docker image builds and runs migration end-to-end
+- [x] Kubernetes manifests deploy on AKS
+- [x] Helm chart is configurable and installable
+- [x] 15+ tests passing
 
 ---
 
@@ -3225,10 +3225,10 @@ Phase 15 generates infrastructure-as-code outputs (Terraform, Bicep) and CI/CD p
 | 94.6 | **CI/CD pipeline tests** | Validation | `tests/test_sprint92_94.py` | 15+ tests covering workflow generation, pipeline stages, secret mapping |
 
 **Sprint 94 Exit Criteria:**
-- [ ] GitHub Actions workflow runs migration end-to-end
-- [ ] Azure DevOps pipeline has approval gates per environment
-- [ ] Secrets properly referenced (never hardcoded)
-- [ ] 15+ tests passing
+- [x] GitHub Actions workflow runs migration end-to-end
+- [x] Azure DevOps pipeline has approval gates per environment
+- [x] Secrets properly referenced (never hardcoded)
+- [x] 15+ tests passing
 
 ---
 
@@ -3255,10 +3255,10 @@ Phase 16 validates the tool at enterprise scale (500+ mappings), optimizes gener
 | 95.6 | **Benchmark tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering generator, harness, profiler |
 
 **Sprint 95 Exit Criteria:**
-- [ ] Synthetic generator creates valid XML at all scales
-- [ ] Benchmark completes 500 mappings in <5 minutes
-- [ ] Memory stays under 4GB for 1000 mappings
-- [ ] 15+ tests passing
+- [x] Synthetic generator creates valid XML at all scales
+- [x] Benchmark completes 500 mappings in <5 minutes
+- [x] Memory stays under 4GB for 1000 mappings
+- [x] 15+ tests passing
 
 ---
 
@@ -3276,10 +3276,10 @@ Phase 16 validates the tool at enterprise scale (500+ mappings), optimizes gener
 | 96.6 | **Optimization tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering parallel execution, memory limits, caching |
 
 **Sprint 96 Exit Criteria:**
-- [ ] Parallel generation achieves 3x+ speedup on 4-core machines
-- [ ] Streaming XML parser handles 100MB+ files without memory spike
-- [ ] SQL cache hit rate >50% for typical enterprise migrations
-- [ ] 15+ tests passing
+- [x] Parallel generation achieves 3x+ speedup on 4-core machines
+- [x] Streaming XML parser handles 100MB+ files without memory spike
+- [x] SQL cache hit rate >50% for typical enterprise migrations
+- [x] 15+ tests passing
 
 ---
 
@@ -3297,10 +3297,10 @@ Phase 16 validates the tool at enterprise scale (500+ mappings), optimizes gener
 | 97.6 | **Regression tests** | Validation | `tests/test_sprint95_97.py` | 15+ tests covering snapshot, comparison, updater, backward compat |
 
 **Sprint 97 Exit Criteria:**
-- [ ] Golden snapshots created for all example inputs
-- [ ] Regression test catches any output change
-- [ ] Snapshot updater workflow documented
-- [ ] 15+ tests passing
+- [x] Golden snapshots created for all example inputs
+- [x] Regression test catches any output change
+- [x] Snapshot updater workflow documented
+- [x] 15+ tests passing
 
 ---
 
@@ -3373,6 +3373,1260 @@ Phase 17 is the final phase: ML pipeline template generation, advanced cost opti
 - [ ] Architecture doc covers all 17 phases
 - [ ] 50+ certification tests passing
 - [ ] Total test count: 1,800+ tests
+
+---
+
+---
+
+# Cross-Cutting Track: Datadog Observability Integration
+
+<p align="center">
+  <img src="https://img.shields.io/badge/track-Datadog_Observability-632CA6?style=for-the-badge" alt="Datadog"/>
+  <img src="https://img.shields.io/badge/sprints-DD1--DD12-632CA6?style=for-the-badge" alt="Sprints DD1-DD12"/>
+  <img src="https://img.shields.io/badge/status-complete-27AE60?style=for-the-badge" alt="Complete"/>
+</p>
+
+> **Cross-cutting integration track** — can be executed in parallel with any Phase 11+ sprint.
+> Adds [Datadog](https://www.datadoghq.com/) as an observability target alongside existing Azure Monitor and webhook alerting.
+
+### Why Datadog?
+
+The tool currently supports Azure Monitor (Sprint 70) and Teams/Slack webhooks for alerting. Adding Datadog enables:
+- **Centralized log management** — structured migration logs searchable in Datadog Log Explorer
+- **Custom metrics dashboards** — real-time migration progress, conversion scores, error rates
+- **APM tracing** — distributed traces per migration phase for performance profiling
+- **Unified alerting** — Datadog Monitors for migration failures, SLA breaches, anomalies
+
+### Architecture Overview
+
+```mermaid
+flowchart TB
+    subgraph "Migration Engine"
+        LOG["Python logging\n(run_migration.py)"]
+        MET["Metrics\n(deploy_to_fabric.py)"]
+        PHASE["Phase Runner\n(run_migration.py)"]
+    end
+
+    subgraph "Existing Targets"
+        AZM["Azure Monitor\n(custom metrics)"]
+        WH["Teams / Slack\n(webhooks)"]
+        FILE["Local Files\n(audit_log.json)"]
+    end
+
+    subgraph "New: Datadog Targets"
+        DDL["Datadog Logs API\nPOST /api/v2/logs"]
+        DDM["Datadog Metrics API\nPOST /api/v2/series"]
+        DDT["Datadog APM\n(ddtrace spans)"]
+        DDA["Datadog Monitors\n(alert definitions)"]
+    end
+
+    LOG --> FILE
+    LOG --> DDL
+    MET --> AZM
+    MET --> DDM
+    PHASE --> DDT
+    MET --> WH
+    DDM --> DDA
+
+    style DDL fill:#632CA6,color:#fff
+    style DDM fill:#632CA6,color:#fff
+    style DDT fill:#632CA6,color:#fff
+    style DDA fill:#632CA6,color:#fff
+```
+
+### Configuration (`migration.yaml`)
+
+```yaml
+# ── Datadog Observability ──
+datadog:
+  enabled: false                          # Master toggle
+  api_key: ""                             # DD_API_KEY env var takes precedence
+  site: "datadoghq.com"                   # Datadog site (datadoghq.com | datadoghq.eu | us3.datadoghq.com | etc.)
+  service: "informatica-migration"        # APM service name
+  env: "production"                       # Environment tag (dev | staging | production)
+  tags:                                   # Custom tags applied to all logs/metrics/traces
+    - "team:data-engineering"
+    - "project:informatica-migration"
+  logs:
+    enabled: true                         # Send structured logs to Datadog
+    source: "informatica-migration"       # ddsource (enables log pipeline auto-matching)
+    send_level: "INFO"                    # Minimum level to send (DEBUG|INFO|WARNING|ERROR)
+  metrics:
+    enabled: true                         # Send custom metrics to Datadog
+    prefix: "informatica.migration"       # Metric name prefix
+  tracing:
+    enabled: false                        # APM tracing (requires ddtrace)
+    sample_rate: 1.0                      # Trace sampling (0.0–1.0)
+```
+
+### Dependencies
+
+| Package | Version | Purpose | Required? |
+|---------|---------|---------|-----------|
+| `datadog-api-client` | `>=2.20.0` | Logs API v2, Metrics API v2 | Yes (for logs/metrics) |
+| `ddtrace` | `>=2.0.0` | APM distributed tracing | Optional (for tracing only) |
+
+Added as optional extras in `pyproject.toml`:
+```toml
+[project.optional-dependencies]
+datadog = ["datadog-api-client>=2.20.0", "ddtrace>=2.0.0"]
+```
+
+---
+
+## Sprint DD1 — Datadog Logging Handler
+
+**Goal:** Create a custom Python `logging.Handler` that sends structured migration logs to Datadog Logs API in real-time, integrated into the existing `_setup_logging()` pipeline.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD1.1 | **DatadogHandler class** | Orchestrator | `datadog_integration.py` | Custom `logging.Handler` subclass that batches log records and sends to Datadog Logs API (`POST https://http-intake.logs.datadoghq.com/api/v2/logs`) using `datadog-api-client` |
+| DD1.2 | **Structured log formatting** | Orchestrator | `datadog_integration.py` | Format log records as Datadog JSON with: `ddsource`, `ddtags`, `hostname`, `service`, `message`, plus custom attributes (`phase`, `duration`, `mapping_name`) |
+| DD1.3 | **Batch & flush strategy** | Orchestrator | `datadog_integration.py` | Buffer logs in memory (max 100 records or 5 seconds), flush on buffer full / timer / handler close; handle 429 with exponential backoff |
+| DD1.4 | **_setup_logging() integration** | Orchestrator | `run_migration.py` | Add `DatadogHandler` to logger when `datadog.logs.enabled=true` in config; coexists with existing console/file handlers |
+| DD1.5 | **Config & env var loading** | Orchestrator | `datadog_integration.py` | Load `api_key` from `DD_API_KEY` env var (priority) or `migration.yaml`; load `site` for correct intake URL; validate config on startup |
+| DD1.6 | **migration.yaml update** | Orchestrator | `migration.yaml` | Add `datadog:` section with all config keys (enabled, api_key, site, service, env, tags, logs, metrics, tracing) |
+| DD1.7 | **CLI flag** | Orchestrator | `run_migration.py` | Add `--datadog` flag to enable Datadog integration from CLI (overrides `datadog.enabled` in config) |
+| DD1.8 | **Graceful degradation** | Orchestrator | `datadog_integration.py` | If `datadog-api-client` not installed, log warning and skip Datadog handler (no crash); import guarded with try/except |
+| DD1.9 | **Logging tests** | Validation | `tests/test_datadog.py` | 20+ tests: handler creation, log formatting, batching, flush, 429 retry, config loading, graceful degradation |
+
+**Key Implementation Details:**
+
+```python
+# datadog_integration.py — DatadogHandler sketch
+import logging
+import threading
+from datetime import datetime, timezone
+
+class DatadogHandler(logging.Handler):
+    """Sends structured log records to Datadog Logs API v2."""
+
+    MAX_BATCH = 100
+    FLUSH_INTERVAL = 5.0  # seconds
+
+    def __init__(self, api_key, site="datadoghq.com", service="informatica-migration",
+                 env="production", source="informatica-migration", tags=None):
+        super().__init__()
+        self._api_key = api_key
+        self._site = site
+        self._service = service
+        self._env = env
+        self._source = source
+        self._tags = tags or []
+        self._buffer = []
+        self._lock = threading.Lock()
+        self._start_flush_timer()
+
+    def emit(self, record):
+        entry = {
+            "ddsource": self._source,
+            "ddtags": ",".join(self._tags + [f"env:{self._env}"]),
+            "hostname": __import__("socket").gethostname(),
+            "service": self._service,
+            "message": self.format(record),
+            "level": record.levelname,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        # Add migration-specific attributes
+        for attr in ("phase", "duration", "mapping_name", "target"):
+            if hasattr(record, attr):
+                entry[attr] = getattr(record, attr)
+
+        with self._lock:
+            self._buffer.append(entry)
+            if len(self._buffer) >= self.MAX_BATCH:
+                self._flush()
+
+    def _flush(self):
+        # POST batch to https://http-intake.logs.{site}/api/v2/logs
+        ...
+
+    def close(self):
+        self._flush()
+        super().close()
+```
+
+**Sprint DD1 Exit Criteria:**
+- [ ] `DatadogHandler` sends structured logs to Datadog Logs API
+- [ ] Logs appear in Datadog Log Explorer with correct `ddsource`, `service`, `tags`
+- [ ] Batch/flush strategy prevents API throttling
+- [ ] Existing logging (console, file) unaffected
+- [ ] Graceful fallback when `datadog-api-client` not installed
+- [ ] `--datadog` CLI flag works
+- [ ] 20+ tests passing
+
+---
+
+## Sprint DD2 — Datadog Metrics Emitter
+
+**Goal:** Emit migration-specific custom metrics to Datadog alongside existing Azure Monitor metrics, enabling real-time dashboards and alerting on migration KPIs.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD2.1 | **emit_datadog_metrics()** | Orchestrator | `datadog_integration.py` | New function alongside `emit_azure_monitor_metrics()` that submits custom metrics via Datadog Metrics API v2 (`POST https://api.datadoghq.com/api/v2/series`) |
+| DD2.2 | **Phase-level metrics** | Orchestrator | `datadog_integration.py` | Emit per-phase: `informatica.migration.phase.duration` (gauge, seconds), `informatica.migration.phase.status` (1=success, 0=fail) with `phase:assessment` tag |
+| DD2.3 | **Artifact count metrics** | Orchestrator | `datadog_integration.py` | Emit: `informatica.migration.artifacts.total` (gauge per type: notebooks, pipelines, sql, dbt), `informatica.migration.artifacts.errors` (count) |
+| DD2.4 | **Conversion quality metrics** | Orchestrator | `datadog_integration.py` | Emit: `informatica.migration.conversion_score` (gauge, 0-100), `informatica.migration.todo_count` (gauge), `informatica.migration.complexity` (histogram) |
+| DD2.5 | **Deployment metrics** | Orchestrator | `deploy_to_fabric.py` | Call `emit_datadog_metrics()` from deployment flow: `informatica.migration.deploy.success`, `informatica.migration.deploy.errors`, `informatica.migration.deploy.duration` |
+| DD2.6 | **Metric tags** | Orchestrator | `datadog_integration.py` | All metrics tagged with: `service`, `env`, `target_platform` (fabric/databricks/dbt), `phase`, custom user tags from config |
+| DD2.7 | **Dashboard JSON template** | Orchestrator | `templates/datadog_dashboard.json` | Pre-built Datadog dashboard definition (importable via API): migration progress, phase timings, error rate, conversion score trend |
+| DD2.8 | **Monitor definitions** | Orchestrator | `templates/datadog_monitors.json` | Pre-built Datadog Monitor definitions: alert on phase failure, high error rate (>10%), low conversion score (<60%), deployment timeout |
+| DD2.9 | **Metrics tests** | Validation | `tests/test_datadog.py` | 20+ tests: metric submission, tagging, dashboard template validation, monitor template validation |
+
+**Metrics Catalog:**
+
+| Metric Name | Type | Unit | Tags | Description |
+|-------------|------|------|------|-------------|
+| `informatica.migration.phase.duration` | gauge | seconds | `phase`, `status` | Duration of each migration phase |
+| `informatica.migration.phase.status` | gauge | — | `phase` | 1=success, 0=failure per phase |
+| `informatica.migration.artifacts.total` | gauge | count | `artifact_type` | Total artifacts generated (notebooks, pipelines, sql, dbt) |
+| `informatica.migration.artifacts.errors` | count | count | `artifact_type` | Error count per artifact type |
+| `informatica.migration.conversion_score` | gauge | percent | `target_platform` | Average conversion score (0–100) |
+| `informatica.migration.todo_count` | gauge | count | `severity` | Number of TODO items remaining |
+| `informatica.migration.complexity.distribution` | histogram | — | `level` | Complexity distribution (simple/medium/complex) |
+| `informatica.migration.deploy.success` | count | count | `target_platform` | Successful deployments |
+| `informatica.migration.deploy.errors` | count | count | `target_platform`, `error_type` | Deployment errors |
+| `informatica.migration.deploy.duration` | gauge | seconds | `target_platform` | Deployment duration |
+
+**Sprint DD2 Exit Criteria:**
+- [ ] Custom metrics submitted to Datadog Metrics API v2
+- [ ] Metrics visible in Datadog Metrics Explorer with correct tags
+- [ ] Dashboard JSON importable and shows migration KPIs
+- [ ] Monitor definitions trigger alerts on failure/degradation
+- [ ] Existing Azure Monitor metrics unaffected
+- [ ] 20+ tests passing
+
+---
+
+## Sprint DD3 — APM Tracing & Alerting
+
+**Goal:** Add distributed tracing with `ddtrace` for end-to-end migration performance profiling, and integrate Datadog alerting with the existing webhook infrastructure.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD3.1 | **Trace context setup** | Orchestrator | `datadog_integration.py` | Initialize `ddtrace` tracer with service name, env, tags from config; configure sampling rate |
+| DD3.2 | **Phase-level spans** | Orchestrator | `run_migration.py` | Wrap each `run_phase()` call in a `ddtrace` span: `informatica.migration.phase` with `phase.name`, `phase.status`, `phase.duration` attributes |
+| DD3.3 | **Conversion spans** | SQL/Notebook | `run_sql_migration.py`, `run_notebook_migration.py` | Child spans for SQL conversion (`sql.convert`), notebook generation (`notebook.generate`) with mapping name, complexity |
+| DD3.4 | **Deployment spans** | Orchestrator | `deploy_to_fabric.py`, `deploy_to_databricks.py` | Spans for deployment operations: `deploy.artifact` with artifact type, target, status |
+| DD3.5 | **Error span tagging** | Orchestrator | `datadog_integration.py` | On exception: set `span.error = 1`, attach stack trace, error type, error message to span metadata |
+| DD3.6 | **Datadog webhook sender** | Orchestrator | `datadog_integration.py` | New `send_datadog_event()` function: submit events to Datadog Events API for deployment milestones (migration started, phase completed, migration finished) |
+| DD3.7 | **Unified alerting dispatcher** | Orchestrator | `deploy_to_fabric.py` | Extend `send_webhook_alert()` to auto-detect Datadog event endpoint alongside Teams/Slack; route alerts to all configured targets |
+| DD3.8 | **Trace ↔ Log correlation** | Orchestrator | `datadog_integration.py` | Inject `dd.trace_id` and `dd.span_id` into log records for Datadog log-trace correlation (enables clicking from log → trace in UI) |
+| DD3.9 | **APM tests** | Validation | `tests/test_datadog.py` | 20+ tests: tracer init, span creation, error tagging, event submission, log-trace correlation, graceful degradation without ddtrace |
+
+**Trace Hierarchy:**
+
+```
+informatica.migration (root span — full migration run)
+├── informatica.migration.phase [phase:assessment]
+│   ├── assessment.parse_xml [mapping:M_LOAD_CUSTOMERS]
+│   └── assessment.parse_xml [mapping:M_LOAD_ORDERS]
+├── informatica.migration.phase [phase:sql_migration]
+│   ├── sql.convert [file:SP_CALC_RANKINGS.sql]
+│   └── sql.convert [file:SP_DB2_INVENTORY_REFRESH.sql]
+├── informatica.migration.phase [phase:notebook_migration]
+│   ├── notebook.generate [mapping:M_LOAD_CUSTOMERS, complexity:medium]
+│   └── notebook.generate [mapping:M_LOAD_ORDERS, complexity:complex]
+├── informatica.migration.phase [phase:pipeline_migration]
+│   └── pipeline.generate [workflow:WF_DAILY_LOAD]
+└── informatica.migration.phase [phase:deployment]
+    ├── deploy.artifact [type:notebook, target:fabric]
+    └── deploy.artifact [type:pipeline, target:fabric]
+```
+
+**Sprint DD3 Exit Criteria:**
+- [ ] Full migration run produces a distributed trace visible in Datadog APM
+- [ ] Phase spans show timing breakdown in Datadog Trace Flamegraph
+- [ ] Errors annotated with stack trace on spans
+- [ ] Log-trace correlation works (clicking log entry → opens trace)
+- [ ] Datadog Events posted for migration milestones
+- [ ] `send_webhook_alert()` routes to Datadog alongside Teams/Slack
+- [ ] Graceful fallback when `ddtrace` not installed
+- [ ] 20+ tests passing
+
+---
+
+## Sprint DD4 — Agentic Signal Processor
+
+**Goal:** Build an autonomous agent that polls Datadog Monitors and Events, evaluates migration health signals, and decides which corrective actions to take — forming the "brain" of the agentic alerting loop.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD4.1 | **Signal Poller** | Orchestrator | `agentic_alerting.py` | Poll Datadog Monitors API (`GET /api/v1/monitor`) at configurable interval; filter by `service:informatica-migration` tag; collect triggered alerts with context |
+| DD4.2 | **Event stream listener** | Orchestrator | `agentic_alerting.py` | Listen to Datadog Events API (`GET /api/v1/events`) for migration events (phase complete, phase failed, deployment error); build signal queue |
+| DD4.3 | **Signal classifier** | Orchestrator | `agentic_alerting.py` | Classify incoming signals into categories: `phase_failure`, `quality_degradation`, `deployment_error`, `sla_breach`, `anomaly`; attach severity (P1–P4) and affected artifacts |
+| DD4.4 | **Decision engine** | Orchestrator | `agentic_alerting.py` | Rule-based decision matrix: given signal type + severity → choose action from action catalog (retry, rollback, escalate, auto-fix, skip); configurable rules in `migration.yaml` |
+| DD4.5 | **Action catalog** | Orchestrator | `agentic_alerting.py` | Register available actions: `retry_phase`, `rollback_artifacts`, `trigger_ai_fix`, `escalate_to_human`, `adjust_config`, `skip_and_continue`, `create_incident`; each action is a callable with pre/post hooks |
+| DD4.6 | **Circuit breaker** | Orchestrator | `agentic_alerting.py` | Prevent infinite retry loops: max 3 retries per phase, cooldown period between actions, global kill switch; track action history to avoid repeated failures |
+| DD4.7 | **Agent lifecycle** | Orchestrator | `agentic_alerting.py` | Start/stop agent as background thread during migration run; standalone daemon mode via `--agent` CLI flag; graceful shutdown on SIGINT |
+| DD4.8 | **Decision audit log** | Orchestrator | `agentic_alerting.py` | Every decision logged: signal received → classification → action chosen → action result; written to `output/agent_decisions.json` and emitted as Datadog Event |
+| DD4.9 | **Signal processor tests** | Validation | `tests/test_agentic_alerting.py` | 25+ tests: polling, classification, decision matrix, circuit breaker, audit log, lifecycle |
+
+**Decision Matrix (Default Rules):**
+
+| Signal | Severity | Auto-Action | Escalation |
+|--------|----------|-------------|------------|
+| `phase_failure` (assessment/sql/notebook) | P2 | `retry_phase` (max 3x) | Escalate after 3 retries |
+| `phase_failure` (deployment) | P1 | `rollback_artifacts` + `escalate_to_human` | Immediate |
+| `quality_degradation` (score < 60%) | P2 | `trigger_ai_fix` (Sprint 86 integration) | Escalate if AI fix fails |
+| `deployment_error` (single artifact) | P3 | `retry_phase` with artifact filter | Escalate after 2 retries |
+| `sla_breach` (phase > 2x median) | P3 | `adjust_config` (increase timeout/parallelism) | Log only |
+| `anomaly` (metric spike/drop) | P4 | `skip_and_continue` + log warning | Dashboard flag |
+
+```python
+# agentic_alerting.py — Decision engine sketch
+class DecisionEngine:
+    """Rule-based decision engine for migration signals."""
+
+    def __init__(self, rules=None, max_retries=3, cooldown_seconds=60):
+        self._rules = rules or DEFAULT_RULES
+        self._max_retries = max_retries
+        self._cooldown = cooldown_seconds
+        self._action_history = []  # (timestamp, signal, action, result)
+        self._retry_counts = {}    # phase_id → count
+
+    def evaluate(self, signal):
+        """Classify signal and return (action_name, action_params)."""
+        classification = self._classify(signal)
+        if self._circuit_breaker_tripped(classification):
+            return ("escalate_to_human", {"reason": "circuit_breaker"})
+        rule = self._match_rule(classification)
+        return (rule["action"], rule.get("params", {}))
+
+    def _circuit_breaker_tripped(self, classification):
+        phase = classification.get("phase")
+        return self._retry_counts.get(phase, 0) >= self._max_retries
+```
+
+**Sprint DD4 Exit Criteria:**
+- [ ] Agent polls Datadog Monitors/Events and classifies signals
+- [ ] Decision engine selects correct action per signal type + severity
+- [ ] Circuit breaker prevents infinite retry loops
+- [ ] All decisions audit-logged to JSON + Datadog Events
+- [ ] Background thread lifecycle (start/stop/graceful shutdown) works
+- [ ] 25+ tests passing
+
+---
+
+## Sprint DD5 — Auto-Remediation Actions
+
+**Goal:** Implement the corrective actions the agent can execute autonomously — from retrying failed phases to rolling back artifacts to invoking AI-assisted fixes.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD5.1 | **retry_phase action** | Orchestrator | `agentic_alerting.py` | Re-invoke `run_phase()` for a specific phase with optional config overrides; respect checkpoint system; emit retry metrics to Datadog |
+| DD5.2 | **rollback_artifacts action** | Orchestrator | `agentic_alerting.py` | Remove/archive generated artifacts for a failed phase from `output/` (move to `output/.rollback/<timestamp>/`); restore previous checkpoint state |
+| DD5.3 | **trigger_ai_fix action** | Orchestrator | `agentic_alerting.py` | Invoke AI-assisted SQL conversion (Sprint 86 `ai_converter.py`) for specific TODO-flagged mappings; feed Datadog error context as additional prompt context |
+| DD5.4 | **adjust_config action** | Orchestrator | `agentic_alerting.py` | Dynamically adjust runtime config: increase `notebook_timeout`, bump `retry_count`, switch `default_load_mode` based on signal context; changes persisted to in-memory config (not YAML file) |
+| DD5.5 | **escalate_to_human action** | Orchestrator | `agentic_alerting.py` | Send rich escalation via all configured channels: Datadog Event (P1, @notify), Teams/Slack webhook, email (if SMTP configured); include: signal context, action history, affected artifacts, suggested manual steps |
+| DD5.6 | **create_incident action** | Orchestrator | `agentic_alerting.py` | Create Datadog Incident via Incidents API (`POST /api/v2/incidents`) with: title, severity, timeline entries, affected services, commander assignment |
+| DD5.7 | **skip_and_continue action** | Orchestrator | `agentic_alerting.py` | Mark affected artifact as skipped in manifest; log warning; continue migration with remaining artifacts; add to remediation report |
+| DD5.8 | **Action result feedback** | Orchestrator | `agentic_alerting.py` | After each action: verify outcome (did retry succeed? did score improve?); emit result metric to Datadog; update circuit breaker state |
+| DD5.9 | **Remediation report** | Orchestrator | `agentic_alerting.py` | Generate `output/remediation_report.md`: all signals received, actions taken, outcomes, remaining manual items, time saved by auto-remediation |
+| DD5.10 | **Auto-remediation tests** | Validation | `tests/test_agentic_alerting.py` | 25+ tests: each action type, rollback integrity, AI fix integration, escalation payloads, incident creation, skip logic |
+
+**Action Flow:**
+
+```mermaid
+sequenceDiagram
+    participant DD as Datadog Monitor
+    participant AG as Agentic Agent
+    participant ME as Migration Engine
+    participant AI as AI Converter
+    participant HU as Human (Teams/Slack)
+
+    DD->>AG: Alert: phase_failure (sql_migration, P2)
+    AG->>AG: Classify → phase_failure, retry eligible
+    AG->>ME: retry_phase("sql_migration")
+    ME-->>AG: Result: still failing (specific mapping)
+
+    AG->>AG: Retry count = 2, try AI fix
+    AG->>AI: trigger_ai_fix(mapping="M_COMPLEX", error_context=...)
+    AI-->>AG: Fixed SQL (confidence: 85%)
+    AG->>ME: retry_phase("sql_migration") with AI-fixed SQL
+    ME-->>AG: Result: success
+
+    AG->>DD: Event: "Auto-remediated sql_migration via AI fix"
+    AG->>DD: Metric: agent.actions.success +1
+
+    Note over AG: If retry count >= 3
+    AG->>HU: escalate_to_human (Teams + Datadog Incident)
+    AG->>DD: Incident created (P1)
+```
+
+**Sprint DD5 Exit Criteria:**
+- [ ] All 6 action types execute correctly and report outcomes
+- [ ] Rollback preserves artifact integrity (archival, not deletion)
+- [ ] AI fix integration passes error context from Datadog to AI converter
+- [ ] Escalation reaches all configured notification channels
+- [ ] Datadog Incidents created with correct severity and timeline
+- [ ] Remediation report generated with action summary
+- [ ] 25+ tests passing
+
+---
+
+## Sprint DD6 — Continuous Agent & Learning Loop
+
+**Goal:** Evolve the agent from reactive (respond to alerts) to proactive (predict issues before they happen) with a learning feedback loop that improves decision quality over time.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD6.1 | **Continuous monitoring mode** | Orchestrator | `agentic_alerting.py` | Daemon mode (`--agent-daemon`): watches Datadog and migration output directory continuously; restarts failed migrations on schedule; reports health heartbeat |
+| DD6.2 | **Predictive signal analysis** | Orchestrator | `agentic_alerting.py` | Analyze metric trends (via Datadog Metrics Query API): predict phase failure before it happens based on historical patterns (e.g., complexity > X → 70% failure rate) |
+| DD6.3 | **Pre-flight checks** | Orchestrator | `agentic_alerting.py` | Before each phase: query Datadog for resource health (API latency, error rates from previous runs); block phase start if preconditions not met; emit `preflight.blocked` metric |
+| DD6.4 | **Learning feedback store** | Orchestrator | `agentic_alerting.py` | Persist decision outcomes to local SQLite DB (`output/.agent_memory.db`): signal → action → result; query historical success rates per action type per signal type |
+| DD6.5 | **Adaptive decision weights** | Orchestrator | `agentic_alerting.py` | Adjust action selection based on historical success: if `retry_phase` succeeds 90% for `phase_failure/sql_migration`, keep it; if it drops to 20%, switch to `trigger_ai_fix` first |
+| DD6.6 | **Anomaly detection enrichment** | Orchestrator | `agentic_alerting.py` | Query Datadog Anomaly Monitor results; correlate with migration events; auto-create investigation signals with root cause hypothesis (e.g., "conversion_score dropped 15% — new mapping M_COMPLEX_V2 has unsupported DECODE patterns") |
+| DD6.7 | **Agent health dashboard** | Orchestrator | `templates/datadog_agent_dashboard.json` | Dedicated Datadog dashboard for the agent itself: signals processed, actions taken, success rate, circuit breaker trips, mean-time-to-remediation |
+| DD6.8 | **Runbook integration** | Orchestrator | `agentic_alerting.py` | Link each escalation to the relevant section in `docs/RUNBOOK.md`; include deep link in Teams/Slack notification and Datadog Incident timeline |
+| DD6.9 | **Agent system tests** | Validation | `tests/test_agentic_alerting.py` | 20+ tests: daemon mode, predictive analysis, pre-flight checks, learning store, adaptive weights, anomaly correlation |
+
+**Agent Architecture:**
+
+```mermaid
+flowchart TB
+    subgraph "Signal Sources"
+        DDM["Datadog Monitors\n(threshold/anomaly)"]
+        DDE["Datadog Events\n(migration lifecycle)"]
+        MET["Datadog Metrics\n(trend queries)"]
+    end
+
+    subgraph "Agentic Agent"
+        POLL["Signal Poller"]
+        CLASS["Signal Classifier\n(type + severity)"]
+        PRED["Predictive Analyzer\n(trend-based)"]
+        DEC["Decision Engine\n(rule matrix + learned weights)"]
+        CB["Circuit Breaker"]
+        MEM["Learning Store\n(SQLite)"]
+    end
+
+    subgraph "Actions"
+        RETRY["retry_phase"]
+        ROLL["rollback_artifacts"]
+        AIFIX["trigger_ai_fix"]
+        ADJ["adjust_config"]
+        ESC["escalate_to_human"]
+        INC["create_incident"]
+        SKIP["skip_and_continue"]
+    end
+
+    subgraph "Feedback"
+        RES["Action Result"]
+        DDOUT["Datadog Metrics\n+ Events"]
+        REPORT["Remediation Report"]
+    end
+
+    DDM --> POLL
+    DDE --> POLL
+    MET --> PRED
+    POLL --> CLASS
+    PRED --> DEC
+    CLASS --> DEC
+    DEC --> CB
+    CB --> RETRY & ROLL & AIFIX & ADJ & ESC & INC & SKIP
+    RETRY & ROLL & AIFIX & ADJ & ESC & INC & SKIP --> RES
+    RES --> MEM
+    RES --> DDOUT
+    RES --> REPORT
+    MEM --> DEC
+
+    style POLL fill:#632CA6,color:#fff
+    style CLASS fill:#632CA6,color:#fff
+    style PRED fill:#632CA6,color:#fff
+    style DEC fill:#632CA6,color:#fff
+    style CB fill:#632CA6,color:#fff
+    style MEM fill:#632CA6,color:#fff
+```
+
+**Sprint DD6 Exit Criteria:**
+- [ ] Daemon mode runs continuously with heartbeat
+- [ ] Predictive analysis flags at-risk phases before execution
+- [ ] Pre-flight checks block phases when preconditions fail
+- [ ] Learning store records outcomes and adjusts action weights
+- [ ] Agent health dashboard shows operational metrics
+- [ ] Runbook deep links in escalation messages
+- [ ] 20+ tests passing
+
+---
+
+## Sprint DD7 — Global Monitoring Platform: Unified Control Plane
+
+**Goal:** Build a single-pane-of-glass monitoring platform that aggregates all observability signals (Datadog logs/metrics/traces, agent decisions, migration state, deployment health) into a centralized control plane — the "mission control" for the entire migration program.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD7.1 | **Platform state aggregator** | Orchestrator | `monitoring_platform.py` | Aggregates state from all sources into unified `PlatformState` object: active migrations (count, phase, progress %), agent status (idle/active/blocked), Datadog health (monitors OK/alert/warn), deployment status per target (Fabric/Databricks/DBT) |
+| DD7.2 | **Migration fleet tracker** | Orchestrator | `monitoring_platform.py` | Track multiple concurrent migration runs (multi-tenant/multi-project): each run has ID, start time, current phase, artifacts generated, errors, conversion score; fleet-level aggregates (total runs, success rate, mean duration) |
+| DD7.3 | **Health score calculator** | Orchestrator | `monitoring_platform.py` | Compute composite health score (0-100) per migration run and fleet-wide: weighted formula = 30% phase success + 25% conversion score + 20% deployment success + 15% agent remediation rate + 10% SLA compliance |
+| DD7.4 | **SLO definitions & tracking** | Orchestrator | `monitoring_platform.py` | Define SLOs: "95% of phases complete within 5 min", "99% of deployments succeed", "Conversion score ≥ 70 for all mappings"; track burn rate, error budget remaining; emit SLO metrics to Datadog |
+| DD7.5 | **Datadog SLO API integration** | Orchestrator | `monitoring_platform.py` | Create Datadog SLOs via API (`POST /api/v1/slo`) for each defined SLO; query SLO status; display in platform dashboard |
+| DD7.6 | **Status page generator** | Orchestrator | `monitoring_platform.py` | Generate `output/platform_status.html`: real-time status page showing all migrations, health scores, active alerts, agent actions, SLO compliance — auto-refreshes via WebSocket or polling |
+| DD7.7 | **Datadog composite monitors** | Orchestrator | `templates/datadog_platform_monitors.json` | Composite monitors that combine multiple signals: "Phase failed AND agent retry failed AND conversion score < 50" → P1 incident; "3+ migrations degraded simultaneously" → platform-wide alert |
+| DD7.8 | **Platform metrics to Datadog** | Orchestrator | `monitoring_platform.py` | Emit platform-level metrics: `informatica.platform.fleet.active_runs`, `informatica.platform.health_score`, `informatica.platform.slo.budget_remaining`, `informatica.platform.agent.actions_per_hour` |
+| DD7.9 | **Platform tests** | Validation | `tests/test_monitoring_platform.py` | 25+ tests: state aggregation, fleet tracking, health score, SLO tracking, status page generation, composite monitors |
+
+**Platform State Model:**
+
+```python
+# monitoring_platform.py — PlatformState sketch
+@dataclass
+class MigrationRunState:
+    run_id: str
+    project: str
+    target: str                    # fabric | databricks | dbt
+    started_at: datetime
+    current_phase: str
+    phases_completed: int
+    phases_total: int
+    artifacts_generated: int
+    errors: int
+    conversion_score: float
+    agent_actions_taken: int
+    health_score: float            # 0–100 composite
+
+@dataclass
+class PlatformState:
+    fleet: list[MigrationRunState]
+    agent_status: str              # idle | active | blocked | error
+    datadog_monitors: dict         # monitor_id → status (OK|Alert|Warn)
+    slo_compliance: dict           # slo_name → {target, current, budget_remaining}
+    overall_health: float          # fleet-wide composite score
+    last_updated: datetime
+```
+
+**Sprint DD7 Exit Criteria:**
+- [ ] Platform state aggregates all migration runs into unified view
+- [ ] Fleet tracker handles multiple concurrent migrations
+- [ ] Health score computed correctly per composite formula
+- [ ] SLOs created in Datadog and tracked with burn rate
+- [ ] Status page HTML generated and auto-refreshes
+- [ ] Composite monitors defined for multi-signal scenarios
+- [ ] 25+ tests passing
+
+---
+
+## Sprint DD8 — Global Alerting Orchestrator & Escalation Chains
+
+**Goal:** Build a multi-tier alerting orchestrator that sits above Datadog monitors, coordinates escalation across channels (Datadog → Teams → PagerDuty → email → phone), enforces on-call schedules, and deduplicates/correlates alerts across migration runs.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD8.1 | **Alert correlation engine** | Orchestrator | `monitoring_platform.py` | Correlate related alerts across migration runs: group by root cause (e.g., "Oracle source unavailable" triggers failures in 5 runs → 1 correlated incident, not 5) |
+| DD8.2 | **Deduplication & suppression** | Orchestrator | `monitoring_platform.py` | Deduplicate repeated alerts (same signal within suppression window); suppress child alerts when parent alert active (e.g., suppress per-mapping alerts when entire phase failed) |
+| DD8.3 | **Escalation chain engine** | Orchestrator | `monitoring_platform.py` | Multi-tier escalation: P4→log only, P3→Datadog Event + dashboard, P2→Teams/Slack + Datadog Incident, P1→PagerDuty/email + Datadog Incident + phone bridge; configurable timeouts between tiers |
+| DD8.4 | **On-call schedule integration** | Orchestrator | `monitoring_platform.py` | Define on-call rotation in `migration.yaml` (or pull from PagerDuty/Datadog On-Call API); route escalations to current on-call; include on-call name in notifications |
+| DD8.5 | **Notification templates** | Orchestrator | `monitoring_platform.py` | Rich notification templates per channel: Teams Adaptive Card with action buttons ("Retry", "View Logs", "Acknowledge"), Slack Block Kit with context, email HTML with embedded charts |
+| DD8.6 | **Acknowledgment & snooze** | Orchestrator | `monitoring_platform.py` | Track alert acknowledgment (via Datadog API or webhook callback); snooze alerts for configurable duration; resume escalation if not resolved after snooze |
+| DD8.7 | **Alert analytics** | Orchestrator | `monitoring_platform.py` | Compute alerting KPIs: MTTA (mean time to acknowledge), MTTR (mean time to resolve), alert noise ratio, top alerting sources; emit as Datadog metrics |
+| DD8.8 | **PagerDuty integration** | Orchestrator | `monitoring_platform.py` | Optional PagerDuty Events API v2 integration: trigger/acknowledge/resolve incidents; map severity to PagerDuty urgency |
+| DD8.9 | **Alerting orchestrator tests** | Validation | `tests/test_monitoring_platform.py` | 25+ tests: correlation, dedup, escalation chains, on-call routing, acknowledgment, analytics, PagerDuty integration |
+
+**Escalation Chain Flow:**
+
+```mermaid
+sequenceDiagram
+    participant DD as Datadog Monitor
+    participant COR as Alert Correlator
+    participant ESC as Escalation Engine
+    participant T1 as Tier 1: Dashboard
+    participant T2 as Tier 2: Teams/Slack
+    participant T3 as Tier 3: Datadog Incident
+    participant T4 as Tier 4: PagerDuty
+
+    DD->>COR: Alert fired (phase_failure, Run-A)
+    DD->>COR: Alert fired (phase_failure, Run-B)
+    DD->>COR: Alert fired (phase_failure, Run-C)
+
+    COR->>COR: Correlate: same root cause (Oracle source down)
+    COR->>ESC: Correlated alert (P2, 3 runs affected)
+
+    ESC->>T1: Log + Dashboard update (immediate)
+    Note over ESC: Wait 2 min for ack
+    ESC->>T2: Teams Adaptive Card + Slack Block Kit
+    Note over ESC: Wait 5 min for ack
+    ESC->>T3: Datadog Incident (P2, commander=on-call)
+    Note over ESC: Wait 15 min for ack
+    ESC->>T4: PagerDuty (high urgency, phone alert)
+```
+
+**Escalation Configuration (`migration.yaml`):**
+
+```yaml
+alerting_platform:
+  escalation:
+    tiers:
+      - level: 1
+        channels: ["datadog_event", "dashboard"]
+        delay_seconds: 0
+      - level: 2
+        channels: ["teams", "slack"]
+        delay_seconds: 120
+      - level: 3
+        channels: ["datadog_incident"]
+        delay_seconds: 300
+      - level: 4
+        channels: ["pagerduty", "email"]
+        delay_seconds: 900
+    suppression_window_seconds: 300
+    correlation_window_seconds: 120
+  on_call:
+    source: "config"               # config | pagerduty | datadog
+    schedule:
+      - name: "Alice"
+        email: "alice@company.com"
+        hours: "08:00-20:00"
+        timezone: "America/New_York"
+      - name: "Bob"
+        email: "bob@company.com"
+        hours: "20:00-08:00"
+        timezone: "America/New_York"
+  pagerduty:
+    enabled: false
+    routing_key: ""                # PagerDuty Events API v2 routing key
+```
+
+**Sprint DD8 Exit Criteria:**
+- [ ] Related alerts correlated across runs into single incidents
+- [ ] Deduplication prevents alert storms during cascading failures
+- [ ] 4-tier escalation chain fires in correct order with timeouts
+- [ ] On-call routing sends notifications to current on-call person
+- [ ] Rich notification templates work for Teams/Slack/email
+- [ ] Alert analytics KPIs computed and emitted to Datadog
+- [ ] 25+ tests passing
+
+---
+
+## Sprint DD9 — Enterprise Monitoring Dashboard & Reporting
+
+**Goal:** Build the top-level enterprise monitoring dashboard — a comprehensive reporting layer that aggregates everything (migrations, Datadog signals, agent actions, alert history, SLOs) into executive-ready views and automated reports.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD9.1 | **Executive summary dashboard** | Orchestrator | `templates/datadog_executive_dashboard.json` | Datadog dashboard designed for leadership: migration progress (% complete), overall health score, cost tracking, SLO compliance, risk heatmap — minimal detail, high-level KPIs |
+| DD9.2 | **Operations dashboard** | Orchestrator | `templates/datadog_ops_dashboard.json` | Datadog dashboard for ops team: per-run status, phase timings, error drilldown, agent action timeline, active alerts, deployment pipeline status |
+| DD9.3 | **Automated daily report** | Orchestrator | `monitoring_platform.py` | Generate daily migration report (HTML + email): runs completed, artifacts generated, errors resolved, SLO status, agent actions, top issues — sent via configured email/webhook |
+| DD9.4 | **Weekly trend report** | Orchestrator | `monitoring_platform.py` | Weekly trend analysis: conversion score trend, error rate trend, phase duration trend (improving/degrading), agent effectiveness (actions taken vs resolved), projected completion date |
+| DD9.5 | **Capacity planning view** | Orchestrator | `monitoring_platform.py` | Based on historical data: estimate remaining work (mappings/time), resource utilization trend, predicted bottlenecks (phases that consistently slow down), recommended parallelism |
+| DD9.6 | **Datadog Notebook generation** | Orchestrator | `monitoring_platform.py` | Generate Datadog Notebooks (via API) with pre-built investigation templates: "Migration Run Investigation", "Phase Failure RCA", "Conversion Score Deep-Dive" — with embedded metric queries and log searches |
+| DD9.7 | **Compliance evidence export** | Orchestrator | `monitoring_platform.py` | Export monitoring evidence for compliance: full audit trail (JSON), alert history (CSV), SLO compliance proof, agent decision log — packaged as ZIP for audit review |
+| DD9.8 | **Platform CLI** | Orchestrator | `run_migration.py` | CLI commands: `--platform-status` (print fleet status), `--platform-report` (generate daily report), `--platform-health` (print health score); integrate with existing CLI |
+| DD9.9 | **Enterprise dashboard tests** | Validation | `tests/test_monitoring_platform.py` | 20+ tests: dashboard JSON validation, report generation, trend calculation, capacity planning, notebook generation, compliance export |
+
+**Full Platform Architecture:**
+
+```mermaid
+flowchart TB
+    subgraph "Migration Runs"
+        R1["Run 1\nFabric target"]
+        R2["Run 2\nDatabricks target"]
+        R3["Run 3\nDBT target"]
+    end
+
+    subgraph "Datadog Observability (DD1-DD3)"
+        LOGS["📋 Logs API\n(structured logs)"]
+        METRICS["📊 Metrics API\n(custom metrics)"]
+        TRACES["🔍 APM Traces\n(phase spans)"]
+    end
+
+    subgraph "Agentic System (DD4-DD6)"
+        SIGNAL["🧠 Signal Processor"]
+        ACTIONS["🔧 Auto-Remediation"]
+        LEARN["🎯 Learning Agent"]
+    end
+
+    subgraph "Global Monitoring Platform (DD7-DD9)"
+        STATE["📡 Platform State\nAggregator"]
+        HEALTH["💚 Health Score\nCalculator"]
+        SLO["📏 SLO Tracker"]
+        CORR["🔗 Alert Correlator"]
+        ESC["📢 Escalation\nChain Engine"]
+        ONCALL["👤 On-Call\nRouter"]
+        EXEC["📊 Executive\nDashboard"]
+        OPS["⚙️ Operations\nDashboard"]
+        REPORT["📄 Automated\nReports"]
+        PLAN["📐 Capacity\nPlanning"]
+    end
+
+    subgraph "Notification Channels"
+        DDI["Datadog Incidents"]
+        TEAMS["Microsoft Teams"]
+        SLACK["Slack"]
+        PD["PagerDuty"]
+        EMAIL["Email"]
+        STATUS["Status Page\n(HTML)"]
+    end
+
+    R1 & R2 & R3 --> LOGS & METRICS & TRACES
+    LOGS & METRICS & TRACES --> SIGNAL
+    SIGNAL --> ACTIONS
+    ACTIONS --> LEARN
+    LEARN --> SIGNAL
+
+    LOGS & METRICS --> STATE
+    SIGNAL --> STATE
+    ACTIONS --> STATE
+    STATE --> HEALTH & SLO
+    HEALTH --> EXEC & OPS
+    SLO --> EXEC & REPORT
+    STATE --> CORR
+    CORR --> ESC
+    ESC --> ONCALL
+    ONCALL --> DDI & TEAMS & SLACK & PD & EMAIL
+    STATE --> STATUS
+    STATE --> REPORT & PLAN
+
+    style STATE fill:#0078D4,color:#fff
+    style HEALTH fill:#0078D4,color:#fff
+    style SLO fill:#0078D4,color:#fff
+    style CORR fill:#0078D4,color:#fff
+    style ESC fill:#0078D4,color:#fff
+    style ONCALL fill:#0078D4,color:#fff
+    style EXEC fill:#0078D4,color:#fff
+    style OPS fill:#0078D4,color:#fff
+    style REPORT fill:#0078D4,color:#fff
+    style PLAN fill:#0078D4,color:#fff
+```
+
+**Sprint DD9 Exit Criteria:**
+- [ ] Executive dashboard shows high-level KPIs for leadership
+- [ ] Operations dashboard enables drill-down for ops teams
+- [ ] Daily report auto-generated and sent via email/webhook
+- [ ] Weekly trend report shows improvement/degradation curves
+- [ ] Capacity planning estimates remaining work and bottlenecks
+- [ ] Datadog Notebooks created with investigation templates
+- [ ] Compliance evidence exported as audit-ready ZIP
+- [ ] `--platform-status/report/health` CLI commands work
+- [ ] 20+ tests passing
+
+---
+
+## Datadog Track Summary
+
+| Sprint | Theme | Tests | Key Deliverable |
+|--------|-------|-------|----------------|
+| **DD1** | Logging Handler | 20+ | `DatadogHandler` → Datadog Logs API |
+| **DD2** | Metrics Emitter | 20+ | Custom metrics → Datadog Metrics API + Dashboard/Monitor JSON |
+| **DD3** | APM Tracing & Alerting | 20+ | `ddtrace` spans + Events API + log-trace correlation |
+| **DD4** | Signal Processor | 25+ | Signal poller, classifier, decision engine, circuit breaker |
+| **DD5** | Auto-Remediation | 25+ | 6 action types + AI fix integration + incident creation |
+| **DD6** | Learning Agent | 20+ | Predictive analysis, adaptive weights, daemon mode, learning store |
+| **DD7** | Global Control Plane | 25+ | Platform state aggregator, fleet tracker, health score, SLO tracking |
+| **DD8** | Alerting Orchestrator | 25+ | Alert correlation, escalation chains, on-call routing, PagerDuty |
+| **DD9** | Enterprise Dashboards | 20+ | Executive/ops dashboards, auto-reports, capacity planning, compliance export |
+| **Total** | — | **200+** | Full platform: Observability → Agentic → Global Monitoring |
+
+### Files Created/Modified
+
+| File | Action | Description |
+|------|--------|-------------|
+| `datadog_integration.py` | **New** | `DatadogHandler`, `emit_datadog_metrics()`, `send_datadog_event()`, tracer setup |
+| `agentic_alerting.py` | **New** | Signal poller, classifier, decision engine, action catalog, learning store, daemon mode |
+| `monitoring_platform.py` | **New** | Platform state aggregator, fleet tracker, health score, SLO tracker, alert correlator, escalation engine, report generator |
+| `run_migration.py` | Modified | `_setup_logging()` adds DatadogHandler; `run_phase()` wrapped in trace spans; `--datadog` / `--agent` / `--platform-*` CLI flags |
+| `deploy_to_fabric.py` | Modified | Calls `emit_datadog_metrics()` alongside Azure Monitor; `send_webhook_alert()` routes to Datadog Events |
+| `deploy_to_databricks.py` | Modified | Deployment spans for Databricks target |
+| `run_sql_migration.py` | Modified | Child spans for SQL conversion operations |
+| `run_notebook_migration.py` | Modified | Child spans for notebook generation |
+| `migration.yaml` | Modified | `datadog:` + `agent:` + `alerting_platform:` config sections |
+| `pyproject.toml` | Modified | Optional `[datadog]` extras dependency group |
+| `requirements.txt` | Modified | Add `datadog-api-client` and `ddtrace` as optional |
+| `templates/datadog_dashboard.json` | **New** | Pre-built Datadog migration dashboard (importable) |
+| `templates/datadog_agent_dashboard.json` | **New** | Pre-built Datadog agent health dashboard |
+| `templates/datadog_platform_monitors.json` | **New** | Composite monitors for multi-signal alerting |
+| `templates/datadog_executive_dashboard.json` | **New** | Executive KPI dashboard for leadership |
+| `templates/datadog_ops_dashboard.json` | **New** | Operations drill-down dashboard |
+| `templates/datadog_monitors.json` | **New** | Pre-built Datadog Monitor definitions |
+| `tests/test_datadog.py` | **New** | 60+ tests for Datadog integration (DD1-DD3) |
+| `tests/test_agentic_alerting.py` | **New** | 70+ tests for agentic system (DD4-DD6) |
+| `tests/test_monitoring_platform.py` | **New** | 70+ tests for global monitoring platform (DD7-DD9) |
+| `docs/USER_GUIDE.md` | Modified | Datadog + agent + platform setup instructions |
+
+### Execution Order
+
+```mermaid
+flowchart LR
+    DD1["📋 DD1\nLogging"]
+    DD2["📊 DD2\nMetrics"]
+    DD3["🔍 DD3\nAPM"]
+    DD4["🧠 DD4\nSignals"]
+    DD5["🔧 DD5\nRemediation"]
+    DD6["🎯 DD6\nLearning"]
+    DD7["📡 DD7\nControl Plane"]
+    DD8["📢 DD8\nEscalation"]
+    DD9["📊 DD9\nEnterprise"]
+
+    DD1 --> DD2 --> DD3 --> DD4 --> DD5 --> DD6 --> DD7 --> DD8 --> DD9
+
+    style DD1 fill:#632CA6,color:#fff
+    style DD2 fill:#632CA6,color:#fff
+    style DD3 fill:#632CA6,color:#fff
+    style DD4 fill:#E74C3C,color:#fff
+    style DD5 fill:#E74C3C,color:#fff
+    style DD6 fill:#E74C3C,color:#fff
+    style DD7 fill:#0078D4,color:#fff
+    style DD8 fill:#0078D4,color:#fff
+    style DD9 fill:#0078D4,color:#fff
+```
+
+### Rollout Checklist
+
+**Phase A — Observability (DD1-DD3):**
+- [ ] Install: `pip install informatica-to-fabric[datadog]`
+- [ ] Set `DD_API_KEY` env var or add `api_key` to `migration.yaml`
+- [ ] Set `datadog.enabled: true` in config (or use `--datadog` CLI flag)
+- [ ] Run migration → verify logs in Datadog Log Explorer
+- [ ] Import `templates/datadog_dashboard.json` in Datadog → view dashboard
+- [ ] Import `templates/datadog_monitors.json` → receive alerts
+- [ ] (Optional) Enable `datadog.tracing.enabled: true` → view APM traces
+
+**Phase B — Agentic System (DD4-DD6):**
+- [ ] Enable `agent.enabled: true` + `--agent` CLI flag for autonomous remediation
+- [ ] Import `templates/datadog_agent_dashboard.json` → monitor agent health
+- [ ] Configure `agent.max_retries_per_phase` and `agent.cooldown_seconds`
+- [ ] (Optional) Enable `agent.ai_fix_enabled: true` for AI-assisted remediation
+- [ ] (Optional) Enable `agent.learning.enabled: true` for adaptive decision weights
+
+**Phase C — Global Monitoring Platform (DD7-DD9):**
+- [ ] Configure `alerting_platform.escalation.tiers` with notification channels
+- [ ] Set up on-call schedule (config or PagerDuty integration)
+- [ ] Import `templates/datadog_executive_dashboard.json` → leadership view
+- [ ] Import `templates/datadog_ops_dashboard.json` → operations view
+- [ ] Import `templates/datadog_platform_monitors.json` → composite alerts
+- [ ] Run `--platform-status` to verify fleet tracking
+- [ ] Configure `--platform-report` for automated daily reports
+- [ ] (Optional) Enable PagerDuty integration for Tier 4 escalation
+
+---
+
+# IDMC Full-Platform Migration Review Track (DD10–DD12)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/track-IDMC_Full_Platform-FF4500?style=for-the-badge&logo=informatica&logoColor=white" alt="IDMC"/>
+  <img src="https://img.shields.io/badge/sprints-DD10--DD12-FF4500?style=for-the-badge" alt="Sprints DD10-DD12"/>
+  <img src="https://img.shields.io/badge/status-planned-F39C12?style=for-the-badge" alt="Planned"/>
+</p>
+
+> **Cross-cutting IDMC integration track** — depends on DD1–DD9 (Datadog + Agentic + Monitoring Platform).
+> Extends the migration tool from IICS CDI-only to the **full Informatica IDMC platform** (all 12 components),
+> adds a **migration review workflow** (merge, optimise, rework), and wires everything into the Datadog monitoring stack.
+
+### Current State vs Target State
+
+```mermaid
+flowchart LR
+    subgraph "Currently Supported (IICS CDI Core)"
+        CM["Cloud Mapping"]
+        TF["Taskflow"]
+        ST["Sync Task"]
+        MI["Mass Ingestion"]
+        DQ["DQ Task"]
+        AI["App Integration"]
+        CN["Connections"]
+    end
+
+    subgraph "NEW: Full IDMC Platform (DD10)"
+        CDGC["CDGC\n(Catalog & Governance)"]
+        CDQ2["CDQ\n(Scorecards & Rules)"]
+        MDM["MDM\n(Match/Merge)"]
+        B2B["B2B Gateway\n(EDI/Partners)"]
+        DP["Data Privacy\n(CLAIRE)"]
+        DMP["Data Marketplace\n(Assets)"]
+        API["API Center\n(APIs)"]
+        DIH["Data Integration Hub\n(Pub/Sub)"]
+        OI["Operational Insights\n(Job Monitoring)"]
+    end
+
+    subgraph "NEW: Migration Review (DD11)"
+        MERGE["Merge Analysis\n(deduplicate across\nPowerCenter + IDMC)"]
+        OPT["Optimization\n(consolidate, simplify,\nmodernize patterns)"]
+        REWORK["Rework Detection\n(anti-patterns,\nrefactoring candidates)"]
+    end
+
+    subgraph "NEW: Monitoring Integration (DD12)"
+        DDI["Datadog: IDMC\ncomponent metrics"]
+        REV["Review dashboard\n(merge/opt/rework)"]
+        AGT["Agent rules for\nIDMC signals"]
+    end
+
+    CM & TF & ST & MI & DQ & AI & CN -.-> MERGE
+    CDGC & CDQ2 & MDM & B2B & DP & DMP & API & DIH & OI -.-> MERGE
+    MERGE --> OPT --> REWORK
+    REWORK --> DDI & REV & AGT
+
+    style CDGC fill:#FF4500,color:#fff
+    style CDQ2 fill:#FF4500,color:#fff
+    style MDM fill:#FF4500,color:#fff
+    style B2B fill:#FF4500,color:#fff
+    style DP fill:#FF4500,color:#fff
+    style DMP fill:#FF4500,color:#fff
+    style API fill:#FF4500,color:#fff
+    style DIH fill:#FF4500,color:#fff
+    style OI fill:#FF4500,color:#fff
+    style MERGE fill:#E67E22,color:#fff
+    style OPT fill:#E67E22,color:#fff
+    style REWORK fill:#E67E22,color:#fff
+    style DDI fill:#632CA6,color:#fff
+    style REV fill:#632CA6,color:#fff
+    style AGT fill:#632CA6,color:#fff
+```
+
+### IDMC Component Map — Full Platform Inventory
+
+| # | IDMC Component | Service | Current Status | Target (DD10) | Migration Target |
+|---|----------------|---------|----------------|---------------|-----------------|
+| 1 | **Cloud Data Integration (CDI)** | Mappings, Taskflows, Sync, Mass Ingestion | ✅ Supported | Enhance | Fabric Notebooks + Pipelines |
+| 2 | **Cloud Data Governance & Catalog (CDGC)** | Business glossary, data catalog, lineage, classification | ❌ Not supported | **New** | Microsoft Purview / Unity Catalog |
+| 3 | **Cloud Data Quality (CDQ)** | Scorecards, rules, profiling, dedup, address verification | ⚠️ Partial (DQ Tasks only) | **Expand** | Fabric DQ rules / Great Expectations |
+| 4 | **Master Data Management (MDM)** | Entity models, match/merge rules, hierarchy, golden records | ❌ Not supported | **New** | Purview MDM / custom PySpark |
+| 5 | **B2B Gateway** | EDI schemas, partner profiles, transaction sets | ❌ Not supported | **New** | Azure Logic Apps / custom pipeline |
+| 6 | **Data Privacy Management** | CLAIRE AI policies, masking rules, subject rights | ❌ Not supported | **New** | Purview sensitivity labels / RLS |
+| 7 | **Data Marketplace** | Published assets, subscriptions, access requests | ❌ Not supported | **New** | Purview Data Catalog / OneLake |
+| 8 | **API Center** | API definitions, policies, security, rate limiting | ❌ Not supported | **New** | Azure API Management |
+| 9 | **Application Integration** | REST/SOAP triggers, service connectors | ✅ Supported | Enhance | Fabric Pipelines / Logic Apps |
+| 10 | **Data Integration Hub** | Pub/sub topics, publication/subscription | ❌ Not supported | **New** | Azure Event Grid / Service Bus |
+| 11 | **Operational Insights** | Job monitoring, SLA, metrics, dashboards | ❌ Not supported | **New** | Datadog dashboards (DD7–DD9) |
+| 12 | **Advanced Connectors** | Specialized connectors (SAP, Snowflake, etc.) | ⚠️ Via CDI | Map to Fabric | Fabric/Databricks connectors |
+
+---
+
+## Sprint DD10 — IDMC Full Component Assessment & Parsing
+
+**Goal:** Extend the assessment agent to parse, inventory, and classify **all 12 IDMC platform components** — not just CDI core — so the migration tool has visibility into the full Informatica estate before any conversion begins.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD10.1 | **IDMC REST API client** | Assessment | `idmc_client.py` | Authenticate to IDMC REST API v3 (OAuth2 with `@informatica.com` IDP); list all objects per component (mappings, taskflows, connections, DQ rules, CDGC glossaries, MDM entities); fallback to XML export if API unavailable |
+| DD10.2 | **CDGC metadata parser** | Assessment | `run_assessment.py` | Parse CDGC export: business glossary terms, data domains, classifications, custom attributes → inventory entries; map CDGC lineage graph to `dependency_dag.json` edges |
+| DD10.3 | **CDQ scorecard & rules parser** | Assessment | `run_assessment.py` | Parse CDQ scorecards: rule definitions, thresholds, profiles, dedup match keys, address verification rules → generate equivalent Great Expectations / Fabric DQ rules |
+| DD10.4 | **MDM entity & match/merge parser** | Assessment | `run_assessment.py` | Parse MDM models: entity definitions, attribute groups, match rules (fuzzy, exact, phonetic), merge strategies (survivorship), trust scores, hierarchy definitions |
+| DD10.5 | **B2B Gateway parser** | Assessment | `run_assessment.py` | Parse B2B configuration: EDI schemas (X12/EDIFACT), trading partner profiles, transaction sets, acknowledgment rules, communication channels → generate Logic Apps B2B templates |
+| DD10.6 | **Data Privacy parser** | Assessment | `run_assessment.py` | Parse privacy policies: CLAIRE AI classification rules, masking templates (hash, truncate, substitute, encrypt), subject catalog, consent rules, data retention policies |
+| DD10.7 | **Data Marketplace & API Center parser** | Assessment | `run_assessment.py` | Parse marketplace assets (published datasets, access policies, SLA definitions) and API Center definitions (OpenAPI specs, rate limits, security policies) → inventory |
+| DD10.8 | **Data Integration Hub parser** | Assessment | `run_assessment.py` | Parse pub/sub topics, publication mappings, subscription definitions, delivery rules → map to Azure Event Grid / Service Bus topology |
+| DD10.9 | **Operational Insights extractor** | Assessment | `run_assessment.py` | Extract IDMC job history, execution stats, SLA definitions, alert rules → feed into Datadog metrics (DD2) as historical baseline for comparison |
+| DD10.10 | **Cross-component dependency graph** | Assessment | `run_assessment.py` | Build a unified DAG across all 12 IDMC components: mapping X → uses DQ rule Y → references CDGC glossary Z → feeds MDM entity W; detect cross-component dependencies that must migrate together |
+| DD10.11 | **IDMC inventory report** | Assessment | `run_assessment.py` | Generate `output/inventory/idmc_full_inventory.json` + `idmc_component_report.md`: count per component, complexity distribution, dependency analysis, migration readiness score per component |
+| DD10.12 | **IDMC assessment tests** | Validation | `tests/test_idmc_assessment.py` | 30+ tests: each component parser, REST API client mock, cross-component DAG, inventory report |
+
+**IDMC Component Assessment Output (`idmc_full_inventory.json`):**
+
+```json
+{
+  "platform": "IDMC",
+  "org_id": "abcdef123",
+  "assessed_at": "2026-04-08T10:30:00Z",
+  "components": {
+    "cdi": {
+      "mappings": 247,
+      "taskflows": 38,
+      "sync_tasks": 12,
+      "mass_ingestion_tasks": 5,
+      "connections": 34,
+      "complexity": {"simple": 120, "medium": 85, "complex": 42},
+      "migration_readiness": 0.87
+    },
+    "cdgc": {
+      "glossary_terms": 1450,
+      "data_domains": 28,
+      "classifications": 15,
+      "lineage_edges": 3200,
+      "migration_readiness": 0.72
+    },
+    "cdq": {
+      "scorecards": 18,
+      "rules": 340,
+      "profiles": 95,
+      "dedup_configs": 8,
+      "migration_readiness": 0.65
+    },
+    "mdm": {
+      "entities": 12,
+      "match_rules": 45,
+      "merge_strategies": 12,
+      "hierarchies": 6,
+      "migration_readiness": 0.55
+    },
+    "b2b": {"partner_profiles": 24, "edi_schemas": 15, "migration_readiness": 0.40},
+    "data_privacy": {"masking_rules": 78, "subject_catalogs": 3, "migration_readiness": 0.50},
+    "marketplace": {"published_assets": 120, "subscriptions": 45, "migration_readiness": 0.60},
+    "api_center": {"api_definitions": 18, "policies": 32, "migration_readiness": 0.45},
+    "app_integration": {"processes": 15, "triggers": 22, "migration_readiness": 0.80},
+    "dih": {"topics": 8, "publications": 12, "subscriptions": 20, "migration_readiness": 0.50},
+    "operational_insights": {"jobs_tracked": 580, "sla_definitions": 12, "migration_readiness": 0.90}
+  },
+  "cross_dependencies": [
+    {"from": "cdi/M_LOAD_CUSTOMERS", "to": "cdq/SC_CUSTOMER_QUALITY", "type": "uses"},
+    {"from": "cdq/SC_CUSTOMER_QUALITY", "to": "cdgc/GLOSSARY_CUSTOMER", "type": "references"},
+    {"from": "cdi/M_LOAD_CUSTOMERS", "to": "mdm/ENTITY_CUSTOMER", "type": "feeds"}
+  ],
+  "total_objects": 2684,
+  "overall_readiness": 0.68
+}
+```
+
+**Sprint DD10 Exit Criteria:**
+- [ ] All 12 IDMC components inventoried (REST API or XML export)
+- [ ] Cross-component dependency graph built with correct edges
+- [ ] Migration readiness score computed per component
+- [ ] Full inventory JSON + component report generated
+- [ ] 30+ tests passing
+
+---
+
+## Sprint DD11 — Migration Review Workflow: Merge, Optimize, Rework
+
+**Goal:** Build a comprehensive migration review workflow that analyses the full IDMC inventory to identify **merge opportunities** (deduplicate overlapping PowerCenter + IDMC objects), **optimization candidates** (simplify/modernize patterns), and **rework items** (anti-patterns that need refactoring before migration) — all tracked through Datadog.
+
+### DD11-A: Cross-Platform Merge Analysis
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD11.1 | **Duplicate detector** | Assessment | `migration_review.py` | Compare PowerCenter inventory vs IDMC inventory: find objects that exist in both (same source/target tables, similar SQL, overlapping schedules) using fingerprint-based matching (table names + column sets + transform chain hash) |
+| DD11.2 | **Mapping similarity scorer** | Assessment | `migration_review.py` | Jaccard similarity on: source tables, target tables, column names, transformation types, SQL fragments; score 0–100; threshold ≥ 70 → flag as merge candidate |
+| DD11.3 | **Merge candidate report** | Assessment | `migration_review.py` | Generate `output/review/merge_candidates.json` + `merge_report.md`: for each pair, show similarity score, field-level diff, recommendation (merge/keep both/review), estimated effort savings |
+| DD11.4 | **Merge resolution engine** | Orchestrator | `migration_review.py` | Interactive resolution: for each merge candidate → user chooses: `merge_to_single` (pick the better version), `keep_both` (migrate separately), `retire_one` (drop the legacy version), `rework_both` (combine into new design) |
+| DD11.5 | **Connection deduplication** | Assessment | `migration_review.py` | Deduplicate connections across PowerCenter + IDMC: same host/port/database → single Fabric connection; generate unified connection map |
+| DD11.6 | **Schedule conflict detector** | Assessment | `migration_review.py` | Detect conflicting schedules across PowerCenter workflows + IDMC taskflows + AutoSys jobs: overlapping windows hitting same target tables → flag as serialization risk |
+
+### DD11-B: Optimization Engine
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD11.7 | **Anti-pattern detector** | Assessment | `migration_review.py` | Detect common anti-patterns: (1) Lookup with full-table scan → replace with broadcast join, (2) sequential lookups → batch join, (3) Expression with nested IIF → CASE/SWITCH, (4) Router with single output → simplify to Filter, (5) Sorter before Aggregator → push-down to Spark, (6) normalizer + denormalizer chain → eliminate |
+| DD11.8 | **Consolidation recommender** | Orchestrator | `migration_review.py` | Identify mappings that can be merged: 2+ mappings reading same source → single notebook with multiple outputs; 3+ sequential mappings → single multi-step notebook; estimate cost savings |
+| DD11.9 | **Modernization suggestions** | Orchestrator | `migration_review.py` | Suggest modern equivalents: (1) flat-file staging → direct Delta Lake, (2) batch polling → Event-driven triggers, (3) stored proc calls → inline PySpark, (4) SCD Type 2 via custom logic → Delta Lake MERGE, (5) slowly changing CSV lookups → Delta reference tables |
+| DD11.10 | **SQL optimization pass** | SQL | `migration_review.py` | Review converted SQL for: (1) redundant subqueries → CTEs, (2) correlated subqueries → window functions, (3) DISTINCT on full rows → GROUP BY, (4) OR chains → IN clauses, (5) missing partition predicates → add partition filter |
+| DD11.11 | **Schema optimization** | Orchestrator | `migration_review.py` | Analyze target schema: (1) missing partition keys → recommend based on query patterns, (2) data type widening → right-size types, (3) redundant columns across layers → prune, (4) missing Z-ORDER columns → suggest from join keys |
+
+### DD11-C: Rework Detection & Tracking
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD11.12 | **Rework classifier** | Assessment | `migration_review.py` | Classify rework items by effort: `trivial` (auto-fixable, <5 min), `minor` (1-hour refactor), `major` (redesign required), `blocked` (missing target feature); each item has: source object, issue, recommendation, estimated effort |
+| DD11.13 | **Auto-fix engine** | Orchestrator | `migration_review.py` | Apply trivial fixes automatically: rename reserved keywords, fix data types, rewrite simple anti-patterns; track applied fixes in audit log |
+| DD11.14 | **Review queue manager** | Orchestrator | `migration_review.py` | Generate review queue: ordered by (priority × effort × blast radius); assignable to reviewers; stateful (pending → in-review → approved → applied → validated) |
+| DD11.15 | **Review report generator** | Orchestrator | `migration_review.py` | Generate comprehensive `output/review/migration_review_report.md`: merge candidates (count, savings), optimization (anti-patterns found, consolidation opportunities), rework (items by effort, critical path), overall migration quality score |
+| DD11.16 | **Review CLI** | Orchestrator | `run_migration.py` | CLI commands: `--review` (run full merge+optimize+rework analysis), `--review-merge` (merge only), `--review-optimize` (optimize only), `--review-rework` (rework only), `--review-apply` (apply auto-fixes) |
+| DD11.17 | **Review tests** | Validation | `tests/test_migration_review.py` | 30+ tests: duplicate detection, similarity scoring, anti-patterns, consolidation, SQL optimization, rework classification, auto-fix, review queue |
+
+**Migration Review Workflow:**
+
+```mermaid
+flowchart TB
+    subgraph "Input: Full IDMC + PowerCenter Inventory"
+        PC["PowerCenter\n247 mappings\n38 workflows"]
+        IDMC["IDMC\n120 cloud mappings\n15 taskflows\n+ CDGC/CDQ/MDM/..."]
+    end
+
+    subgraph "Step 1: Merge Analysis"
+        DUP["Duplicate Detector\n(fingerprint matching)"]
+        SIM["Similarity Scorer\n(Jaccard ≥ 70%)"]
+        CONN["Connection Dedup"]
+        SCHED["Schedule Conflict"]
+    end
+
+    subgraph "Step 2: Optimization"
+        ANTI["Anti-Pattern Detector\n(6 patterns)"]
+        CONSOL["Consolidation\nRecommender"]
+        MOD["Modernization\nSuggestions"]
+        SQLOPT["SQL Optimization"]
+        SCHEMA["Schema Optimization"]
+    end
+
+    subgraph "Step 3: Rework"
+        CLASS["Rework Classifier\n(trivial→blocked)"]
+        AUTOFIX["Auto-Fix Engine\n(trivial items)"]
+        QUEUE["Review Queue\n(prioritized)"]
+    end
+
+    subgraph "Output"
+        MREPORT["Merge Report\n(X candidates, Y% savings)"]
+        OREPORT["Optimization Report\n(Z anti-patterns, W consolidations)"]
+        RREPORT["Rework Report\n(N items by effort)"]
+        SCORE["Migration Quality\nScore (0–100)"]
+    end
+
+    PC & IDMC --> DUP & SIM & CONN & SCHED
+    DUP & SIM --> MREPORT
+    CONN & SCHED --> MREPORT
+    PC & IDMC --> ANTI & CONSOL & MOD & SQLOPT & SCHEMA
+    ANTI & CONSOL & MOD & SQLOPT & SCHEMA --> OREPORT
+    PC & IDMC --> CLASS
+    CLASS --> AUTOFIX & QUEUE
+    AUTOFIX & QUEUE --> RREPORT
+    MREPORT & OREPORT & RREPORT --> SCORE
+
+    style DUP fill:#E67E22,color:#fff
+    style SIM fill:#E67E22,color:#fff
+    style ANTI fill:#27AE60,color:#fff
+    style CONSOL fill:#27AE60,color:#fff
+    style MOD fill:#27AE60,color:#fff
+    style SQLOPT fill:#27AE60,color:#fff
+    style SCHEMA fill:#27AE60,color:#fff
+    style CLASS fill:#E74C3C,color:#fff
+    style AUTOFIX fill:#E74C3C,color:#fff
+    style QUEUE fill:#E74C3C,color:#fff
+    style SCORE fill:#0078D4,color:#fff
+```
+
+**Anti-Pattern Catalog:**
+
+| # | Anti-Pattern | Detection | Auto-Fix? | Recommendation |
+|---|-------------|-----------|-----------|---------------|
+| 1 | **Full-table Lookup** | Lookup transform with no filter + large source table | Yes | Replace with broadcast join or join hint |
+| 2 | **Sequential Lookup chain** | ≥3 Lookups in series on same source | Yes | Batch into single multi-column join |
+| 3 | **Nested IIF cascade** | Expression with ≥4 nested `IIF()` | Yes | Rewrite as `CASE WHEN ... END` |
+| 4 | **Single-output Router** | Router with only 1 output group + default | Yes | Replace with Filter transform |
+| 5 | **Pre-Agg Sorter** | Sorter immediately before Aggregator | Yes | Remove — Spark handles partitioning |
+| 6 | **Normalize→Denormalize** | Normalizer followed by Denormalizer on same data | Yes | Eliminate both (no-op) |
+| 7 | **Flat-file staging** | Write to CSV then read back | No | Direct Delta Lake write |
+| 8 | **Polling-based schedule** | Timer every 5 min checking for new files | No | Event-driven (Auto Loader / Event Grid) |
+| 9 | **Stored proc wrapper** | Mapping that only calls a stored procedure | Suggest | Inline SQL or PySpark equivalent |
+| 10 | **SELECT \*** | SQL override with `SELECT *` | Yes | Explicit column list for predicate pushdown |
+
+**Sprint DD11 Exit Criteria:**
+- [ ] Merge analysis finds duplicates across PowerCenter + IDMC with ≥70% accuracy
+- [ ] 10 anti-patterns detected and 6 auto-fixable
+- [ ] Consolidation recommender identifies groupable mappings
+- [ ] SQL optimization pass improves converted SQL quality
+- [ ] Rework items classified by effort and tracked in review queue
+- [ ] Auto-fix engine applies trivial fixes with audit trail
+- [ ] `--review` CLI runs full analysis pipeline
+- [ ] Migration quality score computed (0–100)
+- [ ] 30+ tests passing
+
+---
+
+## Sprint DD12 — IDMC Monitoring Integration & Migration Review Dashboard
+
+**Goal:** Wire the full IDMC inventory and migration review results into the Datadog monitoring platform (DD7–DD9) and the agentic system (DD4–DD6), creating a unified view of the entire migration program from source IDMC estate through conversion quality to target deployment status.
+
+| # | Task | Owner | Files | Acceptance Criteria |
+|---|------|-------|-------|-------------------|
+| DD12.1 | **IDMC component metrics** | Orchestrator | `datadog_integration.py` | Emit per-component metrics to Datadog: `informatica.idmc.{component}.objects_total`, `informatica.idmc.{component}.readiness_score`, `informatica.idmc.{component}.conversion_progress`; one metric per IDMC component |
+| DD12.2 | **Cross-dependency metrics** | Orchestrator | `datadog_integration.py` | Emit dependency graph metrics: `informatica.idmc.dependencies.total_edges`, `informatica.idmc.dependencies.cross_component`, `informatica.idmc.dependencies.circular` (should be 0) |
+| DD12.3 | **Review metrics** | Orchestrator | `datadog_integration.py` | Emit review workflow metrics: `informatica.review.merge_candidates`, `informatica.review.anti_patterns`, `informatica.review.rework_items` (by effort level), `informatica.review.auto_fixes_applied`, `informatica.review.quality_score` |
+| DD12.4 | **IDMC migration dashboard** | Orchestrator | `templates/datadog_idmc_dashboard.json` | Datadog dashboard: IDMC component inventory heatmap (readiness color-coded), cross-dependency graph widget, conversion progress per component, component-level drill-down |
+| DD12.5 | **Review workflow dashboard** | Orchestrator | `templates/datadog_review_dashboard.json` | Datadog dashboard: merge candidate count + savings estimate, anti-pattern distribution (bar chart), rework queue (kanban-style: pending/in-review/done), auto-fix rate, quality score trend over time |
+| DD12.6 | **Agent rules for IDMC signals** | Orchestrator | `agentic_alerting.py` | New agent decision rules: (1) CDGC readiness < 50% → suggest phased approach, (2) cross-component circular dependency → flag and block migration, (3) merge candidate auto-resolution for score ≥ 95%, (4) anti-pattern auto-fix batch when > 20 trivial items queued |
+| DD12.7 | **IDMC-aware escalation** | Orchestrator | `monitoring_platform.py` | Escalation context enrichment: when alerting on a CDI mapping failure, include linked CDGC glossary terms, CDQ rules, MDM entity — so the reviewer has full cross-component context in the notification |
+| DD12.8 | **Review progress tracking** | Orchestrator | `monitoring_platform.py` | Track review workflow state in platform: merge decisions (pending/resolved), optimization items (applied/skipped), rework queue (pending/in-review/approved/applied); compute review completion % |
+| DD12.9 | **Migration readiness gate** | Orchestrator | `monitoring_platform.py` | Define readiness gate conditions: "All P1 merge candidates resolved", "Zero blocked rework items", "Quality score ≥ 75", "All IDMC components at readiness ≥ 60%"; gate blocks deployment until conditions met |
+| DD12.10 | **IDMC comparison report** | Orchestrator | `monitoring_platform.py` | Side-by-side IDMC source vs Fabric/Databricks target comparison: per-component object count (source → target), coverage %, feature parity gaps, manual intervention required per component |
+| DD12.11 | **Compliance evidence for IDMC** | Orchestrator | `monitoring_platform.py` | Extend compliance export (DD9.7) with IDMC-specific evidence: CDGC lineage preservation proof, CDQ rule migration coverage, data privacy policy migration verification, MDM golden record integrity check |
+| DD12.12 | **IDMC monitoring tests** | Validation | `tests/test_idmc_monitoring.py` | 25+ tests: component metrics, review metrics, dashboard JSON validation, agent rules, readiness gate, comparison report, compliance evidence |
+
+**Full-Stack Architecture (IDMC → Datadog → Agent → Platform):**
+
+```mermaid
+flowchart TB
+    subgraph "IDMC Source Platform"
+        CDI2["CDI\n(Mappings, Taskflows)"]
+        CDGC2["CDGC\n(Catalog, Lineage)"]
+        CDQ3["CDQ\n(Quality Rules)"]
+        MDM2["MDM\n(Match/Merge)"]
+        OTHER["B2B, Privacy,\nMarketplace, API,\nDIH, OpInsights"]
+    end
+
+    subgraph "Assessment (DD10)"
+        PARSE["Full IDMC Parser\n(12 components)"]
+        DAG["Cross-Component\nDependency Graph"]
+        READINESS["Readiness Score\n(per component)"]
+    end
+
+    subgraph "Review (DD11)"
+        MERGE2["Merge Analysis\n(PC ↔ IDMC dedup)"]
+        OPT2["Optimization\n(anti-patterns)"]
+        REWORK2["Rework Queue\n(prioritized)"]
+        QUALITY["Quality Score"]
+    end
+
+    subgraph "Migration Engine"
+        CONVERT["Conversion\n(SQL, Notebook,\nPipeline, DBT)"]
+        DEPLOY["Deployment\n(Fabric/Databricks)"]
+    end
+
+    subgraph "Datadog Observability (DD1-DD3)"
+        LOGS2["Logs"]
+        METRICS2["Metrics"]
+        TRACES2["Traces"]
+    end
+
+    subgraph "Agentic System (DD4-DD6)"
+        AGENT2["Signal → Decision\n→ Action → Learn"]
+    end
+
+    subgraph "Global Platform (DD7-DD9)"
+        DASHBOARD["Dashboards\n(IDMC + Review +\nExec + Ops)"]
+        ALERT2["Escalation\n(4-tier + on-call)"]
+        SLO2["SLO Tracking"]
+        GATE["Readiness Gate\n(blocks deploy)"]
+    end
+
+    CDI2 & CDGC2 & CDQ3 & MDM2 & OTHER --> PARSE
+    PARSE --> DAG --> READINESS
+    READINESS --> MERGE2 & OPT2 & REWORK2
+    MERGE2 & OPT2 & REWORK2 --> QUALITY
+    QUALITY --> CONVERT --> DEPLOY
+
+    PARSE & MERGE2 & OPT2 & REWORK2 & CONVERT & DEPLOY --> LOGS2 & METRICS2 & TRACES2
+    LOGS2 & METRICS2 --> AGENT2
+    AGENT2 --> CONVERT
+    METRICS2 --> DASHBOARD & SLO2
+    AGENT2 --> ALERT2
+    QUALITY & READINESS --> GATE
+    GATE --> DEPLOY
+
+    style PARSE fill:#FF4500,color:#fff
+    style DAG fill:#FF4500,color:#fff
+    style READINESS fill:#FF4500,color:#fff
+    style MERGE2 fill:#E67E22,color:#fff
+    style OPT2 fill:#E67E22,color:#fff
+    style REWORK2 fill:#E67E22,color:#fff
+    style QUALITY fill:#E67E22,color:#fff
+    style GATE fill:#0078D4,color:#fff
+    style DASHBOARD fill:#0078D4,color:#fff
+```
+
+**Sprint DD12 Exit Criteria:**
+- [ ] IDMC component metrics visible in Datadog per all 12 components
+- [ ] Review workflow metrics track merge/optimize/rework progress
+- [ ] IDMC migration dashboard shows full estate at a glance
+- [ ] Review dashboard shows quality improvement trend
+- [ ] Agent auto-resolves high-confidence merge candidates and trivial anti-patterns
+- [ ] Escalation notifications include cross-component IDMC context
+- [ ] Readiness gate blocks deployment when conditions not met
+- [ ] IDMC comparison report shows source→target coverage
+- [ ] 25+ tests passing
+
+---
+
+## IDMC Track Summary
+
+| Sprint | Theme | Tests | Key Deliverable |
+|--------|-------|-------|----------------|
+| **DD10** | Full IDMC Assessment | 30+ | 12-component parser, REST API client, cross-dependency graph, readiness scoring |
+| **DD11** | Migration Review Workflow | 30+ | Merge analysis, 10 anti-patterns, optimization engine, rework queue, auto-fix, quality score |
+| **DD12** | IDMC Monitoring Integration | 25+ | IDMC Datadog dashboards, review metrics, agent rules, readiness gate, compliance evidence |
+| **Total** | — | **85+** | Full IDMC platform visibility + review workflow + monitoring integration |
+
+### Files Created/Modified (DD10-DD12)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `idmc_client.py` | **New** | IDMC REST API v3 client (OAuth2), org inventory pull, fallback to XML |
+| `migration_review.py` | **New** | Merge analysis, similarity scoring, anti-pattern detection, optimization engine, rework classifier, auto-fix engine, review queue |
+| `run_assessment.py` | Modified | CDGC, CDQ (expanded), MDM, B2B, Privacy, Marketplace, API Center, DIH, OpInsights parsers |
+| `datadog_integration.py` | Modified | IDMC component metrics, review workflow metrics |
+| `agentic_alerting.py` | Modified | IDMC-specific agent decision rules |
+| `monitoring_platform.py` | Modified | IDMC-aware escalation context, readiness gate, comparison report, compliance evidence extension |
+| `run_migration.py` | Modified | `--review`, `--review-merge`, `--review-optimize`, `--review-rework`, `--review-apply` CLI commands |
+| `migration.yaml` | Modified | `idmc:` config section (API credentials, component toggles) |
+| `templates/datadog_idmc_dashboard.json` | **New** | IDMC component inventory + readiness dashboard |
+| `templates/datadog_review_dashboard.json` | **New** | Migration review workflow dashboard |
+| `tests/test_idmc_assessment.py` | **New** | 30+ tests for full IDMC assessment |
+| `tests/test_migration_review.py` | **New** | 30+ tests for merge/optimize/rework workflow |
+| `tests/test_idmc_monitoring.py` | **New** | 25+ tests for IDMC monitoring integration |
 
 ---
 

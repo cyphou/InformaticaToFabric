@@ -1,7 +1,7 @@
-# Databricks notebook source
+# Fabric notebook source
 
 # METADATA_START
-# {"language_info":{"name":"python"},"kernel_info":{"name":"python3"}}
+# {"language_info":{"name":"python"},"kernel_info":{"name":"synapse_pyspark"}}
 
 # CELL 1 — Metadata & Parameters
 # Notebook: NB_m_inventory_snapshot
@@ -10,7 +10,7 @@
 # Sources: src_silver_inventory
 # Targets: tgt_gold_inventory_history
 # Flow: EXP → port
-# Generated: 2026-04-02
+# Generated: 2026-04-08
 
 from pyspark.sql.functions import (
     col, lit, when, coalesce, concat_ws, current_timestamp,
@@ -19,12 +19,18 @@ from pyspark.sql.functions import (
 )
 from pyspark.sql.window import Window
 from delta.tables import DeltaTable
+
+# Performance tuning (auto-generated based on mapping complexity)
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.shuffle.partitions", "200")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "10485760")
 # COMMAND ----------
 
 # CELL 2 — Source Read
 # --- Source: src_silver_inventory ---
 # Oracle: SELECT * FROM src_silver_inventory
-df_source = spark.table("main.bronze.src_silver_inventory")
+df_source = spark.table("bronze.src_silver_inventory")
 
 # COMMAND ----------
 
@@ -45,9 +51,9 @@ df = df
 # COMMAND ----------
 
 # CELL 5 — Target Write
-# --- Target: tgt_gold_inventory_history → main.gold.tgt_gold_inventory_history ---
+# --- Target: tgt_gold_inventory_history → gold.tgt_gold_inventory_history ---
 df = df
-df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("main.gold.tgt_gold_inventory_history")
+df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold.tgt_gold_inventory_history")
 
 # COMMAND ----------
 
