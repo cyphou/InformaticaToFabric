@@ -217,6 +217,132 @@ def slide_solution(prs):
     _add_bullet_list(slide, Inches(6.7), Inches(3.9), Inches(6), Inches(3.3), features_r, font_size=14)
 
 
+def slide_pipeline_flow(prs):
+    """Slide — Migration Pipeline Flow (from README mermaid diagram)."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Migration Pipeline — 8-Phase Flow",
+                   "Assess → Convert → Generate → Validate → Deploy — fully automated")
+
+    # Phase boxes (LR flow from README mermaid)
+    phases = [
+        ("📂", "XML\nExports", ACCENT_ORANGE, "PowerCenter\nIICS + IDMC"),
+        ("🔍", "ASSESS\nParse &\nInventory", RGBColor(0x4B, 0x8B, 0xBE), "XML → inventory.json\ncomplexity scoring\ndependency DAG"),
+        ("🗄️", "SQL\nCONVERT", ACCENT_PURPLE, "Oracle → Spark SQL\n6 DB dialects\n180+ patterns"),
+        ("📓", "NOTEBOOK\nGENERATE", ACCENT_GREEN, "Mappings → PySpark\n18 transform types\nFabric or Databricks"),
+        ("🏗️", "DBT\nMODELS", RGBColor(0xFF, 0x69, 0x4F), "staging/int/marts\nJinja SQL models\nauto-routing"),
+        ("⚡", "PIPELINE\nGENERATE", FABRIC_BLUE, "Workflows → JSON\nAutoSys JIL\nSchedule triggers"),
+        ("✅", "VALIDATE", RGBColor(0x27, 0xAE, 0x60), "5-level checks\nRow counts\nChecksums"),
+        ("🚀", "DEPLOY", DARK_BLUE, "Fabric REST API\nor Databricks CLI\nor dbt deploy"),
+    ]
+
+    x = Inches(0.2)
+    box_w = Inches(1.45)
+    box_h = Inches(1.1)
+    y_box = Inches(1.8)
+    y_desc = Inches(3.05)
+
+    for i, (icon, label, clr, desc) in enumerate(phases):
+        _add_shape(slide, x, y_box, box_w, box_h, clr, f"{icon} {label}",
+                   font_size=12, font_color=WHITE, bold=True)
+        _add_text_box(slide, x, y_desc, box_w, Inches(1.2), desc,
+                      font_size=10, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        # Arrow between boxes
+        if i < len(phases) - 1:
+            arrow = slide.shapes.add_shape(
+                MSO_SHAPE.RIGHT_ARROW, x + box_w + Inches(0.02), y_box + Inches(0.35),
+                Inches(0.2), Inches(0.3))
+            arrow.fill.solid()
+            arrow.fill.fore_color.rgb = DARK_GRAY
+            arrow.line.fill.background()
+        x += box_w + Inches(0.22)
+
+    # Data flow annotations
+    _add_text_box(slide, Inches(0.3), Inches(4.5), Inches(12.5), Inches(0.4),
+                  "Data flows: inventory.json → SQL conversion → Notebook generation → Pipeline orchestration → Validation → Deployment",
+                  font_size=13, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
+
+    # Phase summary strip
+    summaries = [
+        ("Phase 0", "Assess", ACCENT_ORANGE),
+        ("Phase 1", "SQL Convert", ACCENT_PURPLE),
+        ("Phase 2-3", "Notebooks + DBT", ACCENT_GREEN),
+        ("Phase 4-5", "Pipelines + AutoSys", FABRIC_BLUE),
+        ("Phase 6", "Schema DDL", RGBColor(0xFF, 0xD7, 0x00)),
+        ("Phase 7", "Validate", RGBColor(0x27, 0xAE, 0x60)),
+        ("Phase 8", "Deploy", DARK_BLUE),
+    ]
+    x = Inches(0.3)
+    for phase, name, clr in summaries:
+        _add_shape(slide, x, Inches(5.1), Inches(1.75), Inches(0.45), clr,
+                   f"{phase}: {name}", font_size=11, font_color=WHITE, bold=False)
+        x += Inches(1.85)
+
+    _add_text_box(slide, Inches(0.3), Inches(5.8), Inches(12.5), Inches(0.8),
+                  "Each phase is idempotent — re-run any phase independently. "
+                  "The orchestrator (run_migration.py) chains all 8 phases with a single command.\n"
+                  "CLI: informatica-to-fabric --target fabric|databricks|dbt|auto",
+                  font_size=13, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+
+
+def slide_fabric_architecture(prs):
+    """Slide — Fabric Target Architecture / Medallion (from README mermaid diagram)."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Target Architecture — Medallion on Microsoft Fabric",
+                   "Bronze → Silver → Gold lakehouse layers on OneLake with Delta Lake")
+
+    # ── Storage Layer (3 medallion boxes) ──
+    _add_text_box(slide, Inches(0.4), Inches(1.45), Inches(3.8), Inches(0.35),
+                  "Storage Layer (OneLake / Delta Lake)", font_size=14, font_color=DARK_BLUE, bold=True)
+
+    medal_boxes = [
+        ("🥉 Bronze Lakehouse", "Raw ingestion\nSource-congruent tables\nNo transformation", RGBColor(0xCD, 0x7F, 0x32)),
+        ("🥈 Silver Lakehouse", "Cleansed & typed\nDeduplication, casting\nBusiness rules applied", RGBColor(0xC0, 0xC0, 0xC0)),
+        ("🥇 Gold Lakehouse", "Business-ready\nAggregated & curated\nServing layer for BI", RGBColor(0xFF, 0xD7, 0x00)),
+    ]
+    x = Inches(0.4)
+    for title, desc, clr in medal_boxes:
+        _add_shape(slide, x, Inches(1.85), Inches(3.8), Inches(0.65), clr, title,
+                   font_size=14, font_color=WHITE if clr != RGBColor(0xFF, 0xD7, 0x00) else BLACK, bold=True)
+        _add_text_box(slide, x + Inches(0.1), Inches(2.55), Inches(3.6), Inches(1.0), desc,
+                      font_size=11, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        x += Inches(4.2)
+
+    # ── Compute Layer ──
+    _add_text_box(slide, Inches(0.4), Inches(3.6), Inches(6), Inches(0.35),
+                  "Compute Layer", font_size=14, font_color=DARK_BLUE, bold=True)
+
+    compute_boxes = [
+        ("📓 Notebooks (PySpark)", "Transformation logic\n18 Informatica types → PySpark\nBronze → Silver → Gold", FABRIC_BLUE),
+        ("🗄️ SQL Warehouse", "Stored procedures\nT-SQL for Warehouse\nSpark SQL for Lakehouse", ACCENT_PURPLE),
+    ]
+    x = Inches(0.4)
+    for title, desc, clr in compute_boxes:
+        _add_shape(slide, x, Inches(4.0), Inches(5.9), Inches(0.55), clr, title,
+                   font_size=13, font_color=WHITE, bold=True)
+        _add_text_box(slide, x + Inches(0.1), Inches(4.6), Inches(5.7), Inches(0.8), desc,
+                      font_size=11, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        x += Inches(6.3)
+
+    # ── Orchestration Layer ──
+    _add_text_box(slide, Inches(0.4), Inches(5.45), Inches(6), Inches(0.35),
+                  "Orchestration Layer", font_size=14, font_color=DARK_BLUE, bold=True)
+
+    orch_boxes = [
+        ("⚡ Data Pipelines", "Workflow orchestration\nActivity chaining\nAutoSys JIL → Pipeline", ACCENT_GREEN),
+        ("⏰ Triggers & Schedules", "Cron schedules\nEvent-based triggers\nInformatica schedules → triggers", ACCENT_ORANGE),
+        ("🔗 IDMC Assessment", "12-service inventory\nComplexity scoring\nMigration readiness", RGBColor(0xFF, 0x45, 0x00)),
+    ]
+    x = Inches(0.4)
+    for title, desc, clr in orch_boxes:
+        _add_shape(slide, x, Inches(5.85), Inches(3.8), Inches(0.5), clr, title,
+                   font_size=12, font_color=WHITE, bold=True)
+        _add_text_box(slide, x + Inches(0.1), Inches(6.4), Inches(3.6), Inches(0.7), desc,
+                      font_size=10, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        x += Inches(4.2)
+
+
 def slide_architecture(prs):
     """Slide 4 — Architecture."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -780,8 +906,10 @@ def main():
     slide_title(prs)           # 1 - Title
     slide_problem(prs)         # 2 - The Challenge
     slide_solution(prs)        # 3 - Solution Overview
-    slide_architecture(prs)    # 4 - Architecture
-    slide_what_gets_migrated(prs)  # 5 - What Gets Migrated
+    slide_pipeline_flow(prs)   # 4 - Migration Pipeline Flow
+    slide_architecture(prs)    # 5 - Multi-Agent Architecture
+    slide_fabric_architecture(prs)  # 6 - Fabric Target Architecture (Medallion)
+    slide_what_gets_migrated(prs)  # 7 - What Gets Migrated
     slide_sql_depth(prs)       # 6 - Advanced SQL
     slide_validation(prs)      # 7 - Validation
     slide_extensibility(prs)   # 8 - Extensibility
