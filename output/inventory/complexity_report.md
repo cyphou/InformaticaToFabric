@@ -1,6 +1,6 @@
 # Informatica-to-Fabric Migration -- Complexity Report
 
-**Generated:** 2026-04-09T07:25:45Z
+**Generated:** 2026-04-09T10:08:23Z
 **Source Platform:** Informatica PowerCenter
 **Target Platform:** Microsoft Fabric
 

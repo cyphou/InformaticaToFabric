@@ -1,6 +1,6 @@
 # Migration Summary — Target: Fabric
 
-**Generated:** 2026-04-09 07:25 UTC
+**Generated:** 2026-04-09 10:08 UTC
 **Target Platform:** Fabric
 
 ## Phase Results

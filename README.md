@@ -4,10 +4,10 @@
   <img src="https://img.shields.io/badge/Microsoft%20Fabric-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Microsoft Fabric"/>
 </p>
 
-<h1 align="center">Informatica to Microsoft Fabric / Azure Databricks Migration</h1>
+<h1 align="center">Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter & IICS workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, IDMC full-platform assessment, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
@@ -20,6 +20,7 @@
   <img src="https://img.shields.io/badge/Delta%20Lake-schema%20gen-00ADD8?style=flat-square&logo=databricks&logoColor=white" alt="Delta Lake"/>
   <img src="https://img.shields.io/badge/6%20databases-Oracle%20%C2%B7%20SQL%20Server%20%C2%B7%20Teradata%20%C2%B7%20DB2%20%C2%B7%20MySQL%20%C2%B7%20PostgreSQL-blue?style=flat-square&logo=amazondynamodb&logoColor=white" alt="6 databases"/>
   <img src="https://img.shields.io/badge/IICS-full%20support-27AE60?style=flat-square&logo=icloud&logoColor=white" alt="IICS"/>
+  <img src="https://img.shields.io/badge/IDMC-12%20services-FF4500?style=flat-square&logo=informatica&logoColor=white" alt="IDMC 12 services"/>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License"/>
 </p>
 
@@ -160,6 +161,15 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 
 </td>
 </tr>
+<tr>
+<td colspan="2">
+
+### 🔗 IDMC Full Platform Assessment (12 Cloud Services)
+The tool connects to the **Informatica Intelligent Data Management Cloud** (IDMC) via REST API and performs a full inventory across all 12 services:
+**CDI** (Cloud Data Integration), **CDGC** (Cloud Data Governance & Catalog), **CDQ** (Cloud Data Quality), **MDM** (Master Data Management), **DI** (Data Integration), **B2B** (B2B Gateway), **API Manager**, **Connector** (Marketplace Connectors), **EDC** (Enterprise Data Catalog), **Axon** (Data Governance), **Market** (Marketplace), **Test Data Management** — with complexity scoring, dependency mapping, and migration readiness assessment per component.
+
+</td>
+</tr>
 </table>
 
 > [!NOTE]
@@ -171,6 +181,7 @@ Row count checks, column checksums, aggregate comparisons, sample record diffs, 
 |---|---|---|---|
 | **Informatica PowerCenter** 9.x/10.x | ✅ Full XML parsing | ✅ Oracle + SQL Server + Teradata + DB2 + MySQL + PostgreSQL | Production-ready |
 | **Informatica IICS** (Cloud) | ✅ Taskflows + Mappings + Sync/MassIngestion | ✅ Namespace-aware | Production-ready (Sprint 19) |
+| **IDMC** (Intelligent Data Management Cloud) | ✅ Full 12-service assessment via REST API (CDI, CDGC, CDQ, MDM, DI, B2B, API Manager, Connector, EDC, Axon, Market, Test Data) | ✅ Complexity scoring + dependency mapping | Production-ready (DD10–DD12) |
 | **Oracle** SQL overrides & stored procs | ✅ 43+ patterns | ✅ Full conversion + GTT/MV/DB links | Production-ready |
 | **SQL Server** SQL overrides & stored procs | ✅ 18 patterns | ✅ T-SQL → Spark SQL | Production-ready |
 | **Flat files** (CSV, fixed-width) | ✅ Documented | ✅ `spark.read.csv()` patterns | Production-ready |

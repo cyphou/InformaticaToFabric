@@ -86,7 +86,7 @@ flowchart TB
 | Agent | Invoke With | Owns | Outputs |
 |-------|-------------|------|---------|
 | **🎯 @migration-orchestrator** | `@migration-orchestrator start migration` | Migration plan, wave scheduling, progress | `output/migration_summary.md` |
-| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), AutoSys JIL parsing, inventory, complexity, DAG, session config, scheduler | `output/inventory/`, `output/autosys/` |
+| **🔍 @assessment** | `@assessment parse input/workflows/` | XML parsing (PowerCenter + IICS), AutoSys JIL parsing, IDMC 12-service assessment (via REST API), inventory, complexity, DAG, session config, scheduler | `output/inventory/`, `output/autosys/` |
 | **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook or DBT model generation (Fabric `notebookutils` or Databricks `dbutils` or `dbt`) | `output/notebooks/NB_*.py`, `output/dbt/` |
 | **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Fabric Pipeline JSON or Databricks Workflow JSON, AutoSys BOX/CMD → Pipeline JSON | `output/pipelines/PL_*.json`, `output/autosys/PL_AUTOSYS_*.json` |
 | **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle/SQL Server → Spark SQL / T-SQL (+ GTT, MV, DB link detection) | `output/sql/SQL_*.sql` |
@@ -109,9 +109,9 @@ flowchart TB
 
 | | |
 |---|---|
-| **Role** | Parses Informatica XML exports (PowerCenter + IICS), builds inventories, classifies complexity, maps dependencies, extracts session configs and scheduler definitions |
-| **Inputs** | Informatica XML export files (workflows, mappings, sessions, IICS taskflows) |
-| **Outputs** | `inventory.json`, `complexity_report.md`, `dependency_dag.json` |
+| **Role** | Parses Informatica XML exports (PowerCenter + IICS) and IDMC REST API (12 cloud services: CDI, CDGC, CDQ, MDM, DI, B2B, API Manager, Connector, EDC, Axon, Market, Test Data), builds inventories, classifies complexity, maps dependencies, extracts session configs and scheduler definitions |
+| **Inputs** | Informatica XML export files (workflows, mappings, sessions, IICS taskflows), IDMC REST API credentials (optional) |
+| **Outputs** | `inventory.json`, `complexity_report.md`, `dependency_dag.json`, `idmc_inventory.json` |
 | **File** | [.github/agents/assessment.agent.md](.github/agents/assessment.agent.md) |
 
 ### 3. 📓 `notebook-migration` (Transformation Conversion)

@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 1,843 tests, ~98% coverage. Multi-target support: Microsoft Fabric, Azure Databricks, and DBT.
+**Current status:** 1,843 tests, ~98% coverage. Multi-source: PowerCenter, IICS, IDMC (12 services). Multi-target: Microsoft Fabric, Azure Databricks, and DBT.
 
 ## Test Files
 

@@ -107,11 +107,11 @@ def slide_title(prs):
     _add_bg(slide, DARK_BLUE)
 
     _add_text_box(slide, Inches(1), Inches(1.2), Inches(11), Inches(1),
-                  "Informatica  →  Microsoft Fabric / Azure Databricks",
+                  "Informatica PowerCenter / IDMC  \u2192  Microsoft Fabric / Azure Databricks",
                   font_size=36, font_color=WHITE, bold=True, align=PP_ALIGN.CENTER)
 
     _add_text_box(slide, Inches(1.5), Inches(2.4), Inches(10), Inches(0.8),
-                  "Automated Migration Tool — Functionality Overview & ROI Analysis",
+                  "Automated Migration Tool \u2014 PowerCenter + IICS + IDMC (12 Services) \u2192 Fabric / Databricks / DBT",
                   font_size=22, font_color=RGBColor(0xBD, 0xC3, 0xC7), align=PP_ALIGN.CENTER)
 
     # Stat bar
@@ -138,9 +138,10 @@ def slide_problem(prs):
     _add_title_bar(slide, "The Challenge", "Why migrate away from Informatica?")
 
     pain_points = [
-        "Informatica PowerCenter/IICS licensing costs escalate year-over-year (avg. 15-25% annual increase)",
-        "On-premises infrastructure limits elasticity — peak workloads pay for idle capacity",
+        "Informatica PowerCenter/IICS/IDMC licensing costs escalate year-over-year (avg. 15-25% annual increase)",
+        "On-premises infrastructure limits elasticity \u2014 peak workloads pay for idle capacity",
         "Vendor lock-in: proprietary XML formats, no native cloud integration, limited Spark support",
+        "IDMC cloud services (CDI, CDGC, CDQ, MDM, etc.) add complexity without reducing on-prem footprint",
         "Manual migration projects historically take 12-24 months with 40-60% cost overruns",
         "Lack of modern data engineering patterns (Medallion, Delta Lake, Unity Catalog)",
         "AutoSys / scheduler coupling adds hidden dependency & operational risk",
@@ -192,7 +193,7 @@ def slide_solution(prs):
 
     # Key features below
     features_l = [
-        "PowerCenter 9.x/10.x + IICS full support",
+        "PowerCenter 9.x/10.x + IICS + IDMC (12 cloud services) full support",
         "6 source databases (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL)",
         "180+ SQL pattern conversions → Spark SQL",
         "18 transformation types → PySpark code",

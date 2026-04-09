@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-This playbook guides enterprise-scale migration from **Informatica PowerCenter / IICS** to **Microsoft Fabric** or **Azure Databricks**. It covers planning, execution, validation, and go-live for organizations with 50+ mappings and multiple environments.
+This playbook guides enterprise-scale migration from **Informatica PowerCenter / IICS / IDMC** (Intelligent Data Management Cloud — 12 services: CDI, CDGC, CDQ, MDM, DI, B2B, API Manager, Connector, EDC, Axon, Market, Test Data) to **Microsoft Fabric** or **Azure Databricks**. It covers planning, execution, validation, and go-live for organizations with 50+ mappings and multiple environments.
 
 ---
 

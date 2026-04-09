@@ -1,4 +1,4 @@
-# User Guide — Informatica to Microsoft Fabric / Azure Databricks Migration
+# User Guide — Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks Migration
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@
 - **Python 3.10+** (tested with 3.14)
 - **VS Code** with GitHub Copilot (for agent-driven workflow)
 - **Informatica XML exports** — workflow, mapping, and session XML files
+- **IDMC credentials** (optional) — org URL + API bearer token for full 12-service IDMC assessment
 - **Microsoft Fabric workspace** (for Fabric target) **or Azure Databricks workspace** (for Databricks target)
 
 ## 2. Installation

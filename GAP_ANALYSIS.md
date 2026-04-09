@@ -6,11 +6,12 @@
   <img src="https://img.shields.io/badge/status-sprint_97_complete-27AE60?style=for-the-badge" alt="Sprint 97 complete"/>
   <img src="https://img.shields.io/badge/tests-1843-2980B9?style=for-the-badge" alt="1843 tests"/>
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
+  <img src="https://img.shields.io/badge/IDMC-12%20services-FF4500?style=for-the-badge&logo=informatica&logoColor=white" alt="IDMC 12 services"/>
 </p>
 
 **Generated:** 2026-03-23  
 **Last Updated:** 2026-04-09 (Sprint 97 — Phase 1-10 + DD1-DD12 + Phase 15-16 complete + Databricks + DBT + AutoSys JIL + Datadog + Agentic Alerting + IDMC + IaC + Container/K8s + CI/CD + Benchmarks + Regression)  
-**Scope:** Informatica PowerCenter 9.x/10.x + IICS → **Microsoft Fabric** or **Azure Databricks** or **DBT**  
+**Scope:** Informatica PowerCenter 9.x/10.x + IICS + **IDMC** (12 cloud services) → **Microsoft Fabric** or **Azure Databricks** or **DBT**  
 **Purpose:** Comprehensive inventory of all Informatica object types with migration readiness assessment and gap identification.
 
 ---

@@ -5,17 +5,17 @@
   <img src="https://img.shields.io/badge/Azure%20Databricks-FF3621?style=for-the-badge&logo=databricks&logoColor=white" alt="Databricks"/>
 </p>
 
-<h1 align="center">Migration Plan — Informatica to Microsoft Fabric / Azure Databricks</h1>
+<h1 align="center">Migration Plan — Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks</h1>
 
 <p align="center">
-  <strong>An 8-phase strategy to migrate Informatica PowerCenter/IICS workloads to Microsoft Fabric, Azure Databricks, or DBT — including AutoSys JIL scheduler migration.</strong>
+  <strong>An 8-phase strategy to migrate Informatica PowerCenter/IICS/IDMC (12 cloud services) workloads to Microsoft Fabric, Azure Databricks, or DBT — including AutoSys JIL scheduler migration and full IDMC platform assessment.</strong>
 </p>
 
 ---
 
 ## Executive Summary
 
-This plan outlines the migration strategy from **Informatica PowerCenter/IICS** to **Microsoft Fabric** or **Azure Databricks**, replacing ETL/ELT workloads with a combination of:
+This plan outlines the migration strategy from **Informatica PowerCenter/IICS/IDMC** (including all 12 IDMC cloud services) to **Microsoft Fabric** or **Azure Databricks**, replacing ETL/ELT workloads with a combination of:
 
 | Informatica Component | Fabric Target | Databricks Target | DBT Target | Agent |
 |---|---|---|---|---|
@@ -25,6 +25,7 @@ This plan outlines the migration strategy from **Informatica PowerCenter/IICS** 
 | Sessions / connections | **Fabric Lakehouses + Shortcuts** | **Unity Catalog + Volumes** | **profiles.yml** | `@assessment` |
 | Scheduler | **Pipeline Triggers + Fabric Scheduler** | **Job Scheduler (cron)** | **dbt Cloud / Airflow** | `@pipeline-migration` |
 | **AutoSys JIL** (BOX/CMD/FW) | **Fabric Data Pipelines** (activities + triggers) | **Databricks Workflows** (multi-task jobs) | — | `@pipeline-migration` |
+| **IDMC Platform** (CDI/CDGC/CDQ/MDM/DI/B2B/API/Connector/EDC/Axon/Market/Test Data) | Assessed via REST API → inventory + complexity scoring | Assessed via REST API → inventory + complexity scoring | — | `@assessment` |
 
 ### Migration Overview
 
