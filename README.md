@@ -7,7 +7,7 @@
 <h1 align="center">Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, Azure Functions (CDC/ESB), AI-assisted SQL conversion, visual lineage explorer, ML pipeline templates, cost optimization — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, CDC & Structured Streaming (Kafka / Event Hub / Auto Loader → Delta MERGE INTO), AutoSys JIL conversion, Azure Functions (7 triggers), Fabric Eventstream, AI-assisted SQL conversion, visual lineage explorer, ML pipeline templates, cost optimization — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
@@ -38,6 +38,9 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/CDC-MERGE%20INTO%20%C2%B7%20Change%20Feed-E74C3C?style=flat-square&logo=apachekafka&logoColor=white" alt="CDC"/>
+  <img src="https://img.shields.io/badge/Streaming-Kafka%20%C2%B7%20Event%20Hub%20%C2%B7%20Auto%20Loader-E74C3C?style=flat-square&logo=apachekafka&logoColor=white" alt="Streaming"/>
+  <img src="https://img.shields.io/badge/Eventstream-Fabric%20RT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Eventstream"/>
   <img src="https://img.shields.io/badge/Datadog-observability-632CA6?style=flat-square&logo=datadog&logoColor=white" alt="Datadog observability"/>
   <img src="https://img.shields.io/badge/Agentic-auto--remediation-E67E22?style=flat-square&logo=robot&logoColor=white" alt="Agentic alerting"/>
   <img src="https://img.shields.io/badge/Terraform%20%2B%20Bicep-IaC-844FBA?style=flat-square&logo=terraform&logoColor=white" alt="IaC"/>
@@ -52,6 +55,7 @@
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-capability-summary">Capabilities</a> •
   <a href="#-what-gets-migrated">What Gets Migrated</a> •
+  <a href="#-cdcreal-time--streaming">CDC & Streaming</a> •
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-multi-agent-architecture">Agents</a> •
   <a href="#-transformation-mapping">Mappings</a> •
@@ -188,6 +192,24 @@
 
 </td>
 </tr>
+<tr>
+<td colspan="3" valign="top">
+
+### 🌊 CDC / Real-Time / Streaming
+- **CDC pattern detection** — `full_cdc` (I/U/D), `upsert_only`, `soft_delete` auto-classified from Update Strategy transformations
+- **Delta MERGE INTO generation** — merge keys, operation column routing, `whenMatchedDelete()` for full CDC
+- **Structured Streaming templates** — Kafka → Delta, Event Hub → Delta, Auto Loader → Delta (with watermark & checkpoint)
+- **Change Data Feed reader** — Databricks `readChangeFeed=true` with `_change_type` filtering
+- **Fabric Eventstream definitions** — streaming mappings → JSON (CustomApp / EventHub inputs, Lakehouse destinations, CDC filter transforms)
+- **Azure Functions (7 triggers)** — Service Bus, Event Hub, SQL Change Tracking, Cosmos DB Change Feed, HTTP, Timer, Blob
+- **CDC/RT deployment blueprints** — Bicep + Terraform IaC for Event Hub + APIM + Functions infrastructure
+- **Watermark & late arrival handling** — configurable delay windows across all streaming templates
+- **Idempotent processing** — checkpoint-based exactly-once, MERGE-based upserts, Change Tracking dedup
+- **CDC validation** — operation balance, merge key uniqueness, orphan delete checks, coverage analysis
+- **Streaming source detection** — auto-detects Kafka, Event Hub, JMS, MQTT, Kinesis, Pub/Sub, RabbitMQ, Service Bus, AMQP from mapping XML
+
+</td>
+</tr>
 </table>
 
 ---
@@ -300,6 +322,13 @@ Informatica mappings with event-driven, CDC, or ESB patterns are auto-detected a
 </td>
 <td>
 
+### 🌊 CDC / Real-Time / Streaming
+Informatica mappings with **streaming sources** or **CDC patterns** are auto-detected and migrated to real-time pipelines:
+**CDC patterns** — `full_cdc` (Insert/Update/Delete), `upsert_only`, `soft_delete` — detected from Update Strategy transformations and mapped to Delta **MERGE INTO** with operation column routing. **Structured Streaming** — 3 built-in templates: **Kafka → Delta**, **Event Hub → Delta**, **Auto Loader → Delta** — each with watermark, checkpoint, and configurable trigger intervals. **Change Data Feed** — Databricks `readChangeFeed=true` reader with `_change_type` filtering. **Fabric Eventstream** — JSON definitions generated for streaming mappings (CustomApp/EventHub inputs → Lakehouse destinations). **Deployment blueprints** — Bicep + Terraform IaC for the full CDC/RT stack (Event Hub + APIM + Functions). **CDC validation** — operation balance, merge key uniqueness, orphan delete detection.
+
+</td>
+<td>
+
 ### 🤖 AI-Assisted SQL Conversion (Phase 13)
 Complex SQL that defeats regex rules is handled by **LLM-powered conversion** (Azure OpenAI):
 **Confidence scoring** (0–100) per conversion, **pattern learning store** that improves from feedback, **gap severity ranking** (downstream impact × complexity × frequency), **3-candidate suggestion engine** (pattern match + heuristic + LLM), **TODO backfill** — re-processes manual TODO markers, **budget guardrails** — token tracking prevents runaway costs, **SHA-256 caching** — never converts the same SQL twice.
@@ -390,6 +419,116 @@ The tool connects to the **Informatica Intelligent Data Management Cloud** (IDMC
 | **Microsoft Fabric** | `notebookutils` / 2-level namespace | Fabric Data Pipeline JSON | Delta Lake on Lakehouse | — | JIL → Pipeline JSON | `notebookutils.credentials.getSecret()` | `deploy_to_fabric.py` |
 | **Azure Databricks** | `dbutils` / Unity Catalog 3-level namespace | Databricks Workflow JSON (Jobs API) | Delta Lake on Unity Catalog | `--target dbt` | JIL → Workflow JSON | `dbutils.secrets.get()` | `deploy_to_databricks.py` |
 | **DBT on Databricks** | — (SQL-only mappings) | Databricks Workflow with `dbt_task` | Via dbt schema.yml | `stg_` / `int_` / `mart_` models | JIL → Workflow JSON | dbt profiles.yml | `deploy_dbt_project.py` |
+
+---
+
+## 🌊 CDC/Real-Time & Streaming
+
+The tool automatically detects **streaming sources** and **CDC patterns** in Informatica mappings and routes them to the appropriate real-time architecture — Structured Streaming notebooks, Azure Functions, or Fabric Eventstreams.
+
+### Architecture
+
+```mermaid
+flowchart LR
+    subgraph "Sources (Auto-Detected)"
+        K["Apache Kafka"]
+        EH["Azure Event Hub"]
+        JMS["JMS / Service Bus"]
+        SQL_CDC["SQL Change Tracking"]
+        CDF["Cosmos DB Change Feed"]
+        AL["Cloud Storage\n(Auto Loader)"]
+    end
+
+    subgraph "Processing Layer"
+        SS["🔥 Structured Streaming\n(Spark readStream)"]
+        FN["⚡ Azure Functions\n(7 trigger types)"]
+        ES["🌊 Fabric Eventstream"]
+    end
+
+    subgraph "Delta Lake (Medallion)"
+        B["🥉 Bronze\nRaw events"]
+        S["🥈 Silver\nMERGE INTO\n(CDC upsert)"]
+        G["🥇 Gold\nAggregated"]
+    end
+
+    K --> SS
+    EH --> SS
+    EH --> FN
+    AL --> SS
+    JMS --> FN
+    SQL_CDC --> FN
+    CDF --> FN
+    K --> ES
+    EH --> ES
+
+    SS --> B
+    FN --> B
+    ES --> B
+    B --> S
+    S --> G
+
+    style K fill:#231F20,color:#fff
+    style EH fill:#0078D4,color:#fff
+    style JMS fill:#FF6B35,color:#fff
+    style SQL_CDC fill:#CC2927,color:#fff
+    style CDF fill:#0078D4,color:#fff
+    style AL fill:#FF3621,color:#fff
+    style SS fill:#E25A1C,color:#fff
+    style FN fill:#0078D4,color:#fff
+    style ES fill:#0078D4,color:#fff
+    style B fill:#CD7F32,color:#fff
+    style S fill:#C0C0C0,color:#000
+    style G fill:#FFD700,color:#000
+```
+
+### CDC Pattern Detection
+
+| Pattern | Trigger | Generated Code | Use Case |
+|---------|---------|----------------|----------|
+| **`full_cdc`** | Update Strategy with DD_INSERT + DD_UPDATE + DD_DELETE | `MERGE INTO` with `whenMatchedUpdateAll()` + `whenMatchedDelete()` + `whenNotMatchedInsertAll()` | Full change propagation |
+| **`upsert_only`** | Update Strategy with DD_INSERT + DD_UPDATE | `MERGE INTO` with `whenMatchedUpdateAll()` + `whenNotMatchedInsertAll()` | Insert-or-update patterns |
+| **`soft_delete`** | Update Strategy with DD_DELETE only | `MERGE INTO` setting `is_deleted = true` | Logical deletes, audit trail |
+
+### Streaming Templates
+
+| Template | Source | Key Features |
+|----------|--------|--------------|
+| **Kafka → Delta** | `readStream.format("kafka")` | JSON deserialization, watermark for late arrival, checkpoint, Delta sink |
+| **Event Hub → Delta** | `readStream.format("eventhubs")` | Encrypted connection string, watermark, Delta sink |
+| **Auto Loader → Delta** | `readStream.format("cloudFiles")` | Schema evolution (`addNewColumns`), type inference, `availableNow` trigger |
+| **Change Data Feed** | `spark.read.option("readChangeFeed", "true")` | Databricks CDF reader, `_change_type` filtering (insert/update/delete) |
+| **Fabric Eventstream** | Eventstream JSON definition | CustomApp/EventHub inputs → Lakehouse destinations, CDC filter transforms |
+
+### CDC/RT Deployment Blueprint
+
+Generate complete infrastructure for CDC/real-time architectures:
+
+```bash
+# Analyze inventory for CDC/RT candidates
+python run_blueprint_generator.py --analyze
+
+# Generate Bicep blueprint (Event Hub + APIM + Functions)
+python run_blueprint_generator.py --format bicep --output output/blueprints/
+
+# Generate Terraform blueprint
+python run_blueprint_generator.py --format terraform --output output/blueprints/
+
+# Generate architecture diagram (Markdown + Mermaid)
+python run_blueprint_generator.py --doc --output output/blueprints/
+```
+
+The blueprint categorizes inventory mappings into **CDC**, **Real-Time**, and **ESB/API** buckets, then generates targeted infrastructure:
+- **CDC Pipeline:** Source DB → SQL Trigger / Change Feed → Function → Event Hub → Delta Lake
+- **Real-Time Ingest:** Event Producer → Event Hub → Structured Streaming → Delta Lake
+- **ESB/API Gateway:** Client → APIM → HTTP Function → Target
+
+### CDC Validation
+
+Every CDC migration gets specialized validation:
+- **Operation balance** — insert + update + delete counts match source
+- **Merge key uniqueness** — post-MERGE target has no duplicate keys
+- **Orphan delete check** — (full_cdc) deletes don't reference missing records
+- **CDC coverage** — all operation types are recognized (no unknown `_op` values)
 
 ---
 
@@ -739,7 +878,10 @@ InformaticaToDBFabric/
 ├── templates/                           # 📋 Reusable templates
 │   ├── notebook_template.py             #   Base notebook structure
 │   ├── pipeline_template.json           #   Base pipeline JSON
-│   └── validation_template.py           #   Base validation notebook
+│   ├── validation_template.py           #   Base validation notebook
+│   ├── streaming_kafka.py               #   🌊 Kafka → Delta Structured Streaming
+│   ├── streaming_eventhub.py            #   🌊 Event Hub → Delta Structured Streaming
+│   └── streaming_autoloader.py          #   🌊 Auto Loader → Delta Structured Streaming
 ├── run_assessment.py                    # 🔍 Assessment script (Phase 0)
 ├── run_sql_migration.py                 # 🗄️ SQL conversion script (Phase 1)
 ├── run_notebook_migration.py            # 📓 Notebook generation script (Phase 2)
@@ -814,14 +956,16 @@ InformaticaToDBFabric/
 │   ├── test_datadog.py                  # DD1–DD3: Datadog logging, metrics, APM tracing
 │   ├── test_agentic_alerting.py         # DD4–DD6: Agentic signal processing & auto-remediation
 │   ├── test_monitoring_platform.py      # DD7–DD9: Global monitoring platform & dashboards
-│   └── test_idmc_review.py              # DD10–DD12: IDMC full coverage & migration review
-│   ├── test_sprint92_94.py              # Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD
-│   ├── test_sprint95_97.py              # Phase 16: Benchmarks, Parallel/Memory, Regression/Golden
-│   ├── test_functions_migration.py      # Azure Functions migration tests (45 tests)
-│   ├── test_blueprint_generator.py      # Blueprint generator tests (42 tests)
+│   ├── test_idmc_review.py              # DD10–DD12: IDMC full coverage & migration review
+│   ├── test_sprint80_82.py              # Phase 11: CDC/RT — streaming detection, CDC patterns, MERGE INTO, Eventstream
+│   ├── test_sprint83_85.py              # Phase 12: Security, Compliance, Certification
 │   ├── test_sprint86_88.py              # Phase 13: AI-assisted SQL conversion & assistant
 │   ├── test_sprint89_91.py              # Phase 14: Lineage explorer, diff & review
+│   ├── test_sprint92_94.py              # Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD
+│   ├── test_sprint95_97.py              # Phase 16: Benchmarks, Parallel/Memory, Regression/Golden
 │   ├── test_sprint98_100.py             # Phase 17: ML pipelines, cost advisor
+│   ├── test_functions_migration.py      # Azure Functions migration tests (45 tests)
+│   ├── test_blueprint_generator.py      # CDC/RT blueprint generator tests (42 tests)
 │   └── update_golden.py                 # Golden snapshot updater script
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
@@ -974,6 +1118,8 @@ python run_artifact_validation.py --notebooks  # Notebooks only
 | `test_sprint92_94.py` | 87 | Phase 15: Terraform/Bicep IaC generation, Dockerfile/Compose/K8s manifests, Helm chart, GitHub Actions/Azure DevOps CI/CD |
 | `test_sprint95_97.py` | 69 | Phase 16: Synthetic mapping generator, benchmark harness, memory profiling, parallel execution, golden snapshots, regression suite |
 | `test_functions_migration.py` | 45 | Azure Functions: candidate detection, 7 trigger generators (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob), pipeline integration, code quality |
+| `test_sprint80_82.py` | ~50 | **Phase 11 — CDC/RT:** Streaming detection (Kafka/EH/JMS/MQTT), CDC pattern detection (full_cdc/upsert/soft_delete), MERGE INTO generation, streaming source/sink cells, Change Data Feed reader, Eventstream definitions, CDC validation (op balance, merge keys, orphan deletes) |
+| `test_blueprint_generator.py` | 42 | CDC/RT deployment blueprints: candidate analysis, Bicep generation (Event Hub + APIM + Functions), Terraform generation, architecture docs, deployment scripts |
 | `test_sprint83_85.py` | 68 | Phase 12: Security (RLS/CLS, column masking, audit), Compliance (PII classification, retention, GDPR erasure, data residency), Certification (6-gate system, audit trail, evidence ZIP, sign-off) |
 | `test_sprint86_88.py` | 50 | Phase 13: LLM SQL conversion, confidence scoring, pattern store, gap ranking, suggestions, TODO extraction, migration assistant, query handlers, interactive review |
 | `test_sprint89_91.py` | 24 | Phase 14: Lineage graph generation, impact analysis (BFS), source/target extraction, code classification, diff HTML, batch reports, Cytoscape.js lineage explorer |
@@ -998,7 +1144,7 @@ logging:
 
 ---
 
-## � Examples
+## 📂 Examples
 
 > **[Browse all examples →](examples/)**
 
@@ -1017,7 +1163,7 @@ The [`examples/`](examples/) directory contains a **complete walkthrough** of 10
 
 ---
 
-## �📸 Generated Output Examples
+## 📸 Generated Output Examples
 
 Here are excerpts from actual generated artifacts to illustrate what the agents produce.
 
@@ -1193,6 +1339,9 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | **Pipeline activity types** | 15 workflow elements → Fabric/Databricks |
 | **AutoSys JIL elements** | 15 job types → Pipeline/Workflow |
 | **Azure Function triggers** | 7 types (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob) |
+| **Streaming templates** | 3 (Kafka, Event Hub, Auto Loader → Delta) |
+| **CDC patterns** | 3 (full_cdc, upsert_only, soft_delete) |
+| **Streaming sources detected** | 9 (Kafka, Event Hub, JMS, MQTT, Kinesis, Pub/Sub, RabbitMQ, Service Bus, AMQP) |
 | **IDMC services assessed** | 12 cloud services via REST API |
 
 ---
@@ -1219,6 +1368,11 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 
 | Module | Category | Description |
 |--------|----------|-------------|
+| `run_notebook_migration.py` | CDC / Streaming | CDC-aware notebook generation — MERGE INTO, streaming source/sink cells, Change Data Feed reader |
+| `run_functions_migration.py` | CDC / Streaming | Azure Functions code gen — 7 triggers (Service Bus, Event Hub, SQL CDC, Cosmos Feed, HTTP, Timer, Blob) |
+| `run_blueprint_generator.py` | CDC / Streaming | CDC/RT deployment blueprints — Bicep + Terraform IaC (Event Hub + APIM + Functions) |
+| `run_pipeline_migration.py` | CDC / Streaming | Fabric Eventstream definitions — streaming mapping → JSON (CustomApp/EventHub → Lakehouse) |
+| `templates/streaming_*.py` | CDC / Streaming | Structured Streaming templates — Kafka, Event Hub, Auto Loader → Delta with watermark & checkpoint |
 | `ai_converter.py` | AI / Intelligence | LLM-powered SQL conversion, confidence scoring, pattern learning, gap ranking |
 | `assistant.py` | AI / Intelligence | Chat-based migration assistant — NL queries, interactive TODO review |
 | `diff_generator.py` | Visualization | Side-by-side diff, Cytoscape.js lineage explorer, batch review reports |
@@ -1281,7 +1435,7 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | **9** | 74–76 | Extensibility & SDK | ✅ Complete |
 | **10** | 77–79 | Validation Maturity & Data Catalog | ✅ Complete |
 | **DD** | DD1–DD12 | Datadog Observability, Agentic Alerting, Global Monitoring, IDMC & Review | ✅ Complete |
-| **11** | 80–82 | Streaming & Real-Time | ✅ Complete |
+| **11** | 80–82 | **CDC / Streaming & Real-Time** — CDC detection, MERGE INTO, Structured Streaming (Kafka/EH/Auto Loader), Change Data Feed, Eventstream, watermark, CDC validation | ✅ Complete |
 | **12** | 83–85 | Governance & Compliance | ✅ Complete |
 | **—** | — | Azure Functions Migration (7 trigger types, CDC/ESB/event-driven) | ✅ Complete |
 | **—** | — | CDC/RT Deployment Blueprints (Event Hub + APIM + Functions Bicep/Terraform) | ✅ Complete |
