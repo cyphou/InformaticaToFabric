@@ -289,9 +289,7 @@ def link_jobs_to_workflows(jobs, inventory_workflows=None):
 #  Pipeline / Workflow Generation
 # ─────────────────────────────────────────────
 
-def _get_target():
-    """Return the target platform ('fabric' or 'databricks')."""
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+from migration_utils import get_target as _get_target
 
 
 def _condition_to_depends_on(deps, target="fabric"):

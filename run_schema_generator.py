@@ -26,15 +26,7 @@ INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-
-def _get_target():
-    """Return the target platform ('fabric' or 'databricks')."""
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
-
-
-def _get_catalog():
-    """Return the Unity Catalog name for Databricks target."""
-    return os.environ.get("INFORMATICA_DATABRICKS_CATALOG", "main")
+from migration_utils import get_target as _get_target, get_catalog as _get_catalog
 
 # ─────────────────────────────────────────────
 #  Source DB type → Delta Lake type mapping

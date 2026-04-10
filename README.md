@@ -7,14 +7,14 @@
 <h1 align="center">Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, CDC & Structured Streaming (Kafka / Event Hub / Auto Loader → Delta MERGE INTO), AutoSys JIL conversion, Azure Functions (7 triggers), Fabric Eventstream, AI-assisted SQL conversion, visual lineage explorer, ML pipeline templates, cost optimization — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, CDC & Structured Streaming (Kafka / Event Hub / Auto Loader → Delta MERGE INTO), AutoSys JIL conversion, Azure Functions (7 triggers), Fabric Eventstream, AI-assisted SQL conversion, visual lineage explorer, ML pipeline templates, cost optimization — orchestrated by a 9-agent AI system.</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/100%2F100%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="100/100 sprints complete"/>
   <img src="https://img.shields.io/badge/17%2F17%20phases-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="17/17 phases complete"/>
   <img src="https://img.shields.io/badge/2143%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="2143 tests"/>
-  <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
+  <img src="https://img.shields.io/badge/9%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="9 agents"/>
   <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT%20%7C%20Functions-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT | Functions"/>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License"/>
 </p>
@@ -614,7 +614,7 @@ flowchart TB
 
 ## 🤖 Multi-Agent Architecture
 
-The migration is powered by **6 specialized VS Code Copilot agents**, each with focused expertise and clear responsibilities.
+The migration is powered by **9 specialized VS Code Copilot agents**, each with focused expertise and clear responsibilities.
 
 ```mermaid
 flowchart TB
@@ -624,20 +624,30 @@ flowchart TB
     ORCH --> SQL["🗄️ sql-migration\nOracle → Spark SQL"]
     ORCH --> NB["📓 notebook-migration\nMappings → PySpark"]
     ORCH --> PL["⚡ pipeline-migration\nWorkflows → Pipelines"]
+    ORCH --> STR["🌊 streaming-migration\nCDC / RT / Functions"]
+    ORCH --> GOV["🔒 governance\nSecurity / Compliance"]
+    ORCH --> INF["🏗️ infrastructure\nIaC / CI-CD / Observability"]
     ORCH --> VAL["✅ validation\nTesting & QA"]
     ASS -.->|inventory.json| SQL
     ASS -.->|inventory.json| NB
     ASS -.->|inventory.json| PL
+    ASS -.->|CDC/streaming indicators| STR
     SQL -.->|converted SQL| NB
     NB -.->|notebook refs| PL
     NB -.->|target tables| VAL
     PL -.->|pipeline refs| VAL
+    STR -.->|Functions/Eventstream| PL
+    GOV -.->|certification gate| INF
+    INF -.->|deploy status| ORCH
 
     style ORCH fill:#0078D4,color:#fff,stroke:#0078D4
     style ASS fill:#E67E22,color:#fff,stroke:#E67E22
     style SQL fill:#8E44AD,color:#fff,stroke:#8E44AD
     style NB fill:#27AE60,color:#fff,stroke:#27AE60
     style PL fill:#2980B9,color:#fff,stroke:#2980B9
+    style STR fill:#E74C3C,color:#fff,stroke:#E74C3C
+    style GOV fill:#F39C12,color:#fff,stroke:#F39C12
+    style INF fill:#1ABC9C,color:#fff,stroke:#1ABC9C
     style VAL fill:#C0392B,color:#fff,stroke:#C0392B
     style USER fill:#34495E,color:#fff,stroke:#34495E
 ```
@@ -651,6 +661,9 @@ flowchart TB
 | **@sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle → Spark SQL / T-SQL | SQL overrides, stored procs | Converted `.sql` files |
 | **@notebook-migration** | `@notebook-migration convert mapping M_LOAD_X` | Mapping → PySpark notebook | Mapping metadata | `NB_*.py` notebook files |
 | **@pipeline-migration** | `@pipeline-migration convert workflow WF_DAILY` | Workflow → Pipeline JSON | Workflow metadata, notebook refs | `PL_*.json` pipeline files |
+| **@streaming-migration** | `@streaming-migration analyze CDC patterns` | CDC, Structured Streaming, Functions, Eventstreams | Mapping metadata, CDC indicators | `output/functions/`, `output/blueprints/` |
+| **@governance** | `@governance apply security policies` | RLS/CLS, PII, GDPR/CCPA, certification | Inventory, column metadata | `output/security/`, `output/compliance/`, `output/catalog/` |
+| **@infrastructure** | `@infrastructure generate terraform` | IaC, CI/CD, containers, observability, deploy | Generated artifacts, config | `output/environments/`, `output/scripts/` |
 | **@validation** | `@validation generate tests for Silver tables` | Generates validation scripts | Source/target table pairs | `VAL_*.py` notebooks, test matrix |
 
 ### Agent Interaction Flow
@@ -847,13 +860,16 @@ pie title Typical Migration Complexity Distribution
 ```
 InformaticaToDBFabric/
 ├── .github/
-│   └── agents/                          # 🤖 Agent definitions (6 agents)
+│   └── agents/                          # 🤖 Agent definitions (9 agents)
 │       ├── migration-orchestrator.agent.md  # Coordinator
 │       ├── assessment.agent.md              # Discovery & inventory
 │       ├── notebook-migration.agent.md      # Mapping → Notebook
 │       ├── pipeline-migration.agent.md      # Workflow → Pipeline
 │       ├── sql-migration.agent.md           # Oracle SQL → Spark SQL
-│       └── validation.agent.md              # Testing & QA
+│       ├── validation.agent.md              # Testing & QA
+│       ├── streaming-migration.agent.md     # CDC / RT / Functions
+│       ├── governance.agent.md              # Security / Compliance
+│       └── infrastructure.agent.md          # IaC / CI-CD / Observability
 ├── .vscode/
 │   └── instructions/
 │       └── informatica-patterns.instructions.md  # 📘 Shared conversion rules
@@ -1333,7 +1349,7 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | **Test count** | 2,143 passing |
 | **Test execution time** | ~39s (Python 3.14) |
 | **Source modules** | 40+ Python files |
-| **Agent definitions** | 6 specialized Copilot agents |
+| **Agent definitions** | 9 specialized Copilot agents |
 | **SQL conversion rules** | 80+ patterns across 6 databases |
 | **Transformation mappings** | 14 Informatica types → PySpark |
 | **Pipeline activity types** | 15 workflow elements → Fabric/Databricks |
@@ -1401,6 +1417,9 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | [notebook-migration.agent.md](.github/agents/notebook-migration.agent.md) | Notebook generation — mappings → PySpark |
 | [pipeline-migration.agent.md](.github/agents/pipeline-migration.agent.md) | Pipeline generation — workflows → JSON |
 | [sql-migration.agent.md](.github/agents/sql-migration.agent.md) | SQL conversion — Oracle → Spark SQL |
+| [streaming-migration.agent.md](.github/agents/streaming-migration.agent.md) | CDC / Real-Time / Azure Functions |
+| [governance.agent.md](.github/agents/governance.agent.md) | Security / Compliance / Certification |
+| [infrastructure.agent.md](.github/agents/infrastructure.agent.md) | IaC / CI-CD / Observability / Deployment |
 | [validation.agent.md](.github/agents/validation.agent.md) | Validation — automated testing & QA |
 
 ---

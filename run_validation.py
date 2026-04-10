@@ -342,14 +342,7 @@ def generate_business_rules_cell(custom_rules=None):
     return "\n".join(lines) + "\n"
 
 
-def _get_target():
-    """Return the target platform ('fabric' or 'databricks')."""
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
-
-
-def _get_catalog():
-    """Return the Unity Catalog name for Databricks target."""
-    return os.environ.get("INFORMATICA_DATABRICKS_CATALOG", "main")
+from migration_utils import get_target as _get_target, get_catalog as _get_catalog
 
 
 def _infer_target_table(target_name, transformations):

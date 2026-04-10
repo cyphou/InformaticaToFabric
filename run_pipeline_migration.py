@@ -22,10 +22,7 @@ INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-
-def _get_target():
-    """Return the target platform ('fabric' or 'databricks')."""
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+from migration_utils import get_target as _get_target
 
 
 def _notebook_activity(session_name, mapping_name, depends_on, params):

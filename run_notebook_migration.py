@@ -18,47 +18,21 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
+from migration_utils import (
+    get_target as _get_target,
+    get_catalog as _get_catalog,
+    table_ref as _table_ref,
+    widget_get as _widget_get,
+    secret_get as _secret_get,
+    cell_sep as _cell_sep,
+)
+
 WORKSPACE = Path(__file__).resolve().parent
 OUTPUT_DIR = WORKSPACE / "output" / "notebooks"
 SQL_DIR = WORKSPACE / "output" / "sql"
 INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def _get_target():
-    """Return the target platform ('fabric' or 'databricks')."""
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
-
-
-def _get_catalog():
-    """Return the Unity Catalog name for Databricks target."""
-    return os.environ.get("INFORMATICA_DATABRICKS_CATALOG", "main")
-
-
-def _table_ref(tier, table_name):
-    """Return a fully-qualified table reference for the active target platform."""
-    target = _get_target()
-    if target == "databricks":
-        catalog = _get_catalog()
-        return f"{catalog}.{tier}.{table_name}"
-    return f"{tier}.{table_name}"
-
-
-def _widget_get(param_name):
-    """Return the widget-get call for the active target platform."""
-    target = _get_target()
-    if target == "databricks":
-        return f'dbutils.widgets.get("{param_name}")'
-    return f'notebookutils.widgets.get("{param_name}")'
-
-
-def _secret_get(vault_or_scope, secret_name):
-    """Return the secret-retrieval call for the active target platform."""
-    target = _get_target()
-    if target == "databricks":
-        return f'dbutils.secrets.get(scope="{vault_or_scope}", key="{secret_name}")'
-    return f'notebookutils.credentials.getSecret("{vault_or_scope}", "{secret_name}")'
 
 # Mapping from transformation abbreviation to PySpark code generation
 TX_TEMPLATES = {
@@ -95,10 +69,6 @@ TX_TEMPLATES = {
     "KEYGEN": "key_generator",
     "ADDRVAL": "address_validator",
 }
-
-
-def _cell_sep():
-    return "\n# COMMAND ----------\n\n"
 
 
 # ─────────────────────────────────────────────

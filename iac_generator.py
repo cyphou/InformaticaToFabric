@@ -46,12 +46,12 @@ def _load_config(config_path=None):
         return {}
 
 
+from migration_utils import get_target as _get_target_base
+
+
 def _get_target(config=None):
-    """Resolve target platform."""
-    return os.environ.get(
-        "INFORMATICA_MIGRATION_TARGET",
-        (config or {}).get("target", "fabric"),
-    )
+    """Resolve target platform with optional config fallback."""
+    return _get_target_base(config)
 
 
 # ─────────────────────────────────────────────

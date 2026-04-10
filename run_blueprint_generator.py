@@ -40,8 +40,7 @@ OUTPUT_DIR = WORKSPACE / "output" / "blueprints"
 INVENTORY_PATH = WORKSPACE / "output" / "inventory" / "inventory.json"
 
 
-def _get_target():
-    return os.environ.get("INFORMATICA_MIGRATION_TARGET", "fabric")
+from migration_utils import get_target as _get_target
 
 
 # ─────────────────────────────────────────────

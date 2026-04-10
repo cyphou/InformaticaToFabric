@@ -1,7 +1,7 @@
 # Multi-Agent Architecture — Informatica to Fabric / Databricks Migration
 
 <p align="center">
-  <img src="https://img.shields.io/badge/agents-6-0078D4?style=for-the-badge" alt="6 Agents"/>
+  <img src="https://img.shields.io/badge/agents-9-0078D4?style=for-the-badge" alt="9 Agents"/>
   <img src="https://img.shields.io/badge/Informatica-FF4500?style=for-the-badge&logo=informatica&logoColor=white" alt="Informatica"/>
   <img src="https://img.shields.io/badge/%E2%86%92-gray?style=for-the-badge" alt="arrow"/>
   <img src="https://img.shields.io/badge/Microsoft%20Fabric-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Fabric"/>
@@ -10,7 +10,7 @@
 
 ## Overview
 
-This project uses a **6-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
+This project uses a **9-agent specialization model** to automate and guide the migration from **Informatica PowerCenter and IICS** to **Microsoft Fabric** or **Azure Databricks**. Each agent is a VS Code Copilot agent (`.agent.md`) with scoped domain knowledge, file ownership, and clear boundaries.
 
 **Current state:** 100 sprints complete (Phase 1–17 + DD1–DD12) — 2,143 tests, dual-target support (Microsoft Fabric + Azure Databricks), DBT model generation (`--target dbt|auto`), AutoSys JIL migration (BOX/CMD/FW → Pipeline/Workflow), full PowerCenter + IICS support, CLI tool (`informatica-to-fabric --target fabric|databricks|dbt|pyspark|auto --autosys-dir <path>`), Unity Catalog 3-level namespace, Databricks Workflows (Jobs API), Databricks deployment script (`deploy_to_databricks.py`), Unity Catalog lineage & permissions generator, cluster config & policy recommender, DLT notebook generation, Databricks SQL dashboards, DBU cost estimator, advanced Workflows (job clusters, health rules), DBT macros/incremental/snapshots/CI/CD/mixed workflows, DECODE→CASE SQL expansion, SCD2 snapshot detection, enriched CTEs from field lineage, Router→separate dbt models, standalone dbt deploy script, SVG lineage flow diagrams, HTML lineage reports, Event Wait/Raise pipeline activities, AutoSys condition conversion/alarms/calendars/machine mapping/coverage reports, session config mapping, schedule trigger conversion, GTT/MV/DB link detection, multi-DB support (Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL), Delta Lake schema generation, migration wave planner, 5-level validation framework, credential sanitization, audit logging, PII detection, DQ rules, multi-tenant Key Vault integration, web UI wizard, enterprise runbook, advanced PL/SQL conversion, DevOps CI/CD (env configs, deployment pipelines, DAB bundles, promotion), platform-native features (Lakehouse vs Warehouse advisor, T-SQL DDL, SQL Warehouse DDL, OneLake shortcuts, Delta Sharing, Mirroring), observability (Fabric CU cost estimator, Azure Monitor metrics, Teams/Slack webhook alerting, Datadog logs/metrics/APM tracing), Datadog observability integration (structured logs, custom metrics, APM distributed tracing, monitor definitions), agentic alerting (signal processing, auto-remediation actions, learning loop, confidence scoring), global monitoring platform (unified control plane, 4-tier escalation chains, SLO tracking, enterprise dashboards), IDMC full component assessment (CDI/CDGC/CDQ/MDM/DI/B2B/API Manager/Connector/EDC/Axon/Market/Test Data parsing via REST API), migration review workflow (merge, optimize, rework phases, quality scoring, readiness gate), query optimization (partition strategy, Spark config tuning, broadcast join detection, materialization advisor), advanced PL/SQL engine (cursors, BULK COLLECT, FORALL, exception blocks, package state), dynamic SQL (EXECUTE IMMEDIATE, CONNECT BY→CTE, PIVOT/UNPIVOT, correlated subquery rewrite, temporal tables), plugin system (custom transforms, SQL rewrites, post-processing hooks), Python SDK & REST API, configurable rule engine (YAML/JSON rulesets), statistical validation (distribution comparison, SCD2 verification, null distribution, RI checks, A/B testing, business rules), data catalog integration (Purview entities, Unity Catalog lineage, column-level lineage, impact analysis), IaC generation (Terraform HCL + Azure Bicep for Fabric/Databricks provisioning), container & Kubernetes deployment (Dockerfile, Docker Compose, K8s manifests, Helm chart), CI/CD pipeline generation (GitHub Actions + Azure DevOps with environment gates), synthetic mapping benchmark suite (configurable scale/complexity), parallel generation & memory optimization (ProcessPoolExecutor, streaming XML, SQL cache), regression suite with golden dataset snapshots, Structured Streaming templates (Kafka/Event Hub/Auto Loader → Delta sink), CDC pattern detection & MERGE INTO generation (full_cdc/upsert_only/soft_delete), Change Data Feed reader, Fabric Eventstream definition generator, CDC validation (operation balance, orphan delete, merge key uniqueness), watermark/late-arrival/idempotency patterns, Azure Functions migration (7 trigger types: Service Bus, Event Hub, SQL trigger, Cosmos DB change feed, HTTP, Timer, Blob — with auto-detection of CDC/ESB/event-driven patterns, AzureFunctionActivity pipeline integration, and complete function project scaffolding), CDC/RT deployment blueprints (Event Hub + APIM + Azure Functions Bicep/Terraform/deployment scripts), governance & compliance (Fabric/Databricks RLS policies, column masking, GDPR/CCPA PII classification, retention policies, right-to-erasure templates, data residency validation, 6-gate certification workflow, evidence packages, sign-off templates), AI-assisted migration (LLM-powered SQL conversion, confidence scoring, pattern learning, gap resolution, chat-based assistant), visual lineage explorer (Cytoscape.js interactive graphs, impact analysis, side-by-side diff review, batch review reports), and ML pipeline templates (Feature Store notebooks, MLflow experiment tracking, batch scoring pipelines, TCO comparison, reserved capacity planner, cost allocation tags, cost optimization dashboard).
 
@@ -26,21 +26,31 @@ flowchart TB
     ORCH --> SQL["🗄️ sql-migration\nOracle/SQL Server → Spark SQL"]
     ORCH --> NB["📓 notebook-migration\nMappings → PySpark"]
     ORCH --> PL["⚡ pipeline-migration\nWorkflows → Pipelines"]
+    ORCH --> STR["🌊 streaming-migration\nCDC / RT / Functions"]
+    ORCH --> GOV["🔒 governance\nSecurity / Compliance"]
+    ORCH --> INF["🏗️ infrastructure\nIaC / CI-CD / Observability"]
     ORCH --> VAL["✅ validation\nTesting & QA"]
 
     ASS -.->|inventory.json\ncomplexity_report.md\ndependency_dag.json| SQL
     ASS -.->|mapping metadata| NB
     ASS -.->|workflow metadata| PL
+    ASS -.->|CDC/streaming indicators| STR
     SQL -.->|converted SQL| NB
     NB -.->|notebook references| PL
     NB -.->|target tables| VAL
     PL -.->|pipeline references| VAL
+    STR -.->|Functions/Eventstream| PL
+    GOV -.->|certification gate| INF
+    INF -.->|deploy status| ORCH
 
     style ORCH fill:#0078D4,color:#fff,stroke:#005A9E,stroke-width:2px
     style ASS fill:#E67E22,color:#fff,stroke:#CA6F1E,stroke-width:2px
     style SQL fill:#8E44AD,color:#fff,stroke:#7D3C98,stroke-width:2px
     style NB fill:#27AE60,color:#fff,stroke:#1E8449,stroke-width:2px
     style PL fill:#2980B9,color:#fff,stroke:#2471A3,stroke-width:2px
+    style STR fill:#E74C3C,color:#fff,stroke:#C0392B,stroke-width:2px
+    style GOV fill:#F39C12,color:#fff,stroke:#D68910,stroke-width:2px
+    style INF fill:#1ABC9C,color:#fff,stroke:#16A085,stroke-width:2px
     style VAL fill:#C0392B,color:#fff,stroke:#A93226,stroke-width:2px
     style USER fill:#34495E,color:#fff,stroke:#2C3E50,stroke-width:2px
 ```
@@ -90,6 +100,9 @@ flowchart TB
 | **📓 @notebook-migration** | `@notebook-migration convert mapping M_X` | Mapping → PySpark notebook or DBT model generation (Fabric `notebookutils` or Databricks `dbutils` or `dbt`) | `output/notebooks/NB_*.py`, `output/dbt/` |
 | **⚡ @pipeline-migration** | `@pipeline-migration convert workflow WF_X` | Workflow/Taskflow → Fabric Pipeline JSON or Databricks Workflow JSON, AutoSys BOX/CMD → Pipeline JSON | `output/pipelines/PL_*.json`, `output/autosys/PL_AUTOSYS_*.json` |
 | **🗄️ @sql-migration** | `@sql-migration convert Oracle SQL overrides` | Oracle/SQL Server → Spark SQL / T-SQL (+ GTT, MV, DB link detection) | `output/sql/SQL_*.sql` |
+| **🌊 @streaming-migration** | `@streaming-migration analyze CDC patterns` | CDC detection, Structured Streaming, Azure Functions, Eventstreams, deployment blueprints | `output/functions/`, `output/blueprints/` |
+| **🔒 @governance** | `@governance apply security policies` | RLS/CLS policies, PII classification, GDPR/CCPA compliance, 6-gate certification | `output/catalog/`, `output/security/`, `output/compliance/` |
+| **🏗️ @infrastructure** | `@infrastructure generate terraform` | IaC (Terraform/Bicep), CI/CD, containers, observability, deployment | `output/environments/`, `output/scripts/` |
 | **✅ @validation** | `@validation generate tests for Silver tables` | Test scripts, row counts, checksums, diffs | `output/validation/VAL_*.py` |
 
 ---
@@ -149,6 +162,33 @@ flowchart TB
 | **Inputs** | Source/target table pairs, migration metadata |
 | **Outputs** | Validation notebooks, test matrix, pass/fail summaries |
 | **File** | [.github/agents/validation.agent.md](.github/agents/validation.agent.md) |
+
+### 7. 🌊 `streaming-migration` (CDC / Real-Time / Functions)
+
+| | |
+|---|---|
+| **Role** | Detects CDC and streaming patterns, generates Structured Streaming notebooks, Azure Functions (7 triggers), Eventstream definitions, and CDC/RT deployment blueprints (Bicep/Terraform) |
+| **Inputs** | Mapping metadata with streaming/CDC indicators from assessment, inventory.json |
+| **Outputs** | Azure Functions projects (`output/functions/`), deployment blueprints (`output/blueprints/`), CDC MERGE cells in notebooks, Eventstream JSON in pipelines |
+| **File** | [.github/agents/streaming-migration.agent.md](.github/agents/streaming-migration.agent.md) |
+
+### 8. 🔒 `governance` (Security / Compliance / Certification)
+
+| | |
+|---|---|
+| **Role** | Generates RLS/CLS security policies, PII classification, GDPR/CCPA compliance templates, 6-gate certification workflow, and data catalog integration (Purview/Unity Catalog) |
+| **Inputs** | Inventory with column metadata, PII detection results, validation test results |
+| **Outputs** | Security policies (`output/security/`), compliance reports (`output/compliance/`), catalog entities (`output/catalog/`) |
+| **File** | [.github/agents/governance.agent.md](.github/agents/governance.agent.md) |
+
+### 9. 🏗️ `infrastructure` (IaC / CI-CD / Observability / Deployment)
+
+| | |
+|---|---|
+| **Role** | Generates Terraform/Bicep IaC, CI/CD pipelines (GitHub Actions/Azure DevOps), container configs (Docker/K8s/Helm), configures observability (Datadog/Azure Monitor), and manages environment promotion |
+| **Inputs** | Generated artifacts from all agents, configuration from `migration.yaml` |
+| **Outputs** | IaC templates (`output/environments/`), deployment scripts (`output/scripts/`), DAB bundles (`output/databricks_bundle/`) |
+| **File** | [.github/agents/infrastructure.agent.md](.github/agents/infrastructure.agent.md) |
 
 ---
 
@@ -302,8 +342,11 @@ When an agent encounters work outside its domain:
 | 🎯 Orchestrator | `output/migration_summary.md`, `output/migration_issues.md` | Everything |
 | 🔍 Assessment | `output/inventory/` | `input/` |
 | 🗄️ SQL Migration | `output/sql/` | `output/inventory/`, `input/sql/` |
-| 📓 Notebook Migration | `output/notebooks/` | `output/inventory/`, `output/sql/`, `templates/` |
-| ⚡ Pipeline Migration | `output/pipelines/` | `output/inventory/`, `output/notebooks/`, `templates/` |
+| 📓 Notebook Migration | `output/notebooks/`, `output/dbt/` | `output/inventory/`, `output/sql/`, `templates/` |
+| ⚡ Pipeline Migration | `output/pipelines/`, `output/autosys/` | `output/inventory/`, `output/notebooks/`, `templates/` |
+| 🌊 Streaming Migration | `output/functions/`, `output/blueprints/` | `output/inventory/`, `templates/streaming_*` |
+| 🔒 Governance | `output/security/`, `output/compliance/`, `output/catalog/` | `output/inventory/`, `output/validation/` |
+| 🏗️ Infrastructure | `output/environments/`, `output/scripts/`, `output/databricks_bundle/` | Everything (for deployment) |
 | ✅ Validation | `output/validation/` | `output/notebooks/`, `output/pipelines/`, `output/sql/` |
 
 ---
@@ -313,13 +356,16 @@ When an agent encounters work outside its domain:
 ```
 InformaticaToDBFabric/
 ├── .github/
-│   └── agents/                          # 🤖 Agent definitions (6 agents)
+│   └── agents/                          # 🤖 Agent definitions (9 agents)
 │       ├── migration-orchestrator.agent.md
 │       ├── assessment.agent.md
 │       ├── notebook-migration.agent.md
 │       ├── pipeline-migration.agent.md
 │       ├── sql-migration.agent.md
-│       └── validation.agent.md
+│       ├── validation.agent.md
+│       ├── streaming-migration.agent.md
+│       ├── governance.agent.md
+│       └── infrastructure.agent.md
 ├── .vscode/
 │   └── instructions/                    # 📘 Shared rules
 │       └── informatica-patterns.instructions.md

@@ -1,6 +1,6 @@
 # Compliance Report — GDPR / CCPA
 
-**Generated:** 2026-04-10T07:24:15.927338+00:00
+**Generated:** 2026-04-10T14:15:55.032725+00:00
 **GDPR Readiness Score:** 38/100
 
 ## PII Classification Summary

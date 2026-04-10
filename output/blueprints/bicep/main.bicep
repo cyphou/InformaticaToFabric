@@ -1,5 +1,5 @@
 // CDC / Real-Time Deployment Blueprint — Bicep
-// Generated: 2026-04-10 07:23:51 UTC
+// Generated: 2026-04-10 14:15:27 UTC
 // Target: Fabric | Region: eastus
 
 targetScope = 'resourceGroup'

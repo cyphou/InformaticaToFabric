@@ -635,7 +635,7 @@
     "path": "output\\security\\fabric_rls.sql",
     "size_bytes": 262,
     "created": "2026-04-09T21:12:49.701711+00:00",
-    "modified": "2026-04-10T07:24:15.865864+00:00",
+    "modified": "2026-04-10T14:15:54.881020+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -645,7 +645,7 @@
     "path": "output\\security\\security_audit.json",
     "size_bytes": 457,
     "created": "2026-04-09T21:12:49.701711+00:00",
-    "modified": "2026-04-10T07:24:15.866866+00:00",
+    "modified": "2026-04-10T14:15:54.883530+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -655,7 +655,7 @@
     "path": "output\\security\\security_audit.md",
     "size_bytes": 386,
     "created": "2026-04-09T21:12:49.701711+00:00",
-    "modified": "2026-04-10T07:24:15.867865+00:00",
+    "modified": "2026-04-10T14:15:54.885000+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -665,7 +665,7 @@
     "path": "output\\compliance\\compliance_report.json",
     "size_bytes": 392,
     "created": "2026-04-09T21:12:29.535969+00:00",
-    "modified": "2026-04-10T07:24:15.928488+00:00",
+    "modified": "2026-04-10T14:15:55.033932+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -675,7 +675,7 @@
     "path": "output\\compliance\\compliance_report.md",
     "size_bytes": 641,
     "created": "2026-04-09T21:12:29.535969+00:00",
-    "modified": "2026-04-10T07:24:15.928488+00:00",
+    "modified": "2026-04-10T14:15:55.035354+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -685,7 +685,7 @@
     "path": "output\\compliance\\data_residency.json",
     "size_bytes": 177,
     "created": "2026-04-09T21:12:29.534369+00:00",
-    "modified": "2026-04-10T07:24:15.926487+00:00",
+    "modified": "2026-04-10T14:15:55.031893+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -695,7 +695,7 @@
     "path": "output\\compliance\\gdpr_erasure_notebook.py",
     "size_bytes": 1085,
     "created": "2026-04-09T21:12:29.528035+00:00",
-    "modified": "2026-04-10T07:24:15.924486+00:00",
+    "modified": "2026-04-10T14:15:55.029715+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -705,7 +705,7 @@
     "path": "output\\compliance\\pii_classification.json",
     "size_bytes": 98,
     "created": "2026-04-09T21:12:29.528035+00:00",
-    "modified": "2026-04-10T07:24:15.922488+00:00",
+    "modified": "2026-04-10T14:15:55.025836+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   },
@@ -715,7 +715,7 @@
     "path": "output\\compliance\\retention_policies.sql",
     "size_bytes": 149,
     "created": "2026-04-09T21:12:29.528035+00:00",
-    "modified": "2026-04-10T07:24:15.922488+00:00",
+    "modified": "2026-04-10T14:15:55.027687+00:00",
     "generator": "informatica-to-fabric",
     "version": "1.0.0"
   }
