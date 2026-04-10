@@ -44,7 +44,8 @@ PHASES = [
     {"id": 4, "name": "Pipeline Migration", "module": "run_pipeline_migration"},
     {"id": 5, "name": "AutoSys Migration", "module": "run_autosys_migration"},
     {"id": 6, "name": "Schema Generation", "module": "run_schema_generator"},
-    {"id": 7, "name": "Validation", "module": "run_validation"},
+    {"id": 7, "name": "Functions Migration", "module": "run_functions_migration"},
+    {"id": 8, "name": "Validation", "module": "run_validation"},
 ]
 
 # Credential patterns to sanitize in audit logs

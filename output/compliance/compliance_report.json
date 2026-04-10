@@ -1,0 +1,17 @@
+{
+  "generated": "2026-04-10T07:24:15.927338+00:00",
+  "gdpr_readiness_score": 38,
+  "pii_classification": {
+    "total_columns": 0,
+    "pii_columns": 0
+  },
+  "data_residency": {
+    "total_tables": 0,
+    "compliant": 0,
+    "non_compliant": 0,
+    "compliance_rate": 1.0,
+    "workspace_region": "eastus"
+  },
+  "retention_policies_count": 0,
+  "erasure_tables_count": 0
+}

@@ -1,0 +1,21 @@
+{
+  "generated": "2026-04-10T07:24:15.866235+00:00",
+  "security_filters_found": 0,
+  "masking_transforms_found": 0,
+  "user_groups_detected": [],
+  "pii_columns_found": 0,
+  "rls_policies": {
+    "fabric_tables": [],
+    "databricks_tables": [],
+    "total_covered": 0
+  },
+  "column_masking": {
+    "masked_columns": 0,
+    "coverage": 0
+  },
+  "overall": {
+    "total_tables": 0,
+    "rls_coverage": 0,
+    "masking_coverage": 0
+  }
+}

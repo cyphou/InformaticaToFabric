@@ -1,6 +1,6 @@
 # Migration Summary — Target: Fabric
 
-**Generated:** 2026-04-09 11:24 UTC
+**Generated:** 2026-04-10 07:24 UTC
 **Target Platform:** Fabric
 
 ## Phase Results
@@ -14,9 +14,10 @@
 | 4 | Pipeline Migration | ❌ None | — |
 | 5 | AutoSys Migration | ❌ None | — |
 | 6 | Schema Generation | ❌ None | — |
-| 7 | Validation | ❌ None | — |
+| 7 | Functions Migration | ❌ None | — |
+| 8 | Validation | ❌ None | — |
 
-**Phases completed:** 0/8
+**Phases completed:** 0/9
 **Total duration:** 0.0s
 
 ## Output Directories

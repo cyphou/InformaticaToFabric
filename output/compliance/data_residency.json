@@ -1,0 +1,10 @@
+{
+  "findings": [],
+  "summary": {
+    "total_tables": 0,
+    "compliant": 0,
+    "non_compliant": 0,
+    "compliance_rate": 1.0,
+    "workspace_region": "eastus"
+  }
+}

@@ -197,6 +197,58 @@ def _event_raise_activity(event_name, depends_on_activity):
     }
 
 
+def _azure_function_activity(session_name, mapping_name, depends_on, func_info):
+    """Generate an AzureFunctionActivity for mappings migrated to Azure Functions.
+
+    Instead of a notebook activity, this invokes the corresponding Azure Function
+    via its HTTP endpoint for mappings identified as Functions candidates.
+    """
+    dep_list = []
+    for dep in depends_on:
+        if dep == "Start":
+            continue
+        dep_list.append({
+            "activity": dep,
+            "dependencyConditions": ["Succeeded"]
+        })
+
+    trigger_type = func_info.get("trigger_type", "http")
+    fn_name = f"FN_{mapping_name}" if mapping_name else f"FN_{session_name}"
+
+    activity = {
+        "name": fn_name,
+        "description": (
+            f"Migrated from Informatica session {session_name}. "
+            f"Runs as Azure Function ({trigger_type} trigger). "
+            f"Reason: {func_info.get('reason', '')}"
+        ),
+        "type": "AzureFunctionActivity",
+        "dependsOn": dep_list,
+        "policy": {
+            "timeout": "0.00:10:00",
+            "retry": 2,
+            "retryIntervalInSeconds": 30,
+            "secureOutput": False,
+            "secureInput": False
+        },
+        "typeProperties": {
+            "functionName": fn_name,
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": {
+                "value": "@json(concat('{\"pipeline\":\"', pipeline().Pipeline, "
+                         "'\",\"runId\":\"', pipeline().RunId, '\"}'))",
+                "type": "Expression"
+            },
+            "functionAppUrl": {
+                "value": "@pipeline().parameters.function_app_url",
+                "type": "Expression"
+            }
+        }
+    }
+    return activity
+
+
 def generate_pipeline(workflow, mappings_by_name):
     """Generate a complete Fabric Pipeline JSON for a workflow."""
     name = workflow["name"]
@@ -216,12 +268,14 @@ def generate_pipeline(workflow, mappings_by_name):
 
     # Track which sessions are inside decision branches
     sessions_in_decisions = set()
+    has_function_activities = False
 
-    # 1. Build notebook activities for each session
+    # 1. Build notebook or Azure Function activities for each session
     for session in sessions:
         mapping_name = session_to_mapping.get(session, session.replace("S_", ""))
         mapping = mappings_by_name.get(mapping_name, {})
         params = mapping.get("parameters", [])
+        func_info = mapping.get("functions_candidate", {})
 
         # Resolve dependencies
         deps = dependencies.get(session, [])
@@ -237,7 +291,12 @@ def generate_pipeline(workflow, mappings_by_name):
                 resolved_deps.append(_resolve_activity_name(dep, session_to_mapping))
 
         if session not in sessions_in_decisions:
-            activity = _notebook_activity(session, mapping_name, deps, params)
+            # Use AzureFunctionActivity if mapping is a Functions candidate
+            if func_info.get("is_candidate", False):
+                activity = _azure_function_activity(session, mapping_name, deps, func_info)
+                has_function_activities = True
+            else:
+                activity = _notebook_activity(session, mapping_name, deps, params)
             # Fix dependsOn to use resolved names
             activity["dependsOn"] = [
                 {"activity": _resolve_activity_name(d, session_to_mapping), "dependencyConditions": ["Succeeded"]}
@@ -310,6 +369,12 @@ def generate_pipeline(workflow, mappings_by_name):
         pipeline_params["event_webhook_url"] = {
             "type": "string",
             "defaultValue": "https://your-event-webhook-url"
+        }
+    # Add function app URL if there are Azure Function activities
+    if has_function_activities:
+        pipeline_params["function_app_url"] = {
+            "type": "string",
+            "defaultValue": "https://your-function-app.azurewebsites.net"
         }
 
     # 7. Annotations
@@ -428,6 +493,134 @@ def generate_databricks_workflow(workflow, mappings_by_name):
     return job
 
 
+# ─────────────────────────────────────────────
+#  Sprint 80: Eventstream Definition Generator
+# ─────────────────────────────────────────────
+
+def generate_eventstream(mapping, workflow=None):
+    """Generate a Fabric Eventstream definition for a streaming/event-driven mapping.
+
+    Converts Informatica real-time/event-driven workflows to Fabric Eventstream
+    definitions, mapping Kafka/JMS/MQTT sources to Event Hub or Custom App inputs,
+    and routing to Lakehouse or KQL Database destinations.
+
+    Returns a dict representing the Eventstream JSON definition.
+    """
+    name = mapping["name"]
+    streaming_info = mapping.get("streaming", {})
+    cdc_info = mapping.get("cdc", {})
+    sources = streaming_info.get("streaming_sources", [])
+    targets = mapping.get("targets", [])
+
+    # Build input sources
+    input_sources = []
+    for src in sources:
+        src_type = src.get("type", "").lower()
+        topic = src.get("topic", "default-topic")
+
+        if "kafka" in src_type or "jms" in src_type:
+            input_sources.append({
+                "name": src.get("name", "kafka_input"),
+                "type": "CustomApp",
+                "description": f"Migrated from Informatica source: {src.get('name', '')} ({src_type})",
+                "properties": {
+                    "endpoint": "TODO: Configure Custom App endpoint or use Event Hub",
+                    "consumerGroup": "$Default",
+                    "originalTopic": topic,
+                    "originalSourceType": src_type,
+                }
+            })
+        elif any(kw in src_type for kw in ("eventhub", "event hub")):
+            input_sources.append({
+                "name": src.get("name", "eventhub_input"),
+                "type": "EventHub",
+                "description": f"Migrated from Informatica Event Hub source: {src.get('name', '')}",
+                "properties": {
+                    "eventHubNamespace": "TODO: Configure Event Hub namespace",
+                    "eventHubName": topic,
+                    "consumerGroup": "$Default",
+                }
+            })
+        else:
+            input_sources.append({
+                "name": src.get("name", "custom_input"),
+                "type": "CustomApp",
+                "description": f"Migrated from Informatica source: {src.get('name', '')} ({src_type})",
+                "properties": {
+                    "endpoint": "TODO: Configure ingestion endpoint",
+                    "originalSourceType": src_type,
+                }
+            })
+
+    # If no streaming sources detected, use a generic Custom App
+    if not input_sources:
+        input_sources.append({
+            "name": "custom_input",
+            "type": "CustomApp",
+            "description": "TODO: Configure event source",
+            "properties": {"endpoint": "TODO"}
+        })
+
+    # Build destinations
+    destinations = []
+    for tgt in targets:
+        tgt_lower = tgt.lower()
+        if "gold" in tgt_lower or "agg" in tgt_lower:
+            tier = "gold"
+        elif "silver" in tgt_lower or "fact" in tgt_lower or "dim" in tgt_lower:
+            tier = "silver"
+        else:
+            tier = "bronze"
+
+        destinations.append({
+            "name": f"dest_{tgt}",
+            "type": "Lakehouse",
+            "description": f"Route events to {tier}.{tgt_lower}",
+            "properties": {
+                "workspaceId": "TODO: Set workspace ID",
+                "lakehouseId": "TODO: Set Lakehouse ID",
+                "tableName": f"{tier}.{tgt_lower}",
+                "inputSerialization": {
+                    "type": "Json",
+                    "properties": {"encoding": "UTF8"}
+                }
+            }
+        })
+
+    # Build transformations (lightweight in-stream processing)
+    transformations = []
+    if cdc_info.get("is_cdc", False):
+        cdc_col = "CDC_OPERATION"
+        if cdc_info.get("cdc_sources"):
+            cdc_col = cdc_info["cdc_sources"][0].get("cdc_column", "CDC_OPERATION")
+        transformations.append({
+            "name": "filter_cdc_ops",
+            "type": "Filter",
+            "description": "Filter by CDC operation type",
+            "properties": {
+                "expression": f"{cdc_col} IN ('I', 'U', 'D')"
+            }
+        })
+
+    eventstream = {
+        "name": f"ES_{name}",
+        "type": "Microsoft.Fabric.Eventstream",
+        "description": f"Migrated from Informatica mapping {name}. "
+                       f"Original streaming sources: {', '.join(s.get('name', '') for s in sources)}.",
+        "properties": {
+            "inputSources": input_sources,
+            "transformations": transformations,
+            "destinations": destinations,
+            "annotations": [
+                "MigratedFromInformatica",
+                f"OriginalMapping:{name}",
+            ],
+        }
+    }
+
+    return eventstream
+
+
 def main():
     inv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else INVENTORY_PATH
     if not inv_path.exists():
@@ -490,6 +683,25 @@ def main():
     print("=" * 60)
     print(f"  Pipelines generated: {generated}")
     print(f"  Output: {OUTPUT_DIR}")
+
+    # Sprint 80: Generate Eventstream definitions for streaming mappings
+    all_mappings = inv.get("mappings", [])
+    streaming_mappings = [m for m in all_mappings if m.get("streaming", {}).get("is_streaming", False)]
+    es_generated = 0
+    if streaming_mappings:
+        print()
+        print(f"  Generating Eventstream definitions for {len(streaming_mappings)} streaming mapping(s)...")
+        for m in streaming_mappings:
+            es_def = generate_eventstream(m)
+            es_path = OUTPUT_DIR / f"ES_{m['name']}.json"
+            with open(es_path, "w", encoding="utf-8") as f:
+                json.dump(es_def, f, indent=2, ensure_ascii=False)
+            es_generated += 1
+            src_count = len(es_def["properties"]["inputSources"])
+            dest_count = len(es_def["properties"]["destinations"])
+            print(f"    ✅ ES_{m['name']}.json ({src_count} sources, {dest_count} destinations)")
+        print(f"  Eventstreams generated: {es_generated}")
+
     print("=" * 60)
 
 

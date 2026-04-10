@@ -1,25 +1,23 @@
 {
-  "profile": "medium",
-  "total_mappings": 16,
+  "profile": "small",
+  "total_mappings": 1,
   "complexity_breakdown": {
-    "Complex": 9,
-    "Simple": 6,
-    "Medium": 1
+    "Simple": 1
   },
   "recommendation": {
-    "driver_node_type": "Standard_DS4_v2",
-    "worker_node_type": "Standard_DS4_v2",
+    "driver_node_type": "Standard_DS3_v2",
+    "worker_node_type": "Standard_DS3_v2",
     "autoscale": {
-      "min_workers": 2,
-      "max_workers": 8
+      "min_workers": 1,
+      "max_workers": 2
     },
-    "enable_photon": true,
-    "spark_version": "14.3.x-photon-scala2.12",
-    "runtime_engine": "PHOTON"
+    "enable_photon": false,
+    "spark_version": "14.3.x-scala2.12",
+    "runtime_engine": "STANDARD"
   },
   "rationale": {
-    "profile": "medium profile selected for 16 mappings with 9 complex/custom",
-    "photon": "Photon enabled — aggregations/joins detected",
-    "autoscale": "2-8 workers for ETL-heavy workload"
+    "profile": "small profile selected for 1 mappings with 0 complex/custom",
+    "photon": "Photon disabled — simple transformations only",
+    "autoscale": "1-2 workers for standard workload"
   }
 }

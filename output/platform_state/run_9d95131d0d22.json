@@ -1,0 +1,19 @@
+{
+  "run_id": "9d95131d0d22",
+  "target": "fabric",
+  "start_time": "2026-04-10T06:49:17.591892+00:00",
+  "end_time": "2026-04-10T06:49:17.597024+00:00",
+  "status": "completed",
+  "phases": {},
+  "artifacts": {
+    "notebooks": 0,
+    "pipelines": 0,
+    "sql": 0,
+    "dbt": 0,
+    "validation": 0,
+    "schema": 0
+  },
+  "error_count": 0,
+  "warning_count": 0,
+  "metrics": {}
+}

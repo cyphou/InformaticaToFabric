@@ -7,43 +7,188 @@
 <h1 align="center">Informatica PowerCenter / IDMC to Microsoft Fabric / Azure Databricks Migration</h1>
 
 <p align="center">
-  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, IDMC full-platform assessment, Delta Lake DDL & multi-database SQL conversion — orchestrated by a 6-agent AI system.</strong>
+  <strong>End-to-end automated migration of Informatica PowerCenter, IICS & IDMC (12 cloud services) workloads into Microsoft Fabric or Azure Databricks — PySpark Notebooks, DBT models, Data Pipelines / Databricks Workflows, AutoSys JIL conversion, Azure Functions (CDC/ESB), AI-assisted SQL conversion, visual lineage explorer, ML pipeline templates, cost optimization — orchestrated by a 6-agent AI system.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/97%2F100%20sprints-complete-F39C12?style=flat-square&logo=checkmarx&logoColor=white" alt="97/100 sprints complete"/>
-  <img src="https://img.shields.io/badge/1843%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="1843 tests"/>
+  <img src="https://img.shields.io/badge/100%2F100%20sprints-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="100/100 sprints complete"/>
+  <img src="https://img.shields.io/badge/17%2F17%20phases-complete-27AE60?style=flat-square&logo=checkmarx&logoColor=white" alt="17/17 phases complete"/>
+  <img src="https://img.shields.io/badge/2143%20tests-passing-27AE60?style=flat-square&logo=pytest&logoColor=white" alt="2143 tests"/>
   <img src="https://img.shields.io/badge/6%20AI%20agents-Copilot-0078D4?style=flat-square&logo=github&logoColor=white" alt="6 agents"/>
-  <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT"/>
+  <img src="https://img.shields.io/badge/targets-Fabric%20%7C%20Databricks%20%7C%20DBT%20%7C%20Functions-0078D4?style=flat-square&logo=microsoft&logoColor=white" alt="Fabric | Databricks | DBT | Functions"/>
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License"/>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/AutoSys-JIL%20support-9B59B6?style=flat-square&logo=clockify&logoColor=white" alt="AutoSys JIL"/>
   <img src="https://img.shields.io/badge/PySpark-notebooks-E25A1C?style=flat-square&logo=apachespark&logoColor=white" alt="PySpark"/>
   <img src="https://img.shields.io/badge/Delta%20Lake-schema%20gen-00ADD8?style=flat-square&logo=databricks&logoColor=white" alt="Delta Lake"/>
   <img src="https://img.shields.io/badge/6%20databases-Oracle%20%C2%B7%20SQL%20Server%20%C2%B7%20Teradata%20%C2%B7%20DB2%20%C2%B7%20MySQL%20%C2%B7%20PostgreSQL-blue?style=flat-square&logo=amazondynamodb&logoColor=white" alt="6 databases"/>
   <img src="https://img.shields.io/badge/IICS-full%20support-27AE60?style=flat-square&logo=icloud&logoColor=white" alt="IICS"/>
   <img src="https://img.shields.io/badge/IDMC-12%20services-FF4500?style=flat-square&logo=informatica&logoColor=white" alt="IDMC 12 services"/>
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License"/>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wave%20planner-topological%20sort-8E44AD?style=flat-square&logo=graphql&logoColor=white" alt="Wave Planner"/>
-  <img src="https://img.shields.io/badge/5--level%20validation-L1%E2%80%93L5-C0392B?style=flat-square&logo=testcafe&logoColor=white" alt="5-level validation"/>
-  <img src="https://img.shields.io/badge/audit%20log-JSON-F39C12?style=flat-square&logo=json&logoColor=white" alt="Audit log"/>
-  <img src="https://img.shields.io/badge/credential%20sanitization-secure-2ECC71?style=flat-square&logo=letsencrypt&logoColor=white" alt="Credential sanitization"/>
+  <img src="https://img.shields.io/badge/AI--Assisted-LLM%20SQL%20conversion-9B59B6?style=flat-square&logo=openai&logoColor=white" alt="AI-Assisted"/>
+  <img src="https://img.shields.io/badge/Lineage%20Explorer-Cytoscape.js-2980B9?style=flat-square&logo=graphql&logoColor=white" alt="Lineage Explorer"/>
+  <img src="https://img.shields.io/badge/ML%20Pipelines-Feature%20Store%20%2B%20MLflow-E67E22?style=flat-square&logo=mlflow&logoColor=white" alt="ML Pipelines"/>
+  <img src="https://img.shields.io/badge/Cost%20Advisor-TCO%20%2B%20Reserved-1ABC9C?style=flat-square&logo=cashapp&logoColor=white" alt="Cost Advisor"/>
   <img src="https://img.shields.io/badge/Medallion-Bronze%20%C2%B7%20Silver%20%C2%B7%20Gold-FFD700?style=flat-square&logo=stackblitz&logoColor=black" alt="Medallion architecture"/>
+  <img src="https://img.shields.io/badge/5--level%20validation-L1%E2%80%93L5-C0392B?style=flat-square&logo=testcafe&logoColor=white" alt="5-level validation"/>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Datadog-observability-632CA6?style=flat-square&logo=datadog&logoColor=white" alt="Datadog observability"/>
   <img src="https://img.shields.io/badge/Agentic-auto--remediation-E67E22?style=flat-square&logo=robot&logoColor=white" alt="Agentic alerting"/>
-  <img src="https://img.shields.io/badge/IDMC-full%20coverage-27AE60?style=flat-square&logo=informatica&logoColor=white" alt="IDMC full coverage"/>
+  <img src="https://img.shields.io/badge/Terraform%20%2B%20Bicep-IaC-844FBA?style=flat-square&logo=terraform&logoColor=white" alt="IaC"/>
+  <img src="https://img.shields.io/badge/Docker%20%2B%20K8s-containers-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Containers"/>
+  <img src="https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="CI/CD"/>
+  <img src="https://img.shields.io/badge/Plugin%20System-extensible-27AE60?style=flat-square&logo=pluggy&logoColor=white" alt="Plugins"/>
+  <img src="https://img.shields.io/badge/Python%20SDK-REST%20API-3776AB?style=flat-square&logo=python&logoColor=white" alt="SDK"/>
+  <img src="https://img.shields.io/badge/wave%20planner-topological%20sort-8E44AD?style=flat-square&logo=graphql&logoColor=white" alt="Wave Planner"/>
 </p>
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> •
+  <a href="#-capability-summary">Capabilities</a> •
   <a href="#-what-gets-migrated">What Gets Migrated</a> •
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-multi-agent-architecture">Agents</a> •
   <a href="#-transformation-mapping">Mappings</a> •
+  <a href="#-enterprise-features">Enterprise</a> •
   <a href="examples/">📂 Examples</a> •
   <a href="#-documentation">Docs</a>
 </p>
+
+---
+
+## 🏆 Capability Summary
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🔄 Migration Engine
+- **14 Informatica transformations** → PySpark
+- **6 source databases** — Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL
+- **3 target platforms** — Fabric, Databricks, DBT
+- **AutoSys JIL** → Pipelines / Workflows
+- **Azure Functions** (7 trigger types)
+- **IICS** Taskflows + Sync/MassIngestion
+- **IDMC** 12-service REST API assessment
+- **Advanced PL/SQL** — cursors, BULK COLLECT, FORALL, packages
+- **Dynamic SQL** — EXECUTE IMMEDIATE, CONNECT BY→CTE, PIVOT/UNPIVOT
+
+</td>
+<td width="33%" valign="top">
+
+### 🤖 Intelligence & AI
+- **LLM-powered SQL conversion** with Azure OpenAI
+- **Confidence scoring** (0–100) per conversion
+- **Pattern learning store** — learns from corrections
+- **Gap severity ranking** — prioritize by complexity & impact
+- **Chat-based assistant** — NL queries: "Why was X flagged?"
+- **Interactive review** — accept/modify/skip AI suggestions
+- **Complexity classification** — Simple/Medium/Complex/Custom
+- **Migration wave planner** — topological sort + dependency DAG
+
+</td>
+<td width="33%" valign="top">
+
+### 📊 Visual & Reporting
+- **Cytoscape.js lineage explorer** — interactive graph
+- **Side-by-side diff review** — source vs generated code
+- **Batch review reports** — HTML + JSON summary
+- **Impact analysis** — BFS upstream/downstream
+- **SVG lineage flow diagrams**
+- **HTML migration dashboard**
+- **PowerPoint deck generation**
+- **Cost optimization dashboard**
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🧠 ML & Cost Optimization
+- **Feature Store notebooks** (Databricks)
+- **MLflow experiment templates**
+- **Batch scoring pipelines**
+- **TCO comparison** — Fabric vs Databricks per-mapping
+- **Reserved capacity planner** (1yr / 3yr)
+- **Idle resource detection**
+- **Cost allocation tags** per mapping
+- **DBU / CU cost estimator**
+
+</td>
+<td valign="top">
+
+### 🔒 Governance & Security
+- **RLS / CLS policy generation** (Fabric + Databricks)
+- **Column masking rules**
+- **GDPR / CCPA compliance** — PII classification, retention, erasure
+- **Data residency validation**
+- **6-gate certification workflow** with evidence packages
+- **Credential sanitization** in generated code
+- **Audit logging** — full JSON trail
+- **Unity Catalog permissions** generator
+
+</td>
+<td valign="top">
+
+### 🏗️ DevOps & Infrastructure
+- **Terraform + Bicep** IaC generation
+- **Docker / K8s / Helm** — production containers
+- **GitHub Actions + Azure DevOps** CI/CD pipelines
+- **Environment promotion** (dev → test → prod)
+- **DAB bundles** for Databricks
+- **Plugin system** — custom transforms, SQL rewrites
+- **Python SDK + REST API** for programmatic access
+- **Configurable rule engine** (YAML/JSON)
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 📡 Observability
+- **Datadog integration** — structured logs, metrics, APM tracing
+- **Azure Monitor metrics** export
+- **Agentic alerting** — auto-remediation, learning loop
+- **Global monitoring platform** — 4-tier escalation
+- **SLO tracking** + enterprise dashboards
+- **Teams / Slack webhook alerting**
+- **Confidence scoring** on all conversions
+
+</td>
+<td valign="top">
+
+### ✅ Validation & Quality
+- **5-level validation framework** (L1–L5)
+- **Statistical distribution comparison**
+- **SCD2 verification**
+- **Referential integrity checks**
+- **A/B testing framework**
+- **Data catalog integration** (Purview + Unity)
+- **Column-level lineage** tracking
+- **Golden dataset regression suite**
+
+</td>
+<td valign="top">
+
+### ⚡ Scale & Performance
+- **500+ mapping benchmark suite**
+- **Parallel generation** (ProcessPoolExecutor)
+- **Streaming XML** — low memory footprint
+- **SQL conversion cache** — avoid redundant work
+- **Broadcast join detection** & optimization
+- **Partition strategy recommendation**
+- **Spark config tuning** per mapping
+- **Materialization advisor** (view vs table)
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -142,6 +287,52 @@ BOX → Pipeline container, CMD (pmcmd) → Notebook activity, FW → File senso
 ### 🏗️ DBT Models (Databricks target)
 Simple/Medium mappings can be migrated to **dbt models** instead of PySpark:
 3-layer model generation (staging/intermediate/marts), Oracle→Databricks SQL conversion, `dbt_project.yml` + `profiles.yml` + `sources.yml` + `schema.yml` scaffolding, **auto-routing** (`--target auto`) routes SQL-expressible mappings to dbt and complex mappings to PySpark notebooks.
+
+</td>
+</tr>
+<tr>
+<td>
+
+### ⚡ Azure Functions (Event-Driven / CDC / ESB)
+Informatica mappings with event-driven, CDC, or ESB patterns are auto-detected and migrated to **Azure Functions** (v2 Python):
+**7 trigger types** — Service Bus (JMS/queue/ESB), Event Hub, SQL (change tracking CDC), Cosmos DB (change feed), HTTP (REST API/ESB gateway), Timer (scheduled), Blob (file landing). Each generates a complete function project with `host.json`, `local.settings.json`, and trigger-specific Python code. Pipeline integration via `AzureFunctionActivity`.
+
+</td>
+<td>
+
+### 🤖 AI-Assisted SQL Conversion (Phase 13)
+Complex SQL that defeats regex rules is handled by **LLM-powered conversion** (Azure OpenAI):
+**Confidence scoring** (0–100) per conversion, **pattern learning store** that improves from feedback, **gap severity ranking** (downstream impact × complexity × frequency), **3-candidate suggestion engine** (pattern match + heuristic + LLM), **TODO backfill** — re-processes manual TODO markers, **budget guardrails** — token tracking prevents runaway costs, **SHA-256 caching** — never converts the same SQL twice.
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 💬 Chat-Based Migration Assistant (Phase 13)
+An interactive assistant that understands the full migration context:
+"**Why was M_X flagged?**" → explains complexity, custom SQL, unsupported transforms. "**Show lineage for TABLE**" → upstream/downstream from dependency DAG. "**How to migrate M_X?**" → target-aware advice (auto/manual/AI-assist). "**List todos**" → pending TODO markers from converted SQL. **Interactive review mode** — presents each TODO with AI suggestions for accept/modify/skip.
+
+</td>
+<td>
+
+### 🔍 Visual Lineage Explorer (Phase 14)
+**Cytoscape.js interactive lineage graph** — zoom, pan, filter by medallion tier (bronze/silver/gold). **Side-by-side diff review** — source Informatica logic vs generated target code, with status badges (auto/heuristic/todo/missing). **Batch review reports** — HTML + JSON across all mappings with summary statistics. **BFS impact analysis** — select any table or mapping to see all upstream sources or downstream consumers. **XSS-safe** HTML output — all content escaped.
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🧠 ML Pipeline Templates (Phase 17)
+Informatica mappings that produce feature tables are **auto-detected** (FEAT_/ML_ prefixes + aggregation heuristics) and generate:
+**Databricks Feature Store notebooks** with `FeatureEngineeringClient`, **MLflow experiment templates** with train/evaluate/log_model lifecycle, **Batch scoring pipelines** — load model → transform → write predictions to Delta. Auto-detection works on both name patterns and transformation structure (Aggregator + Expression + Rank).
+
+</td>
+<td>
+
+### 💰 Cost Optimization Advisor (Phase 17)
+**TCO comparison** — per-mapping cost estimate for Fabric vs Databricks with "cheaper" recommendation. **Reserved capacity planner** — pay-as-you-go vs 1-year (35% discount) vs 3-year (55% discount) with break-even analysis. **Idle resource detection** — flags over-provisioned Simple mappings and unused leaf tables. **Cost allocation tags** — department/project/cost-center tags per mapping for cloud billing. **HTML cost dashboard** with interactive charts.
 
 </td>
 </tr>
@@ -541,6 +732,7 @@ InformaticaToDBFabric/
 │   ├── pipelines/                       #   Generated Pipeline JSON
 │   ├── dbt/                             #   Generated dbt project (models, config, schema)
 │   ├── autosys/                         #   AutoSys → Pipeline/Workflow JSON + summary
+│   ├── functions/                       #   Azure Functions project (host.json, FN_*.py)
 │   ├── schema/                          #   Delta Lake DDL (Bronze/Silver/Gold) + setup notebook
 │   ├── sql/                             #   Converted SQL files
 │   └── validation/                      #   Validation scripts + test matrix + HTML report
@@ -555,8 +747,13 @@ InformaticaToDBFabric/
 ├── run_pipeline_migration.py            # ⚡ Pipeline generation script (Phase 4)
 ├── run_autosys_migration.py             # ⏰ AutoSys JIL migration script (Phase 5)
 ├── run_schema_generator.py               # 🏛️ Delta Lake DDL & setup notebook (Phase 6)
+├── run_functions_migration.py           # ⚡ Azure Functions generation (CDC/ESB/event-driven)
+├── run_blueprint_generator.py           # 🏗️ CDC/RT deployment blueprint (Event Hub + APIM + Functions)
+├── security_migration.py                # 🔒 RLS/CLS policies & column masking (Phase 12)
+├── compliance.py                        # 📋 GDPR/CCPA compliance & data residency (Phase 12)
+├── certification.py                     # ✅ 6-gate certification & evidence packages (Phase 12)
 ├── run_validation.py                    # ✅ Validation generation script (Phase 7)
-├── run_migration.py                     # 🎯 End-to-end orchestrator (8 phases)
+├── run_migration.py                     # 🎯 End-to-end orchestrator (9 phases)
 ├── deploy_to_fabric.py                  # 🚀 Fabric REST API deployment script
 ├── deploy_to_databricks.py              # 🚀 Databricks REST API deployment script
 ├── dashboard.py                         # 📊 Interactive HTML dashboard generator
@@ -569,6 +766,11 @@ InformaticaToDBFabric/
 ├── migration_review.py                  # 📋 Migration review workflow (merge, optimize, rework)
 ├── iac_generator.py                     # 🏗️ Terraform & Bicep IaC generation
 ├── cicd_generator.py                    # 🔄 CI/CD pipeline generation (GitHub Actions + Azure DevOps)
+├── ai_converter.py                      # 🤖 LLM-powered SQL conversion & pattern learning (Phase 13)
+├── assistant.py                         # 💬 Chat-based migration assistant (Phase 13)
+├── diff_generator.py                    # 🔍 Side-by-side diff, lineage explorer, batch review (Phase 14)
+├── ml_pipeline.py                       # 🧠 ML pipeline templates & Feature Store (Phase 17)
+├── cost_advisor.py                      # 💰 Cost optimization advisor (Phase 17)
 ├── Dockerfile                           # 🐳 Production container
 ├── docker-compose.yml                   # 🐳 Docker Compose (API + Web + Redis)
 ├── k8s/                                 # ☸️ Kubernetes manifests
@@ -585,7 +787,7 @@ InformaticaToDBFabric/
 ├── pyproject.toml                       # 📦 Python package config (PEP 621)
 ├── requirements.txt                     # 📦 Dependencies
 ├── pytest.ini                           # 🧪 Test configuration
-├── tests/                               # 🧪 1,843 tests
+├── tests/                               # 🧪 2,143 tests
 │   ├── __init__.py
 │   ├── test_migration.py                # Core migration tests
 │   ├── test_extended.py                 # Assessment, deploy, dashboard tests
@@ -615,6 +817,11 @@ InformaticaToDBFabric/
 │   └── test_idmc_review.py              # DD10–DD12: IDMC full coverage & migration review
 │   ├── test_sprint92_94.py              # Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD
 │   ├── test_sprint95_97.py              # Phase 16: Benchmarks, Parallel/Memory, Regression/Golden
+│   ├── test_functions_migration.py      # Azure Functions migration tests (45 tests)
+│   ├── test_blueprint_generator.py      # Blueprint generator tests (42 tests)
+│   ├── test_sprint86_88.py              # Phase 13: AI-assisted SQL conversion & assistant
+│   ├── test_sprint89_91.py              # Phase 14: Lineage explorer, diff & review
+│   ├── test_sprint98_100.py             # Phase 17: ML pipelines, cost advisor
 │   └── update_golden.py                 # Golden snapshot updater script
 ├── docs/                                # 📝 Documentation
 │   ├── USER_GUIDE.md                    # Step-by-step user guide
@@ -622,7 +829,7 @@ InformaticaToDBFabric/
 │   └── ADR/                             # Architecture Decision Records
 ├── CONTRIBUTING.md                      # 🤝 Contributing guide
 ├── AGENTS.md                            # 🤖 Multi-agent architecture
-├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (97/100 complete)
+├── DEVELOPMENT_PLAN.md                  # 📋 Sprint development plan (100/100 complete)
 ├── GAP_ANALYSIS.md                      # 📊 Object inventory & gap analysis
 ├── MIGRATION_PLAN.md                    # 📝 Full migration strategy
 └── README.md                            # 📖 This file
@@ -720,7 +927,7 @@ Alternative deployment methods:
 ### Testing
 
 ```bash
-# Run all 1,843 tests
+# Run all 2,143 tests
 python -m pytest tests/ -v
 
 # Run specific test class
@@ -766,8 +973,13 @@ python run_artifact_validation.py --notebooks  # Notebooks only
 | `test_idmc_review.py` | 54 | DD10–DD12: IDMC full component parser, migration review workflow, readiness gate, IDMC monitoring |
 | `test_sprint92_94.py` | 87 | Phase 15: Terraform/Bicep IaC generation, Dockerfile/Compose/K8s manifests, Helm chart, GitHub Actions/Azure DevOps CI/CD |
 | `test_sprint95_97.py` | 69 | Phase 16: Synthetic mapping generator, benchmark harness, memory profiling, parallel execution, golden snapshots, regression suite |
+| `test_functions_migration.py` | 45 | Azure Functions: candidate detection, 7 trigger generators (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob), pipeline integration, code quality |
+| `test_sprint83_85.py` | 68 | Phase 12: Security (RLS/CLS, column masking, audit), Compliance (PII classification, retention, GDPR erasure, data residency), Certification (6-gate system, audit trail, evidence ZIP, sign-off) |
+| `test_sprint86_88.py` | 50 | Phase 13: LLM SQL conversion, confidence scoring, pattern store, gap ranking, suggestions, TODO extraction, migration assistant, query handlers, interactive review |
+| `test_sprint89_91.py` | 24 | Phase 14: Lineage graph generation, impact analysis (BFS), source/target extraction, code classification, diff HTML, batch reports, Cytoscape.js lineage explorer |
+| `test_sprint98_100.py` | 27 | Phase 17: Feature detection, Feature Store notebooks, MLflow templates, scoring pipelines, TCO comparison, reserved capacity planner, idle detection, cost tags, cost dashboard, cost advisor facade |
 
-**Overall:** 1,843 tests, all passing, ~50s on Python 3.14
+**Overall:** 2,143 tests, all passing, ~39s on Python 3.14
 
 ### Configuration
 
@@ -882,6 +1094,109 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 
 ---
 
+## 🏢 Enterprise Features
+
+### Infrastructure as Code
+
+```bash
+# Generate Terraform HCL for Fabric + Databricks provisioning
+python iac_generator.py --target fabric --output output/iac/
+
+# Generate Azure Bicep templates
+python iac_generator.py --target databricks --format bicep
+
+# Generate CI/CD pipelines (GitHub Actions + Azure DevOps)
+python cicd_generator.py --platform github   # .github/workflows/
+python cicd_generator.py --platform azdo      # azure-pipelines.yml
+```
+
+### Container Deployment
+
+```bash
+# Build and run with Docker
+docker build -t informatica-migration .
+docker compose up          # API + Web UI + Redis
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/
+# Or via Helm
+helm install migration charts/informatica-migration/
+```
+
+### Observability Stack
+
+| Component | Integration | Features |
+|-----------|-------------|----------|
+| **Datadog** | `datadog_integration.py` | Structured JSON logs, custom metrics (conversion rate, errors), APM distributed tracing |
+| **Azure Monitor** | Built-in | CU/DBU metrics, latency tracking, Teams/Slack webhooks |
+| **Agentic Alerting** | `agentic_alerting.py` | Signal processing, auto-remediation (retry/scale/escalate), learning loop, confidence scoring |
+| **Global Monitoring** | `monitoring_platform.py` | Unified control plane, 4-tier escalation chains, SLO tracking, enterprise dashboards |
+
+### Governance & Compliance
+
+| Capability | Module | Details |
+|-----------|--------|---------|
+| **RLS / CLS Policies** | `security_migration.py` | Row-level + column-level security for Fabric & Databricks |
+| **GDPR / CCPA** | `compliance.py` | PII classification, retention policies, right-to-erasure templates, data residency validation |
+| **Certification** | `certification.py` | 6-gate workflow (assess → convert → review → test → certify → deploy), evidence ZIP packages, sign-off templates |
+| **Audit Trail** | Built-in | Full JSON audit log with credential sanitization |
+| **Data Catalog** | `catalog_integration.py` | Purview entities, Unity Catalog lineage, column-level lineage, impact analysis |
+
+### Python SDK & REST API
+
+```python
+# Python SDK
+from sdk import MigrationSDK
+
+sdk = MigrationSDK(config="migration.yaml")
+inventory = sdk.assess("input/workflows/")
+notebooks = sdk.generate_notebooks(inventory, target="fabric")
+sdk.deploy(notebooks, workspace_id="...")
+```
+
+```bash
+# REST API server
+python api_server.py                     # Start on :8000
+curl http://localhost:8000/api/assess     # Run assessment
+curl http://localhost:8000/api/convert    # Run conversion
+curl http://localhost:8000/api/status     # Check progress
+```
+
+### Plugin System
+
+```python
+# Custom SQL rewrite plugin (plugins/my_rewrite.py)
+def transform_sql(sql, context):
+    return sql.replace("MY_CUSTOM_FUNC(", "my_spark_udf(")
+
+# Custom post-processing hook
+def post_process(notebook_code, mapping):
+    return notebook_code + "\n# Custom footer added by plugin"
+```
+
+Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific patterns.
+
+---
+
+## 📈 Project Stats
+
+| Metric | Value |
+|--------|-------|
+| **Sprints completed** | 100 / 100 |
+| **Phases completed** | 17 / 17 (+ DD1–DD12 + Functions + Blueprints) |
+| **Test count** | 2,143 passing |
+| **Test execution time** | ~39s (Python 3.14) |
+| **Source modules** | 40+ Python files |
+| **Agent definitions** | 6 specialized Copilot agents |
+| **SQL conversion rules** | 80+ patterns across 6 databases |
+| **Transformation mappings** | 14 Informatica types → PySpark |
+| **Pipeline activity types** | 15 workflow elements → Fabric/Databricks |
+| **AutoSys JIL elements** | 15 job types → Pipeline/Workflow |
+| **Azure Function triggers** | 7 types (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob) |
+| **IDMC services assessed** | 12 cloud services via REST API |
+
+---
+
 ## 📝 Documentation
 
 | Document | Description |
@@ -890,13 +1205,38 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | [examples/](examples/) | **Browsable before/after migration examples** (10 walkthroughs) |
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Step-by-step user guide |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
+| [docs/ENTERPRISE_PLAYBOOK.md](docs/ENTERPRISE_PLAYBOOK.md) | Enterprise migration playbook |
+| [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations runbook |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (97/100 complete) |
+| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (100/100 complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [docs/ADR/](docs/ADR/) | Architecture Decision Records |
 | [.vscode/instructions/informatica-patterns.instructions.md](.vscode/instructions/informatica-patterns.instructions.md) | Shared transformation patterns & SQL conversion rules |
+
+### Key Modules
+
+| Module | Category | Description |
+|--------|----------|-------------|
+| `ai_converter.py` | AI / Intelligence | LLM-powered SQL conversion, confidence scoring, pattern learning, gap ranking |
+| `assistant.py` | AI / Intelligence | Chat-based migration assistant — NL queries, interactive TODO review |
+| `diff_generator.py` | Visualization | Side-by-side diff, Cytoscape.js lineage explorer, batch review reports |
+| `ml_pipeline.py` | ML / Analytics | Feature Store notebooks, MLflow templates, batch scoring pipelines |
+| `cost_advisor.py` | Cost / Finance | TCO comparison, reserved capacity planner, idle detection, cost dashboard |
+| `security_migration.py` | Governance | RLS/CLS policies, column masking rules |
+| `compliance.py` | Governance | GDPR/CCPA compliance, PII classification, data residency |
+| `certification.py` | Governance | 6-gate certification workflow, evidence packages |
+| `datadog_integration.py` | Observability | Structured logs, custom metrics, APM distributed tracing |
+| `agentic_alerting.py` | Observability | Signal processing, auto-remediation, learning loop |
+| `monitoring_platform.py` | Observability | Unified control plane, escalation chains, SLO tracking |
+| `iac_generator.py` | Infrastructure | Terraform HCL + Azure Bicep generation |
+| `cicd_generator.py` | Infrastructure | GitHub Actions + Azure DevOps pipeline generation |
+| `plugins.py` | Extensibility | Custom transforms, SQL rewrites, post-processing hooks |
+| `sdk.py` | Extensibility | Python SDK for programmatic migration |
+| `api_server.py` | Extensibility | REST API server for remote orchestration |
+| `rule_engine.py` | Extensibility | Configurable YAML/JSON rule engine |
+| `catalog_integration.py` | Data Catalog | Purview entities, Unity Catalog lineage, column-level lineage |
 
 ### Agent Definitions
 
@@ -941,18 +1281,26 @@ results.append(("Row Count", "PASS" if row_count_match else "FAIL",
 | **9** | 74–76 | Extensibility & SDK | ✅ Complete |
 | **10** | 77–79 | Validation Maturity & Data Catalog | ✅ Complete |
 | **DD** | DD1–DD12 | Datadog Observability, Agentic Alerting, Global Monitoring, IDMC & Review | ✅ Complete |
-| **11** | 80–82 | Streaming & Real-Time | ⏳ Planned |
-| **12** | 83–85 | Governance & Compliance | ⏳ Planned |
-| **13** | 86–88 | AI-Assisted Migration | ⏳ Planned |
-| **14** | 89–91 | Web UI & Developer Experience | ⏳ Planned |
+| **11** | 80–82 | Streaming & Real-Time | ✅ Complete |
+| **12** | 83–85 | Governance & Compliance | ✅ Complete |
+| **—** | — | Azure Functions Migration (7 trigger types, CDC/ESB/event-driven) | ✅ Complete |
+| **—** | — | CDC/RT Deployment Blueprints (Event Hub + APIM + Functions Bicep/Terraform) | ✅ Complete |
+| **13** | 86–88 | AI-Assisted Migration | ✅ Complete |
+| **14** | 89–91 | Web UI & Developer Experience | ✅ Complete |
 | **15** | 92–94 | Cloud-Native & IaC | ✅ Complete |
 | **16** | 95–97 | Scale & Performance Testing | ✅ Complete |
-| **17** | 98–100 | GA Release & ML Pipelines | ⏳ Planned |
+| **17** | 98–100 | GA Release & ML Pipelines | ✅ Complete |
 
 See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for detailed sprint breakdowns.
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ using <a href="https://code.visualstudio.com/">VS Code</a> + <a href="https://github.com/features/copilot">GitHub Copilot</a> multi-agent architecture</sub>
+  <img src="https://img.shields.io/badge/status-GA%20v2.0-27AE60?style=for-the-badge" alt="GA v2.0"/>
+  <img src="https://img.shields.io/badge/100%20sprints-complete-27AE60?style=for-the-badge" alt="100 sprints"/>
+  <img src="https://img.shields.io/badge/2143%20tests-passing-27AE60?style=for-the-badge" alt="2143 tests"/>
+</p>
+
+<p align="center">
+  <sub>Built with ❤️ using <a href="https://code.visualstudio.com/">VS Code</a> + <a href="https://github.com/features/copilot">GitHub Copilot</a> multi-agent architecture — 100 sprints, 17 phases, 2,143 tests, zero external dependencies</sub>
 </p>

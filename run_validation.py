@@ -716,6 +716,92 @@ def generate_validation(mapping, source_type):
     return notebooks
 
 
+# ─────────────────────────────────────────────
+#  Sprint 81: CDC Validation Generator
+# ─────────────────────────────────────────────
+
+def generate_cdc_validation_cell(mapping):
+    """Generate CDC-specific validation cells for a mapping.
+
+    Checks:
+    - Insert/Update/Delete counts match between source CDC log and target
+    - No orphan deletes (deletes referencing non-existent records)
+    - Merge key uniqueness after MERGE
+    - CDC operation balance: inserts - deletes ≈ net row count
+    """
+    cdc_info = mapping.get("cdc", {})
+    if not cdc_info.get("is_cdc", False):
+        return ""
+
+    merge_keys = cdc_info.get("merge_keys", [])
+    cdc_sources = cdc_info.get("cdc_sources", [])
+    cdc_type = cdc_info.get("cdc_type", "upsert_only")
+
+    cdc_col = "CDC_OPERATION"
+    if cdc_sources:
+        cdc_col = cdc_sources[0].get("cdc_column", "CDC_OPERATION") or "CDC_OPERATION"
+
+    key_cols_str = ", ".join(f'"{k}"' for k in merge_keys) if merge_keys else '"ID"  # TODO: Replace'
+
+    lines = [
+        "# CDC Validation (Sprint 81)",
+        f"# CDC type: {cdc_type}",
+        f"# CDC column: {cdc_col}",
+        f"# Merge keys: {', '.join(merge_keys) if merge_keys else 'TODO'}",
+        "",
+        "from pyspark.sql.functions import col, count, lit",
+        "",
+        "# 1. CDC Operation Count Balance",
+        f'cdc_counts = df_source.groupBy("{cdc_col}").count().collect()',
+        'cdc_dict = {row[0]: row[1] for row in cdc_counts}',
+        'insert_count = cdc_dict.get("I", 0)',
+        'update_count = cdc_dict.get("U", 0)',
+        'delete_count = cdc_dict.get("D", 0)',
+        'print(f"CDC Operation Counts: Inserts={insert_count}, Updates={update_count}, Deletes={delete_count}")',
+        "",
+        "# Expected target row impact: inserts add rows, deletes remove rows",
+        "expected_net = insert_count - delete_count",
+        'print(f"Expected net row change: {expected_net}")',
+        "",
+        "# 2. Merge Key Uniqueness Check (post-MERGE target should have unique keys)",
+        f"key_cols = [{key_cols_str}]",
+        "target_total = df_target.count()",
+        "unique_keys = df_target.select(*key_cols).distinct().count()",
+        "if target_total == unique_keys:",
+        '    print(f"[PASS] Merge key uniqueness: {unique_keys} unique keys = {target_total} total rows")',
+        "else:",
+        '    print(f"[FAIL] Duplicate merge keys detected: {target_total} rows but {unique_keys} unique keys")',
+        "",
+    ]
+
+    if cdc_type == "full_cdc":
+        lines.extend([
+            "# 3. Orphan Delete Check (only for full CDC)",
+            "# Ensure no deletes were attempted on non-existent rows",
+            f'delete_keys = df_source.filter(col("{cdc_col}") == "D").select(*key_cols)',
+            "target_keys = df_target.select(*key_cols)",
+            "orphan_deletes = delete_keys.subtract(target_keys)  # Should be empty after processing",
+            "orphan_count = orphan_deletes.count()",
+            "if orphan_count == 0:",
+            '    print("[PASS] No orphan deletes")',
+            "else:",
+            '    print(f"[WARN] {orphan_count} delete operations referenced keys not in target")',
+            "",
+        ])
+
+    lines.extend([
+        "# 4. CDC Coverage: All operations processed",
+        f'unprocessed = df_source.filter(~col("{cdc_col}").isin("I", "U", "D"))',
+        "unprocessed_count = unprocessed.count()",
+        "if unprocessed_count == 0:",
+        '    print("[PASS] All CDC operations are recognized (I/U/D)")',
+        "else:",
+        f'    print(f"[WARN] {{unprocessed_count}} rows with unrecognized {cdc_col} values")',
+    ])
+
+    return "\n".join(lines)
+
+
 def generate_test_matrix(inventory, generated_files):
     """Generate a test_matrix.md summary."""
     lines = [

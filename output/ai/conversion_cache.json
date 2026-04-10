@@ -1,0 +1,14 @@
+{
+  "1a9157741f178749": {
+    "converted_sql": "SELECT current_timestamp() ",
+    "confidence": 80,
+    "tokens_used": 0,
+    "model": "local_heuristic"
+  },
+  "51265fbbaebeeb61": {
+    "converted_sql": "SELECT COALESCE(col, 0) ",
+    "confidence": 80,
+    "tokens_used": 0,
+    "model": "local_heuristic"
+  }
+}

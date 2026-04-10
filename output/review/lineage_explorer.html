@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lineage Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<style>
+  body { margin: 0; font-family: -apple-system, sans-serif; }
+  #cy { width: 100%; height: 100vh; }
+  .toolbar { position: fixed; top: 10px; left: 10px; z-index: 10; background: white;
+              padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .toolbar button { padding: 4px 12px; margin: 2px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; background: white; }
+  .toolbar button:hover { background: #0078D4; color: white; }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <strong>🔍 Lineage Explorer</strong><br/>
+  <button onclick="cy.fit()">Fit</button>
+  <button onclick="filterTier('bronze')">Bronze</button>
+  <button onclick="filterTier('silver')">Silver</button>
+  <button onclick="filterTier('gold')">Gold</button>
+  <button onclick="filterTier(null)">All</button>
+</div>
+<div id="cy"></div>
+<script>
+const elements = [];
+const tierColors = {bronze: '#CD7F32', silver: '#C0C0C0', gold: '#FFD700', unknown: '#95a5a6'};
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: elements,
+  style: [
+    {selector: 'node[type="table"]', style: {'shape': 'round-rectangle', 'label': 'data(label)',
+      'background-color': function(ele) { return tierColors[ele.data('tier')] || '#95a5a6'; },
+      'width': 120, 'height': 40, 'font-size': 10, 'text-valign': 'center'}},
+    {selector: 'node[type="mapping"]', style: {'shape': 'ellipse', 'label': 'data(label)',
+      'background-color': '#0078D4', 'color': 'white', 'width': 100, 'height': 40,
+      'font-size': 9, 'text-valign': 'center'}},
+    {selector: 'edge', style: {'width': 2, 'line-color': '#ccc', 'target-arrow-shape': 'triangle',
+      'target-arrow-color': '#999', 'curve-style': 'bezier', 'label': 'data(label)', 'font-size': 8}},
+  ],
+  layout: {name: 'breadthfirst', directed: true, padding: 40},
+});
+function filterTier(tier) {
+  cy.elements().show();
+  if (tier) cy.nodes().filter(n => n.data('tier') !== tier && n.data('type') === 'table').hide();
+}
+</script>
+</body>
+</html>

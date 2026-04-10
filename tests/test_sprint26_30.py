@@ -679,8 +679,8 @@ from run_migration import (
 class TestPHASES:
     """PHASES list should include Schema Generation."""
 
-    def test_has_eight_phases(self):
-        assert len(PHASES) == 8
+    def test_has_nine_phases(self):
+        assert len(PHASES) == 9
 
     def test_schema_generation_present(self):
         names = [p["name"] for p in PHASES]

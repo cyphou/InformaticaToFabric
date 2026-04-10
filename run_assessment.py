@@ -556,6 +556,16 @@ def parse_mapping_xml(filepath):
         mapping_info["manual_effort_hours"] = estimate_manual_effort(mapping_info)
         mapping_info["lineage_summary"] = f"{len(field_lineage)} field paths traced"
 
+        # Sprint 80-81: Streaming & CDC detection
+        streaming_info = detect_streaming_indicators(mapping_el)
+        cdc_info = detect_cdc_indicators(mapping_el, mapping_info)
+        mapping_info["streaming"] = streaming_info
+        mapping_info["cdc"] = cdc_info
+
+        # Azure Functions candidate detection
+        func_info = detect_functions_candidate(mapping_info, streaming_info, cdc_info)
+        mapping_info["functions_candidate"] = func_info
+
         mappings.append(mapping_info)
       except Exception as e:
         warnings.append(f"Error parsing mapping element in {filepath.name}: {e}")
@@ -1089,6 +1099,9 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
             "manual_effort_hours": m.get("manual_effort_hours", 0),
             "lineage_summary": m.get("lineage_summary", ""),
             "field_lineage": m.get("field_lineage", []),
+            "streaming": m.get("streaming", {"is_streaming": False, "streaming_sources": [], "streaming_sinks": [], "indicators": []}),
+            "cdc": m.get("cdc", {"is_cdc": False, "cdc_type": "none", "cdc_sources": [], "update_strategy": None, "merge_keys": [], "indicators": []}),
+            "functions_candidate": m.get("functions_candidate", {"is_candidate": False, "trigger_type": "none", "reason": "", "indicators": []}),
         })
 
     workflows_out = []
@@ -1136,6 +1149,15 @@ def write_inventory_json(all_mappings, all_workflows, connections, sql_files):
             ),
             "total_field_lineage_paths": sum(
                 len(m.get("field_lineage", [])) for m in mappings_out
+            ),
+            "total_streaming_mappings": sum(
+                1 for m in mappings_out if m.get("streaming", {}).get("is_streaming", False)
+            ),
+            "total_cdc_mappings": sum(
+                1 for m in mappings_out if m.get("cdc", {}).get("is_cdc", False)
+            ),
+            "total_functions_candidates": sum(
+                1 for m in mappings_out if m.get("functions_candidate", {}).get("is_candidate", False)
             ),
         },
     }
@@ -1720,7 +1742,7 @@ def parse_iics_mapping(filepath):
 
         complexity = classify_complexity(transformations, [], sources, targets, False, [])
 
-        mappings.append({
+        mapping_info = {
             "name": name,
             "sources": sources,
             "targets": targets,
@@ -1736,7 +1758,19 @@ def parse_iics_mapping(filepath):
             "connector_count": 0,
             "has_mapplet": False,
             "format": "iics",
-        })
+        }
+
+        # Sprint 80-81: Streaming & CDC detection
+        streaming_info = detect_streaming_indicators(tmpl)
+        cdc_info = detect_cdc_indicators(tmpl, mapping_info)
+        mapping_info["streaming"] = streaming_info
+        mapping_info["cdc"] = cdc_info
+
+        # Azure Functions candidate detection
+        func_info = detect_functions_candidate(mapping_info, streaming_info, cdc_info)
+        mapping_info["functions_candidate"] = func_info
+
+        mappings.append(mapping_info)
 
     if not mappings:
         warnings.append(f"WARNING: No IICS mapping objects found in {filepath.name}")
@@ -2510,6 +2544,356 @@ def detect_materialized_views(sql_content):
     return mvs
 
 
+# =====================================================================
+# Azure Functions Candidate Detection
+# =====================================================================
+
+_FUNCTIONS_TRIGGER_PATTERNS = {
+    "servicebus", "service bus", "service_bus",
+    "jms", "rabbitmq", "amqp", "msmq",
+}
+
+_FUNCTIONS_ESB_INDICATORS = {
+    "message", "queue", "topic", "publish", "subscribe",
+    "request", "response", "routing", "mediation",
+    "api_gateway", "rest_api", "soap", "wsdl",
+}
+
+
+def detect_functions_candidate(mapping_info, streaming_info, cdc_info):
+    """Detect whether a mapping is a candidate for Azure Functions migration.
+
+    Azure Functions is recommended over Spark Structured Streaming when:
+    - The pattern is event-driven but low-volume (message queues, ESB)
+    - The mapping involves Service Bus / JMS / queue-based messaging
+    - The mapping is a lightweight CDC handler (single-table, low throughput)
+    - The mapping acts as an API gateway / request-response pattern
+
+    Returns a dict:
+      {
+        "is_candidate": bool,
+        "trigger_type": "service_bus" | "event_hub" | "sql_trigger" |
+                        "cosmos_trigger" | "http" | "timer" | "blob" | "none",
+        "reason": str,
+        "indicators": [...],
+      }
+    """
+    result = {
+        "is_candidate": False,
+        "trigger_type": "none",
+        "reason": "",
+        "indicators": [],
+    }
+
+    name_lower = mapping_info.get("name", "").lower()
+    sources = [s.lower() for s in mapping_info.get("sources", [])]
+    targets = [t.lower() for t in mapping_info.get("targets", [])]
+    transformations = mapping_info.get("transformations", [])
+    all_text = " ".join(sources + targets + [name_lower])
+
+    streaming_sources = streaming_info.get("streaming_sources", [])
+    streaming_indicators = streaming_info.get("indicators", [])
+
+    # 1. Service Bus / JMS / queue-based — ideal for Functions + Service Bus trigger
+    for src in streaming_sources:
+        src_type = src.get("type", "").lower()
+        if any(kw in src_type for kw in _FUNCTIONS_TRIGGER_PATTERNS):
+            result["is_candidate"] = True
+            result["trigger_type"] = "service_bus"
+            result["reason"] = f"Message queue source ({src_type}) maps to Azure Functions Service Bus trigger"
+            result["indicators"].append(f"queue_source:{src_type}")
+            return result
+
+    # 2. Event Hub source with simple transform chain (< 4 transforms)
+    for src in streaming_sources:
+        src_type = src.get("type", "").lower()
+        if any(kw in src_type for kw in ("eventhub", "event hub")):
+            if len(transformations) <= 4:
+                result["is_candidate"] = True
+                result["trigger_type"] = "event_hub"
+                result["reason"] = "Simple Event Hub consumer — Azure Functions Event Hub trigger recommended"
+                result["indicators"].append(f"simple_eventhub:{src_type}")
+                return result
+
+    # 3. CDC on single table with simple logic — SQL trigger or Cosmos trigger
+    if cdc_info.get("is_cdc") and not streaming_info.get("is_streaming"):
+        cdc_sources = cdc_info.get("cdc_sources", [])
+        if len(mapping_info.get("targets", [])) <= 1 and len(transformations) <= 3:
+            # Simple CDC — good for Functions SQL trigger
+            src_db = " ".join(sources)
+            if "cosmos" in src_db or "cosmosdb" in src_db:
+                result["is_candidate"] = True
+                result["trigger_type"] = "cosmos_trigger"
+                result["reason"] = "Cosmos DB CDC maps to Azure Functions Cosmos DB change feed trigger"
+                result["indicators"].append("cosmos_cdc")
+            else:
+                result["is_candidate"] = True
+                result["trigger_type"] = "sql_trigger"
+                result["reason"] = "Simple single-table CDC maps to Azure Functions SQL trigger"
+                result["indicators"].append("simple_cdc")
+            return result
+
+    # 4. ESB / API gateway patterns (name heuristics)
+    esb_keywords = {"esb", "api", "gateway", "request", "response", "orchestrat", "mediator"}
+    if any(kw in name_lower for kw in esb_keywords):
+        result["is_candidate"] = True
+        result["trigger_type"] = "http"
+        result["reason"] = "ESB/API gateway pattern maps to Azure Functions HTTP trigger"
+        result["indicators"].append(f"esb_name_hint:{name_lower}")
+        return result
+
+    # 5. Timer/scheduler-based lightweight processing
+    if not streaming_info.get("is_streaming") and not cdc_info.get("is_cdc"):
+        if len(transformations) <= 2 and len(sources) <= 1 and len(targets) <= 1:
+            for ind in streaming_indicators:
+                if any(kw in ind for kw in _FUNCTIONS_ESB_INDICATORS):
+                    result["is_candidate"] = True
+                    result["trigger_type"] = "timer"
+                    result["reason"] = "Lightweight periodic processing — Azure Functions Timer trigger candidate"
+                    result["indicators"].append(f"lightweight:{ind}")
+                    return result
+
+    # 6. Blob/file-based trigger patterns
+    for src in sources:
+        if any(kw in src for kw in ("blob", "adls", "file_", "flat_file")):
+            if len(transformations) <= 3:
+                result["is_candidate"] = True
+                result["trigger_type"] = "blob"
+                result["reason"] = "File-based source with simple transforms maps to Azure Functions Blob trigger"
+                result["indicators"].append(f"blob_source:{src}")
+                return result
+
+    return result
+
+
+# =====================================================================
+# Sprint 80-81: Streaming & CDC Detection
+# =====================================================================
+
+# Indicators that a mapping uses streaming / real-time / CDC patterns
+_STREAMING_SOURCE_TYPES = {
+    "jms", "kafka", "mqtt", "eventhub", "event hub", "kinesis",
+    "pubsub", "rabbitmq", "servicebus", "service bus", "amqp",
+}
+
+_CDC_INDICATORS = {
+    "cdc", "change data capture", "change feed", "change tracking",
+    "dd_insert", "dd_update", "dd_delete", "dd_reject",
+    "cdc_operation", "op_type", "__$operation",
+}
+
+_STREAMING_OBJECT_TYPES = {
+    "com.infa.adapter.kafka.reader",
+    "com.infa.adapter.kafka.writer",
+    "com.infa.adapter.jms.reader",
+    "com.infa.adapter.jms.writer",
+    "com.infa.adapter.mqtt.reader",
+    "com.infa.adapter.eventhub.reader",
+    "com.infa.adapter.eventhub.writer",
+    "com.infa.adapter.kinesis.reader",
+    "com.infa.adapter.pubsub.reader",
+    "com.infa.adapter.servicebus.reader",
+}
+
+
+def detect_streaming_indicators(mapping_el):
+    """Detect streaming / real-time indicators in a mapping XML element.
+
+    Returns a dict:
+      {
+        "is_streaming": bool,
+        "streaming_sources": [{"name": ..., "type": ..., "topic": ...}],
+        "streaming_sinks": [{"name": ..., "type": ...}],
+        "indicators": ["kafka_source", "jms_source", ...],
+      }
+    """
+    result = {
+        "is_streaming": False,
+        "streaming_sources": [],
+        "streaming_sinks": [],
+        "indicators": [],
+    }
+
+    xml_text = ET.tostring(mapping_el, encoding="unicode").lower()
+
+    # Check IICS objectType attributes for streaming adapters
+    for dt in mapping_el.iter("dTemplate"):
+        obj_type = (dt.get("objectType") or "").lower()
+        dt_name = dt.get("name", "")
+
+        if obj_type in _STREAMING_OBJECT_TYPES or any(
+            s in obj_type for s in ("kafka", "jms", "mqtt", "eventhub", "kinesis", "pubsub")
+        ):
+            is_writer = "writer" in obj_type
+            topic = ""
+            for fld in dt.iter("field"):
+                if fld.get("name", "").lower() == "topic":
+                    topic = fld.get("value", "")
+            entry = {"name": dt_name, "type": obj_type, "topic": topic}
+            if is_writer:
+                result["streaming_sinks"].append(entry)
+                result["indicators"].append(f"streaming_sink:{obj_type}")
+            else:
+                result["streaming_sources"].append(entry)
+                result["indicators"].append(f"streaming_source:{obj_type}")
+            result["is_streaming"] = True
+
+    # Check PowerCenter XML for JMS / message queue sources
+    for src in mapping_el.iter("SOURCE"):
+        db_type = (src.get("DATABASETYPE") or "").lower()
+        name = src.get("NAME", "")
+        if any(s in db_type for s in _STREAMING_SOURCE_TYPES):
+            result["streaming_sources"].append({"name": name, "type": db_type, "topic": ""})
+            result["indicators"].append(f"streaming_source:{db_type}")
+            result["is_streaming"] = True
+
+    # Check for JMS/Kafka connection references anywhere in XML text
+    for kw in ("jms_", "kafka", "eventhub", "event_hub", "mqtt"):
+        if kw in xml_text:
+            if f"source:{kw}" not in " ".join(result["indicators"]):
+                result["indicators"].append(f"xml_hint:{kw}")
+                result["is_streaming"] = True
+
+    return result
+
+
+def detect_cdc_indicators(mapping_el, mapping_info):
+    """Detect CDC (Change Data Capture) patterns in a mapping.
+
+    Checks for:
+    - Update Strategy transformation with DD_INSERT/DD_UPDATE/DD_DELETE
+    - CDC-enabled sources (cdcEnabled=true, extractType=incremental)
+    - CDC operation columns (CDC_OPERATION, __$operation, op_type)
+
+    Returns a dict:
+      {
+        "is_cdc": bool,
+        "cdc_type": "full_cdc" | "upsert_only" | "soft_delete" | "none",
+        "cdc_sources": [{"name": ..., "cdc_column": ..., "extract_type": ...}],
+        "update_strategy": {"expression": ..., "has_insert": bool, "has_update": bool, "has_delete": bool},
+        "merge_keys": [...],
+        "indicators": [...],
+      }
+    """
+    result = {
+        "is_cdc": False,
+        "cdc_type": "none",
+        "cdc_sources": [],
+        "update_strategy": None,
+        "merge_keys": [],
+        "indicators": [],
+    }
+
+    xml_text = ET.tostring(mapping_el, encoding="unicode").lower()
+
+    # 1. Detect CDC-enabled sources (IICS format)
+    for dt in mapping_el.iter("dTemplate"):
+        cdc_enabled = False
+        cdc_column = ""
+        extract_type = ""
+        dt_name = dt.get("name", "")
+        for fld in dt.iter("field"):
+            fname = (fld.get("name") or "").lower()
+            fval = fld.get("value", "")
+            if fname == "cdcenabled" and fval.lower() == "true":
+                cdc_enabled = True
+            if fname == "cdccolumn":
+                cdc_column = fval
+            if fname == "extracttype" and fval.lower() == "incremental":
+                extract_type = "incremental"
+        if cdc_enabled:
+            result["cdc_sources"].append({
+                "name": dt_name,
+                "cdc_column": cdc_column,
+                "extract_type": extract_type,
+            })
+            result["is_cdc"] = True
+            result["indicators"].append(f"cdc_source:{dt_name}")
+
+    # 2. Detect Update Strategy with DD_ expressions (IICS format)
+    for dt in mapping_el.iter("dTemplate"):
+        obj_type = (dt.get("objectType") or "").lower()
+        if "updatestrategy" in obj_type:
+            for fld in dt.iter("field"):
+                if (fld.get("name") or "").lower() == "updatestrategy":
+                    expr = fld.get("value", "")
+                    has_insert = "dd_insert" in expr.lower()
+                    has_update = "dd_update" in expr.lower()
+                    has_delete = "dd_delete" in expr.lower()
+                    result["update_strategy"] = {
+                        "expression": expr,
+                        "has_insert": has_insert,
+                        "has_update": has_update,
+                        "has_delete": has_delete,
+                    }
+                    if has_insert or has_update or has_delete:
+                        result["is_cdc"] = True
+                        result["indicators"].append("update_strategy_dd")
+
+    # 3. Detect Update Strategy in PowerCenter XML
+    for tx in mapping_el.iter("TRANSFORMATION"):
+        if tx.get("TYPE", "") == "Update Strategy":
+            for ta in tx.iter("TABLEATTRIBUTE"):
+                if ta.get("NAME", "") == "Update Strategy Expression":
+                    expr = ta.get("VALUE", "")
+                    has_insert = "dd_insert" in expr.lower()
+                    has_update = "dd_update" in expr.lower()
+                    has_delete = "dd_delete" in expr.lower()
+                    result["update_strategy"] = {
+                        "expression": expr,
+                        "has_insert": has_insert,
+                        "has_update": has_update,
+                        "has_delete": has_delete,
+                    }
+                    if has_insert or has_update or has_delete:
+                        result["is_cdc"] = True
+                        result["indicators"].append("update_strategy_dd")
+
+    # 4. Check for merge keys in target definitions (IICS)
+    for dt in mapping_el.iter("dTemplate"):
+        for fld in dt.iter("field"):
+            fname = (fld.get("name") or "").lower()
+            if fname == "mergekeys":
+                keys = [k.strip() for k in fld.get("value", "").split(",") if k.strip()]
+                result["merge_keys"] = keys
+                if keys:
+                    result["indicators"].append(f"merge_keys:{','.join(keys)}")
+
+    # 5. Check XML text for CDC keywords
+    for kw in _CDC_INDICATORS:
+        if kw in xml_text and f"hint:{kw}" not in " ".join(result["indicators"]):
+            result["indicators"].append(f"xml_hint:{kw}")
+            result["is_cdc"] = True
+
+    # 6. Check if UPD transformation is present (from mapping_info)
+    if "UPD" in mapping_info.get("transformations", []):
+        if not result["update_strategy"]:
+            result["update_strategy"] = {
+                "expression": "DD_UPDATE",
+                "has_insert": True,
+                "has_update": True,
+                "has_delete": False,
+            }
+            result["is_cdc"] = True
+            result["indicators"].append("upd_transformation")
+
+    # Classify CDC type
+    if result["is_cdc"] and result["update_strategy"]:
+        us = result["update_strategy"]
+        if us["has_insert"] and us["has_update"] and us["has_delete"]:
+            result["cdc_type"] = "full_cdc"
+        elif us["has_insert"] and us["has_update"]:
+            result["cdc_type"] = "upsert_only"
+        elif us["has_delete"]:
+            result["cdc_type"] = "soft_delete"
+        else:
+            result["cdc_type"] = "upsert_only"
+    elif result["is_cdc"]:
+        result["cdc_type"] = "upsert_only"
+
+    return result
+
+
 def detect_db_links(sql_content):
     """Detect Oracle database link references (@dblink syntax).
     Returns list of detected DB link references.
@@ -2817,6 +3201,17 @@ def main():
     print(f"    Total waves:          {wave_data['total_waves']}")
     print(f"    Critical path length: {len(wave_data['critical_path'])} mappings")
     print(f"    Critical path effort: {wave_data['critical_path_effort_hours']}h")
+
+    # Sprint 80-81: Streaming & CDC stats
+    streaming_count = inventory["summary"].get("total_streaming_mappings", 0)
+    cdc_count = inventory["summary"].get("total_cdc_mappings", 0)
+    func_count = inventory["summary"].get("total_functions_candidates", 0)
+    if streaming_count or cdc_count or func_count:
+        print()
+        print("  Streaming & CDC:")
+        print(f"    Streaming mappings:   {streaming_count}")
+        print(f"    CDC mappings:         {cdc_count}")
+        print(f"    Functions candidates: {func_count}")
 
     # 9. Warnings and issues
     print()

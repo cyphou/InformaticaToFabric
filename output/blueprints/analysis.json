@@ -1,0 +1,14 @@
+{
+  "cdc": [],
+  "realtime": [],
+  "esb_api": [],
+  "summary": {
+    "total_candidates": 0,
+    "cdc_count": 0,
+    "realtime_count": 0,
+    "esb_api_count": 0,
+    "needs_event_hub": false,
+    "needs_apim": false,
+    "needs_functions": false
+  }
+}

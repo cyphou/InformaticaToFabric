@@ -1283,11 +1283,12 @@ class TestMultiTargetIntegration(unittest.TestCase):
     def test_phases_list_complete(self):
         import run_migration
         phases = run_migration.PHASES
-        self.assertEqual(len(phases), 8)
+        self.assertEqual(len(phases), 9)
         names = [p["name"] for p in phases]
         self.assertIn("Assessment", names)
         self.assertIn("DBT Migration", names)
         self.assertIn("AutoSys Migration", names)
+        self.assertIn("Functions Migration", names)
         self.assertIn("Validation", names)
 
     def test_dbt_module_importable(self):

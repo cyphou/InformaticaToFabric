@@ -855,17 +855,312 @@ def _audit_cell(mapping, cell_num):
     )
 
 
+# ─────────────────────────────────────────────
+#  Sprint 80-81: Streaming & CDC Notebook Generation
+# ─────────────────────────────────────────────
+
+def _cdc_merge_cell(mapping, cell_num):
+    """Generate a Delta MERGE cell driven by CDC metadata.
+
+    Uses the mapping's cdc info (merge_keys, update_strategy) to produce
+    a proper MERGE INTO with WHEN MATCHED / WHEN NOT MATCHED / WHEN NOT
+    MATCHED BY SOURCE clauses.
+    """
+    cdc_info = mapping.get("cdc", {})
+    us = cdc_info.get("update_strategy", {})
+    merge_keys = cdc_info.get("merge_keys", [])
+    cdc_sources = cdc_info.get("cdc_sources", [])
+    cdc_type = cdc_info.get("cdc_type", "upsert_only")
+
+    targets = mapping.get("targets", [])
+    # Pick the first non-bronze target for the merge
+    merge_target = None
+    for t in targets:
+        tl = t.lower()
+        if "silver" in tl or "fact" in tl or "dim" in tl:
+            merge_target = t
+            break
+    if not merge_target and targets:
+        merge_target = targets[0]
+    merge_target = merge_target or "target_table"
+
+    target_ref = _table_ref("silver", merge_target.lower())
+
+    # Determine CDC operation column
+    cdc_col = "CDC_OPERATION"
+    if cdc_sources:
+        cdc_col = cdc_sources[0].get("cdc_column", "CDC_OPERATION") or "CDC_OPERATION"
+
+    # Build merge key condition
+    if merge_keys:
+        merge_cond = " AND ".join(f"tgt.{k} = src.{k}" for k in merge_keys)
+    else:
+        merge_cond = "tgt.ID = src.ID  # TODO: Replace with actual merge key(s)"
+
+    lines = [
+        f"# CELL {cell_num} — CDC MERGE INTO (Sprint 81)",
+        f"# CDC type: {cdc_type}",
+        f"# Merge keys: {', '.join(merge_keys) if merge_keys else 'TODO'}",
+        f"# CDC column: {cdc_col}",
+        "",
+        f'target_table = DeltaTable.forName(spark, "{target_ref}")',
+        "",
+        "# Separate CDC operations",
+        f'df_inserts = df.filter(col("{cdc_col}") == "I")',
+        f'df_updates = df.filter(col("{cdc_col}") == "U")',
+    ]
+
+    if cdc_type == "full_cdc":
+        lines.append(f'df_deletes = df.filter(col("{cdc_col}") == "D")')
+
+    lines.extend([
+        "",
+        "# Upsert: inserts + updates via MERGE",
+        "df_upsert = df_inserts.unionByName(df_updates, allowMissingColumns=True)",
+        "",
+        "target_table.alias('tgt').merge(",
+        "    df_upsert.alias('src'),",
+        f"    '{merge_cond}'",
+        ").whenMatchedUpdateAll()",
+        ".whenNotMatchedInsertAll()",
+    ])
+
+    if cdc_type == "full_cdc":
+        lines.extend([
+            "# Full CDC: also handle deletes",
+            ".execute()",
+            "",
+            "# Apply deletes separately (soft-delete or hard-delete)",
+            "# Option 1: Soft delete (recommended for audit trail)",
+            "# target_table.alias('tgt').merge(",
+            "#     df_deletes.alias('src'),",
+            f"#     '{merge_cond}'",
+            '# ).whenMatchedUpdate(set={{"is_deleted": "lit(True)", "_deleted_ts": "current_timestamp()"}}).execute()',
+            "",
+            "# Option 2: Hard delete",
+            "target_table.alias('tgt').merge(",
+            "    df_deletes.alias('src'),",
+            f"    '{merge_cond}'",
+            ").whenMatchedDelete().execute()",
+        ])
+    else:
+        lines.append(".execute()")
+
+    lines.append("")
+    lines.append("df = df  # Pass through for downstream")
+
+    return "\n".join(lines)
+
+
+def _change_feed_reader_cell(mapping, cell_num):
+    """Generate a Databricks Change Data Feed (CDF) reader cell.
+
+    Reads changes from a Delta table with CDF enabled:
+      spark.readStream.option("readChangeFeed", "true")
+    """
+    targets = mapping.get("targets", [])
+    source_table = _table_ref("silver", (targets[0].lower() if targets else "source_table"))
+
+    lines = [
+        f"# CELL {cell_num} — Change Data Feed Reader (Sprint 81)",
+        "# Read incremental changes from Delta table with CDF enabled",
+        "# Enable CDF on the source table first:",
+        f'# spark.sql("ALTER TABLE {source_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")',
+        "",
+        f"df_changes = (",
+        f"    spark.readStream",
+        f'    .format("delta")',
+        f'    .option("readChangeFeed", "true")',
+        f'    .option("startingVersion", 0)  # Or use startingTimestamp',
+        f'    .table("{source_table}")',
+        ")",
+        "",
+        "# CDF provides: _change_type (insert, update_preimage, update_postimage, delete),",
+        "#               _commit_version, _commit_timestamp",
+        'df_cdc = df_changes.filter(col("_change_type").isin("insert", "update_postimage"))',
+    ]
+
+    return "\n".join(lines)
+
+
+def _streaming_source_cell(mapping, cell_num):
+    """Generate a Structured Streaming source read cell based on streaming metadata."""
+    streaming_info = mapping.get("streaming", {})
+    sources = streaming_info.get("streaming_sources", [])
+
+    if not sources:
+        return None
+
+    src = sources[0]
+    src_type = src.get("type", "").lower()
+    topic = src.get("topic", "streaming-topic")
+    src_name = src.get("name", "streaming_source")
+
+    lines = [f"# CELL {cell_num} — Streaming Source Read (Sprint 80)"]
+
+    if "kafka" in src_type:
+        lines.extend([
+            f"# --- Streaming Source: {src_name} (Kafka) ---",
+            f"kafka_servers = {_secret_get('keyvault', 'kafka-bootstrap-servers')}",
+            "",
+            "from pyspark.sql.functions import from_json",
+            "from pyspark.sql.types import StructType, StructField, StringType, LongType, TimestampType",
+            "",
+            "# TODO: Replace with actual message schema",
+            "message_schema = StructType([",
+            '    StructField("id", LongType(), False),',
+            '    StructField("event_type", StringType(), True),',
+            '    StructField("payload", StringType(), True),',
+            '    StructField("event_time", TimestampType(), True),',
+            "])",
+            "",
+            "df_raw = (",
+            "    spark.readStream",
+            '    .format("kafka")',
+            '    .option("kafka.bootstrap.servers", kafka_servers)',
+            f'    .option("subscribe", "{topic}")',
+            '    .option("startingOffsets", "latest")',
+            '    .option("failOnDataLoss", "false")',
+            '    .option("maxOffsetsPerTrigger", 10000)',
+            "    .load()",
+            ")",
+            "",
+            "df_source = (",
+            '    df_raw.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING) as json_value", "timestamp as kafka_ts")',
+            '    .withColumn("data", from_json(col("json_value"), message_schema))',
+            '    .select("kafka_ts", "data.*")',
+            ")",
+        ])
+    elif any(kw in src_type for kw in ("eventhub", "event hub", "servicebus")):
+        lines.extend([
+            f"# --- Streaming Source: {src_name} (Event Hub) ---",
+            f"eh_conn_string = {_secret_get('keyvault', 'eventhub-connection-string')}",
+            "",
+            "from pyspark.sql.functions import from_json",
+            "from pyspark.sql.types import StructType, StructField, StringType, LongType, TimestampType",
+            "",
+            "eh_conf = {",
+            '    "eventhubs.connectionString": sc._jvm.org.apache.spark.eventhubs.EventHubsUtils.encrypt(eh_conn_string),',
+            '    "maxEventsPerTrigger": 10000,',
+            "}",
+            "",
+            "df_raw = (",
+            "    spark.readStream",
+            '    .format("eventhubs")',
+            "    .options(**eh_conf)",
+            "    .load()",
+            ")",
+            "",
+            'df_source = df_raw.withColumn("body_str", col("body").cast("string"))',
+            "# TODO: Parse body JSON with from_json and actual schema",
+        ])
+    elif "mqtt" in src_type:
+        lines.extend([
+            f"# --- Streaming Source: {src_name} (MQTT → Kafka bridge) ---",
+            "# MQTT sources typically require a bridge to Kafka or Event Hub",
+            "# Configure an IoT Hub or MQTT-to-Kafka connector, then read from the topic",
+            f"kafka_servers = {_secret_get('keyvault', 'kafka-bootstrap-servers')}",
+            "",
+            "df_source = (",
+            "    spark.readStream",
+            '    .format("kafka")',
+            '    .option("kafka.bootstrap.servers", kafka_servers)',
+            f'    .option("subscribe", "{topic}")',
+            '    .option("startingOffsets", "latest")',
+            "    .load()",
+            '    .selectExpr("CAST(value AS STRING) as payload", "timestamp as event_time")',
+            ")",
+        ])
+    else:
+        lines.extend([
+            f"# --- Streaming Source: {src_name} ({src_type}) ---",
+            "# TODO: Configure streaming source connection",
+            f"# Original Informatica source type: {src_type}",
+            'df_source = spark.readStream.format("delta").table("bronze.streaming_source")  # Placeholder',
+        ])
+
+    return "\n".join(lines)
+
+
+def _streaming_sink_cell(mapping, cell_num):
+    """Generate a Delta streaming sink cell with checkpoint."""
+    name = mapping["name"]
+    targets = mapping.get("targets", [])
+    target = targets[0].lower() if targets else "streaming_target"
+    target_ref = _table_ref("bronze", target)
+
+    # Determine output mode based on CDC
+    cdc_info = mapping.get("cdc", {})
+    has_cdc = cdc_info.get("is_cdc", False)
+
+    lines = [
+        f"# CELL {cell_num} — Streaming Sink (Sprint 80)",
+        f'checkpoint_path = "abfss://checkpoints@storage.dfs.core.windows.net/{name}"',
+        "",
+    ]
+
+    if has_cdc:
+        lines.extend([
+            "# CDC streaming: use foreachBatch for MERGE pattern",
+            "def merge_batch(batch_df, batch_id):",
+            f'    target_table = DeltaTable.forName(spark, "{_table_ref("silver", target)}")',
+            "    target_table.alias('tgt').merge(",
+            "        batch_df.alias('src'),",
+            "        'tgt.ID = src.ID'  # TODO: Replace with actual merge key",
+            "    ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()",
+            "",
+            "query = (",
+            "    df.writeStream",
+            '    .foreachBatch(merge_batch)',
+            '    .option("checkpointLocation", checkpoint_path)',
+            '    .trigger(processingTime="30 seconds")',
+            "    .start()",
+            ")",
+        ])
+    else:
+        lines.extend([
+            "query = (",
+            "    df.writeStream",
+            '    .format("delta")',
+            '    .outputMode("append")',
+            '    .option("checkpointLocation", checkpoint_path)',
+            '    .trigger(processingTime="30 seconds")',
+            f'    .toTable("{target_ref}")',
+            ")",
+        ])
+
+    lines.extend([
+        "",
+        "# For long-running streams, use query.awaitTermination()",
+        "# For one-shot processing, use .trigger(availableNow=True)",
+    ])
+
+    return "\n".join(lines)
+
+
 def generate_notebook(mapping):
     """Generate a complete notebook .py file for a mapping."""
     cells = []
+
+    streaming_info = mapping.get("streaming", {})
+    cdc_info = mapping.get("cdc", {})
+    is_streaming = streaming_info.get("is_streaming", False)
+    is_cdc = cdc_info.get("is_cdc", False)
 
     # Cell 1: Metadata + imports
     cells.append(_metadata_cell(mapping))
 
     cell_num = 2
 
-    # Cell 2: Source read
-    cells.append(_source_cell(mapping, cell_num))
+    # Cell 2: Source read — streaming or batch
+    if is_streaming:
+        streaming_cell = _streaming_source_cell(mapping, cell_num)
+        if streaming_cell:
+            cells.append(streaming_cell)
+        else:
+            cells.append(_source_cell(mapping, cell_num))
+    else:
+        cells.append(_source_cell(mapping, cell_num))
     cell_num += 1
 
     # Transformation cells (skip SQ — handled in source cell)
@@ -873,14 +1168,27 @@ def generate_notebook(mapping):
     for i, tx in enumerate(txs):
         if tx == "SQ":
             continue
+        # Use CDC-aware MERGE for UPD when CDC is detected
+        if tx == "UPD" and is_cdc:
+            cells.append(_cdc_merge_cell(mapping, cell_num))
+            cell_num += 1
+            continue
         cell_content = _transformation_cell(tx, i, mapping, cell_num)
         if cell_content:
             cells.append(cell_content)
             cell_num += 1
 
-    # Target write cell
-    cells.append(_target_cell(mapping, cell_num))
+    # Target write cell — streaming sink or batch
+    if is_streaming:
+        cells.append(_streaming_sink_cell(mapping, cell_num))
+    else:
+        cells.append(_target_cell(mapping, cell_num))
     cell_num += 1
+
+    # Change Data Feed reader cell (Databricks only, CDC mappings)
+    if is_cdc and _get_target() == "databricks":
+        cells.append(_change_feed_reader_cell(mapping, cell_num))
+        cell_num += 1
 
     # Sprint 39: PII scanning cell (if PII columns detected)
     pii_columns = mapping.get("pii_columns", [])

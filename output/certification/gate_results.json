@@ -1,0 +1,66 @@
+[
+  {
+    "gate_id": 1,
+    "gate_name": "Assessment",
+    "description": "Informatica inventory parsed and classified",
+    "passed": true,
+    "checks": {
+      "inventory_exists": true,
+      "complexity_report_exists": true,
+      "dependency_dag_exists": true
+    }
+  },
+  {
+    "gate_id": 2,
+    "gate_name": "Conversion",
+    "description": "All mappings converted to notebooks/pipelines/SQL",
+    "passed": true,
+    "checks": {
+      "notebooks_generated": true,
+      "pipelines_generated": true,
+      "sql_converted": true
+    }
+  },
+  {
+    "gate_id": 3,
+    "gate_name": "Validation",
+    "description": "All validation tests pass with acceptable thresholds",
+    "passed": true,
+    "checks": {
+      "validation_scripts_exist": true,
+      "row_count_checks": true,
+      "checksum_checks": true
+    }
+  },
+  {
+    "gate_id": 4,
+    "gate_name": "Security",
+    "description": "RLS/CLS policies and compliance checks complete",
+    "passed": true,
+    "checks": {
+      "security_audit_exists": true,
+      "compliance_report_exists": true,
+      "pii_classified": true
+    }
+  },
+  {
+    "gate_id": 5,
+    "gate_name": "Performance",
+    "description": "Performance benchmarks within acceptable range",
+    "passed": true,
+    "checks": {
+      "notebooks_run_successfully": true,
+      "no_critical_errors": true
+    }
+  },
+  {
+    "gate_id": 6,
+    "gate_name": "Production",
+    "description": "Deployment scripts validated and ready for production",
+    "passed": true,
+    "checks": {
+      "deployment_scripts_exist": true,
+      "rollback_plan_exists": true
+    }
+  }
+]

@@ -1,0 +1,722 @@
+[
+  {
+    "artifact": "NB_DQ_STANDARDIZE_ADDRESSES.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_DQ_STANDARDIZE_ADDRESSES.py",
+    "size_bytes": 1717,
+    "created": "2026-03-24T13:54:05.647264+00:00",
+    "modified": "2026-04-08T11:51:36.314806+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_DQ_VALIDATE_EMAILS.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_DQ_VALIDATE_EMAILS.py",
+    "size_bytes": 1699,
+    "created": "2026-03-24T13:54:05.646265+00:00",
+    "modified": "2026-04-08T11:51:36.312342+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_cdc_order_pipeline.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_cdc_order_pipeline.py",
+    "size_bytes": 4982,
+    "created": "2026-04-02T06:54:07.680891+00:00",
+    "modified": "2026-04-08T11:51:36.288259+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_M_COMPLEX_MULTI_SOURCE.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_M_COMPLEX_MULTI_SOURCE.py",
+    "size_bytes": 4553,
+    "created": "2026-03-24T13:54:05.641265+00:00",
+    "modified": "2026-04-08T11:51:36.301784+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_customer_360.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_customer_360.py",
+    "size_bytes": 5264,
+    "created": "2026-04-02T06:54:07.682890+00:00",
+    "modified": "2026-04-08T11:51:36.290794+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_customer_activity_log.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_customer_activity_log.py",
+    "size_bytes": 2283,
+    "created": "2026-04-02T06:54:07.683892+00:00",
+    "modified": "2026-04-08T11:51:36.292794+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_inventory_snapshot.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_inventory_snapshot.py",
+    "size_bytes": 2124,
+    "created": "2026-04-02T06:54:07.688009+00:00",
+    "modified": "2026-04-08T11:51:36.299788+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_load_contacts.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_load_contacts.py",
+    "size_bytes": 3226,
+    "created": "2026-03-23T17:56:55.082260+00:00",
+    "modified": "2026-04-08T11:51:36.294793+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_M_LOAD_CUSTOMERS.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_M_LOAD_CUSTOMERS.py",
+    "size_bytes": 2043,
+    "created": "2026-03-23T15:44:23.353146+00:00",
+    "modified": "2026-04-08T11:51:36.302789+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_M_LOAD_EMPLOYEES.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_M_LOAD_EMPLOYEES.py",
+    "size_bytes": 3029,
+    "created": "2026-03-23T17:56:55.089365+00:00",
+    "modified": "2026-04-08T11:51:36.305786+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_M_LOAD_ORDERS.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_M_LOAD_ORDERS.py",
+    "size_bytes": 3203,
+    "created": "2026-03-23T15:44:52.129881+00:00",
+    "modified": "2026-04-08T11:51:36.308311+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_realtime_inventory_scd2.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_realtime_inventory_scd2.py",
+    "size_bytes": 5061,
+    "created": "2026-04-02T06:54:07.685894+00:00",
+    "modified": "2026-04-08T11:51:36.298785+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_m_sync_accounts.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_m_sync_accounts.py",
+    "size_bytes": 1822,
+    "created": "2026-03-23T17:56:55.082260+00:00",
+    "modified": "2026-04-08T11:51:36.296784+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_M_UPSERT_INVENTORY.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_M_UPSERT_INVENTORY.py",
+    "size_bytes": 2249,
+    "created": "2026-03-23T15:45:22.075019+00:00",
+    "modified": "2026-04-08T11:51:36.310320+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_MI_BULK_LOAD_PRODUCTS.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_MI_BULK_LOAD_PRODUCTS.py",
+    "size_bytes": 1751,
+    "created": "2026-03-24T13:54:05.648767+00:00",
+    "modified": "2026-04-08T11:51:36.317941+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "NB_SYNC_CUSTOMER_DATA.py",
+    "type": "notebook",
+    "path": "output\\notebooks\\NB_SYNC_CUSTOMER_DATA.py",
+    "size_bytes": 1742,
+    "created": "2026-03-24T13:54:05.648264+00:00",
+    "modified": "2026-04-08T11:51:36.316797+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_AI_PROCESS_ORDER_EVENTS.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_AI_PROCESS_ORDER_EVENTS.json",
+    "size_bytes": 6299,
+    "created": "2026-03-24T13:54:05.659799+00:00",
+    "modified": "2026-04-08T11:51:36.451495+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_AI_WATCH_ORDER_FILES.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_AI_WATCH_ORDER_FILES.json",
+    "size_bytes": 2699,
+    "created": "2026-03-24T13:54:05.663811+00:00",
+    "modified": "2026-04-08T11:51:36.461023+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_svc_create_case.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_svc_create_case.json",
+    "size_bytes": 517,
+    "created": "2026-03-24T13:54:05.662804+00:00",
+    "modified": "2026-04-08T11:51:36.455501+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_svc_lookup_customer.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_svc_lookup_customer.json",
+    "size_bytes": 529,
+    "created": "2026-03-24T13:54:05.660804+00:00",
+    "modified": "2026-04-08T11:51:36.453497+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_svc_publish_event.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_svc_publish_event.json",
+    "size_bytes": 523,
+    "created": "2026-03-24T13:54:05.663811+00:00",
+    "modified": "2026-04-08T11:51:36.458032+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_DAILY_CONTACTS_ETL.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_DAILY_CONTACTS_ETL.json",
+    "size_bytes": 7148,
+    "created": "2026-03-24T13:54:05.667323+00:00",
+    "modified": "2026-04-08T11:51:36.465032+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_DATA_QUALITY_PIPELINE.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_DATA_QUALITY_PIPELINE.json",
+    "size_bytes": 4932,
+    "created": "2026-03-24T13:54:05.666320+00:00",
+    "modified": "2026-04-08T11:51:36.462021+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_NIGHTLY_ENTERPRISE_ETL.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_NIGHTLY_ENTERPRISE_ETL.json",
+    "size_bytes": 18654,
+    "created": "2026-04-02T06:54:07.791578+00:00",
+    "modified": "2026-04-08T11:51:36.467534+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_SUB_CUSTOMER_360.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_SUB_CUSTOMER_360.json",
+    "size_bytes": 2681,
+    "created": "2026-04-02T06:54:07.793578+00:00",
+    "modified": "2026-04-08T11:51:36.469537+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_SUB_KPI_COMPUTATION.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_SUB_KPI_COMPUTATION.json",
+    "size_bytes": 2548,
+    "created": "2026-04-02T06:54:07.797089+00:00",
+    "modified": "2026-04-08T11:51:36.473875+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_TF_SUB_REVENUE_AGGREGATION.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_TF_SUB_REVENUE_AGGREGATION.json",
+    "size_bytes": 2719,
+    "created": "2026-04-02T06:54:07.795582+00:00",
+    "modified": "2026-04-08T11:51:36.470060+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_WF_COMPLEX_FINANCE_ETL.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_WF_COMPLEX_FINANCE_ETL.json",
+    "size_bytes": 10908,
+    "created": "2026-03-24T13:54:05.668827+00:00",
+    "modified": "2026-04-08T11:51:36.476220+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "PL_WF_DAILY_SALES_LOAD.json",
+    "type": "pipeline",
+    "path": "output\\pipelines\\PL_WF_DAILY_SALES_LOAD.json",
+    "size_bytes": 6352,
+    "created": "2026-03-23T15:48:25.380447+00:00",
+    "modified": "2026-04-08T11:51:36.478234+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_OVERRIDES_M_COMPLEX_MULTI_SOURCE.sql",
+    "size_bytes": 1474,
+    "created": "2026-03-24T13:54:05.622966+00:00",
+    "modified": "2026-04-08T11:51:36.186090+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_OVERRIDES_M_LOAD_EMPLOYEES.sql",
+    "size_bytes": 1281,
+    "created": "2026-03-23T17:56:55.053271+00:00",
+    "modified": "2026-04-08T11:51:36.188139+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_OVERRIDES_M_LOAD_ORDERS.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_OVERRIDES_M_LOAD_ORDERS.sql",
+    "size_bytes": 1196,
+    "created": "2026-03-23T15:41:59.772856+00:00",
+    "modified": "2026-04-08T11:51:36.190153+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_CALC_RANKINGS.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_CALC_RANKINGS.sql",
+    "size_bytes": 4658,
+    "created": "2026-03-23T17:56:55.039139+00:00",
+    "modified": "2026-04-08T11:51:36.143262+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_DB2_INVENTORY_REFRESH.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_DB2_INVENTORY_REFRESH.sql",
+    "size_bytes": 3639,
+    "created": "2026-03-24T13:54:05.599027+00:00",
+    "modified": "2026-04-08T11:51:36.147787+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_MYSQL_USER_ANALYTICS.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_MYSQL_USER_ANALYTICS.sql",
+    "size_bytes": 4179,
+    "created": "2026-03-24T13:54:05.604315+00:00",
+    "modified": "2026-04-08T11:51:36.151477+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_POSTGRESQL_REPORTING.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_POSTGRESQL_REPORTING.sql",
+    "size_bytes": 4074,
+    "created": "2026-03-24T13:54:05.607316+00:00",
+    "modified": "2026-04-08T11:51:36.157337+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_REFRESH_DASHBOARD.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_REFRESH_DASHBOARD.sql",
+    "size_bytes": 5529,
+    "created": "2026-03-23T17:56:55.045938+00:00",
+    "modified": "2026-04-08T11:51:36.163880+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_SQLSERVER_CUSTOMER_MERGE.sql",
+    "size_bytes": 4694,
+    "created": "2026-03-24T13:54:05.609442+00:00",
+    "modified": "2026-04-08T11:51:36.169400+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_TERADATA_CUSTOMER_STATS.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_TERADATA_CUSTOMER_STATS.sql",
+    "size_bytes": 2430,
+    "created": "2026-03-24T13:54:05.615360+00:00",
+    "modified": "2026-04-08T11:51:36.173939+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "SQL_SP_UPDATE_ORDER_STATS.sql",
+    "type": "sql",
+    "path": "output\\sql\\SQL_SP_UPDATE_ORDER_STATS.sql",
+    "size_bytes": 3848,
+    "created": "2026-03-23T15:41:35.795266+00:00",
+    "modified": "2026-04-08T11:51:36.182927+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_AGG_ORDERS_BY_CUSTOMER.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_AGG_ORDERS_BY_CUSTOMER.py",
+    "size_bytes": 9062,
+    "created": "2026-03-23T15:59:44.133803+00:00",
+    "modified": "2026-04-08T11:51:36.633109+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_DIM_CUSTOMER.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_DIM_CUSTOMER.py",
+    "size_bytes": 9025,
+    "created": "2026-03-23T15:59:43.210769+00:00",
+    "modified": "2026-04-08T11:51:36.626093+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_DIM_EMPLOYEE.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_DIM_EMPLOYEE.py",
+    "size_bytes": 9019,
+    "created": "2026-03-23T17:57:52.611515+00:00",
+    "modified": "2026-04-08T11:51:36.628108+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_DIM_INVENTORY.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_DIM_INVENTORY.py",
+    "size_bytes": 9043,
+    "created": "2026-03-23T15:59:45.052622+00:00",
+    "modified": "2026-04-08T11:51:36.635105+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_FACT_ORDERS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_FACT_ORDERS.py",
+    "size_bytes": 9024,
+    "created": "2026-03-23T15:59:43.739491+00:00",
+    "modified": "2026-04-08T11:51:36.631104+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_FACT_TXN_HIGH.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_FACT_TXN_HIGH.py",
+    "size_bytes": 9075,
+    "created": "2026-03-24T13:54:05.699059+00:00",
+    "modified": "2026-04-08T11:51:36.617053+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_FACT_TXN_LOW.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_FACT_TXN_LOW.py",
+    "size_bytes": 9069,
+    "created": "2026-03-24T13:54:05.700063+00:00",
+    "modified": "2026-04-08T11:51:36.620093+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_FACT_TXN_TAGS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_FACT_TXN_TAGS.py",
+    "size_bytes": 9075,
+    "created": "2026-03-24T13:54:05.701065+00:00",
+    "modified": "2026-04-08T11:51:36.623098+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_LAKEHOUSE_BRONZE.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_LAKEHOUSE_BRONZE.py",
+    "size_bytes": 9061,
+    "created": "2026-03-24T13:54:05.709672+00:00",
+    "modified": "2026-04-08T11:51:36.639207+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_LAKEHOUSE_SILVER.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_LAKEHOUSE_SILVER.py",
+    "size_bytes": 9055,
+    "created": "2026-03-24T13:54:05.708994+00:00",
+    "modified": "2026-04-08T11:51:36.636616+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_PIPELINE_EXECUTION.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_PIPELINE_EXECUTION.py",
+    "size_bytes": 10196,
+    "created": "2026-03-23T15:59:58.607619+00:00",
+    "modified": "2026-03-23T16:56:37.994939+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_ACCOUNTS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_ACCOUNTS.py",
+    "size_bytes": 9014,
+    "created": "2026-03-23T17:57:52.607257+00:00",
+    "modified": "2026-04-08T11:51:36.602727+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_ALERT_QUEUE.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_ALERT_QUEUE.py",
+    "size_bytes": 9118,
+    "created": "2026-04-02T06:54:07.875822+00:00",
+    "modified": "2026-04-08T11:51:36.612513+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_BRONZE_CDC_EVENTS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_BRONZE_CDC_EVENTS.py",
+    "size_bytes": 9135,
+    "created": "2026-04-02T06:54:07.863313+00:00",
+    "modified": "2026-04-08T11:51:36.583564+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_BRONZE_EVENTS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_BRONZE_EVENTS.py",
+    "size_bytes": 9083,
+    "created": "2026-04-02T06:54:07.870824+00:00",
+    "modified": "2026-04-08T11:51:36.597686+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_GOLD_CUSTOMER_360.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_GOLD_CUSTOMER_360.py",
+    "size_bytes": 9142,
+    "created": "2026-04-02T06:54:07.869822+00:00",
+    "modified": "2026-04-08T11:51:36.594693+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_GOLD_DAILY_SUMMARY.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_GOLD_DAILY_SUMMARY.py",
+    "size_bytes": 9137,
+    "created": "2026-04-02T06:54:07.867816+00:00",
+    "modified": "2026-04-08T11:51:36.588100+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_GOLD_INVENTORY_DASHBOARD.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_GOLD_INVENTORY_DASHBOARD.py",
+    "size_bytes": 9135,
+    "created": "2026-04-02T06:54:07.874821+00:00",
+    "modified": "2026-04-08T11:51:36.609473+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_GOLD_INVENTORY_HISTORY.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_GOLD_INVENTORY_HISTORY.py",
+    "size_bytes": 9084,
+    "created": "2026-04-02T06:54:07.877846+00:00",
+    "modified": "2026-04-08T11:51:36.614531+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_LH_CONTACTS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_LH_CONTACTS.py",
+    "size_bytes": 9029,
+    "created": "2026-03-23T17:57:52.605247+00:00",
+    "modified": "2026-04-08T11:51:36.600197+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_SILVER_CUSTOMER.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_SILVER_CUSTOMER.py",
+    "size_bytes": 9140,
+    "created": "2026-04-02T06:54:07.868824+00:00",
+    "modified": "2026-04-08T11:51:36.591667+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_SILVER_INVENTORY.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_SILVER_INVENTORY.py",
+    "size_bytes": 9115,
+    "created": "2026-04-02T06:54:07.873824+00:00",
+    "modified": "2026-04-08T11:51:36.606737+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "VAL_TGT_SILVER_ORDERS.py",
+    "type": "validation",
+    "path": "output\\validation\\VAL_TGT_SILVER_ORDERS.py",
+    "size_bytes": 9075,
+    "created": "2026-04-02T06:54:07.865313+00:00",
+    "modified": "2026-04-08T11:51:36.585568+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "fabric_rls.sql",
+    "type": "security",
+    "path": "output\\security\\fabric_rls.sql",
+    "size_bytes": 262,
+    "created": "2026-04-09T21:12:49.701711+00:00",
+    "modified": "2026-04-10T07:24:15.865864+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "security_audit.json",
+    "type": "security",
+    "path": "output\\security\\security_audit.json",
+    "size_bytes": 457,
+    "created": "2026-04-09T21:12:49.701711+00:00",
+    "modified": "2026-04-10T07:24:15.866866+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "security_audit.md",
+    "type": "security",
+    "path": "output\\security\\security_audit.md",
+    "size_bytes": 386,
+    "created": "2026-04-09T21:12:49.701711+00:00",
+    "modified": "2026-04-10T07:24:15.867865+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "compliance_report.json",
+    "type": "compliance",
+    "path": "output\\compliance\\compliance_report.json",
+    "size_bytes": 392,
+    "created": "2026-04-09T21:12:29.535969+00:00",
+    "modified": "2026-04-10T07:24:15.928488+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "compliance_report.md",
+    "type": "compliance",
+    "path": "output\\compliance\\compliance_report.md",
+    "size_bytes": 641,
+    "created": "2026-04-09T21:12:29.535969+00:00",
+    "modified": "2026-04-10T07:24:15.928488+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "data_residency.json",
+    "type": "compliance",
+    "path": "output\\compliance\\data_residency.json",
+    "size_bytes": 177,
+    "created": "2026-04-09T21:12:29.534369+00:00",
+    "modified": "2026-04-10T07:24:15.926487+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "gdpr_erasure_notebook.py",
+    "type": "compliance",
+    "path": "output\\compliance\\gdpr_erasure_notebook.py",
+    "size_bytes": 1085,
+    "created": "2026-04-09T21:12:29.528035+00:00",
+    "modified": "2026-04-10T07:24:15.924486+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "pii_classification.json",
+    "type": "compliance",
+    "path": "output\\compliance\\pii_classification.json",
+    "size_bytes": 98,
+    "created": "2026-04-09T21:12:29.528035+00:00",
+    "modified": "2026-04-10T07:24:15.922488+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  },
+  {
+    "artifact": "retention_policies.sql",
+    "type": "compliance",
+    "path": "output\\compliance\\retention_policies.sql",
+    "size_bytes": 149,
+    "created": "2026-04-09T21:12:29.528035+00:00",
+    "modified": "2026-04-10T07:24:15.922488+00:00",
+    "generator": "informatica-to-fabric",
+    "version": "1.0.0"
+  }
+]
