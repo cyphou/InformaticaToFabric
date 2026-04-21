@@ -117,6 +117,73 @@ informatica-to-fabric run --only 5
 - Checksum validation for key tables
 - JDBC connection placeholders filled in
 
+### Phase 6: AutoSys JIL Migration (if applicable)
+
+```bash
+python run_autosys_migration.py input/autosys/
+```
+
+**Outputs:** `output/autosys/PL_AUTOSYS_*.json`, `output/autosys/autosys_summary.json`
+
+**Verify:**
+- BOX/CMD/FW jobs parsed correctly
+- Dependency chains (conditions) preserved
+- `pmcmd` commands linked to Informatica workflows
+
+### Phase 7: Azure Functions (CDC/Event-Driven)
+
+```bash
+python run_functions_migration.py
+```
+
+**Outputs:** `output/functions/FN_*/` (function projects with host.json, function_app.py)
+
+**Verify:**
+- Trigger types correctly detected (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob)
+- Connection string placeholders present
+
+### Phase 8: Deployment
+
+```bash
+# Deploy to Fabric
+python deploy_to_fabric.py --workspace-id <GUID>
+
+# Deploy to Databricks
+python deploy_to_databricks.py --workspace-url <URL> --token <PAT>
+
+# Deploy dbt project
+python deploy_dbt_project.py --workspace-url <URL> --git-url <URL>
+```
+
+**Verify:**
+- All artifacts deployed successfully
+- Check `deployment_log.json` for errors
+
+### Additional Commands
+
+```bash
+# Generate IaC (Terraform/Bicep)
+python iac_generator.py --target fabric --format terraform
+
+# Generate CI/CD pipelines
+python cicd_generator.py --format github
+
+# Generate CDC/RT deployment blueprints
+python run_blueprint_generator.py --format bicep
+
+# Generate security policies (RLS/CLS)
+python security_migration.py
+
+# Generate compliance reports (GDPR/CCPA)
+python compliance.py
+
+# Run cost optimization advisor
+python cost_advisor.py
+
+# Generate ML pipeline templates
+python ml_pipeline.py
+```
+
 ---
 
 ## Troubleshooting
@@ -170,8 +237,8 @@ Every migration run generates `output/audit_log.json`:
   "migration_run": "2024-01-15T10:30:00Z",
   "phases": [...],
   "summary": {
-    "total_phases": 6,
-    "succeeded": 6,
+    "total_phases": 9,
+    "succeeded": 9,
     "failed": 0,
     "total_duration_seconds": 12.5
   }

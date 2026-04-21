@@ -34,7 +34,7 @@
   <img src="https://img.shields.io/badge/ML%20Pipelines-Feature%20Store%20%2B%20MLflow-E67E22?style=flat-square&logo=mlflow&logoColor=white" alt="ML Pipelines"/>
   <img src="https://img.shields.io/badge/Cost%20Advisor-TCO%20%2B%20Reserved-1ABC9C?style=flat-square&logo=cashapp&logoColor=white" alt="Cost Advisor"/>
   <img src="https://img.shields.io/badge/Medallion-Bronze%20%C2%B7%20Silver%20%C2%B7%20Gold-FFD700?style=flat-square&logo=stackblitz&logoColor=black" alt="Medallion architecture"/>
-  <img src="https://img.shields.io/badge/5--level%20validation-L1%E2%80%93L5-C0392B?style=flat-square&logo=testcafe&logoColor=white" alt="5-level validation"/>
+  <img src="https://img.shields.io/badge/6--level%20validation-L1%E2%80%93L6-C0392B?style=flat-square&logo=testcafe&logoColor=white" alt="6-level validation"/>
 </p>
 
 <p align="center">
@@ -73,9 +73,9 @@
 <td width="33%" valign="top">
 
 ### 🔄 Migration Engine
-- **14 Informatica transformations** → PySpark
+- **26+ Informatica transformations** → PySpark
 - **6 source databases** — Oracle, SQL Server, Teradata, DB2, MySQL, PostgreSQL
-- **3 target platforms** — Fabric, Databricks, DBT
+- **4 target platforms** — Fabric, Databricks, DBT, Azure Functions
 - **AutoSys JIL** → Pipelines / Workflows
 - **Azure Functions** (7 trigger types)
 - **IICS** Taskflows + Sync/MassIngestion
@@ -168,7 +168,7 @@
 <td valign="top">
 
 ### ✅ Validation & Quality
-- **5-level validation framework** (L1–L5)
+- **6-level validation framework** (L1–L6)
 - **Statistical distribution comparison**
 - **SCD2 verification**
 - **Referential integrity checks**
@@ -568,7 +568,7 @@ flowchart LR
 
 **Phase 6 — Schema:** Delta Lake DDL generation for Bronze/Silver/Gold (Lakehouse or Unity Catalog)
 
-**Phase 7 — Validate:** 5-level validation — row counts, checksums, data quality rules, key sampling & aggregate comparison
+**Phase 7 — Validate:** 6-level validation — row counts, checksums, null distributions, statistical comparison, data quality rules, key sampling & aggregate comparison
 
 **Phase 8 — Deploy:** Push artifacts to Microsoft Fabric workspace or Azure Databricks workspace
 
@@ -1351,7 +1351,7 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | **Source modules** | 40+ Python files |
 | **Agent definitions** | 9 specialized Copilot agents |
 | **SQL conversion rules** | 80+ patterns across 6 databases |
-| **Transformation mappings** | 14 Informatica types → PySpark |
+| **Transformation mappings** | 26+ Informatica types → PySpark |
 | **Pipeline activity types** | 15 workflow elements → Fabric/Databricks |
 | **AutoSys JIL elements** | 15 job types → Pipeline/Workflow |
 | **Azure Function triggers** | 7 types (Service Bus, Event Hub, SQL, Cosmos DB, HTTP, Timer, Blob) |
@@ -1374,7 +1374,7 @@ Configure via `rules/sql_rules.json` or YAML rulesets for organization-specific 
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations runbook |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup & contributing guide |
 | [GAP_ANALYSIS.md](GAP_ANALYSIS.md) | Informatica object inventory & migration gap analysis |
-| [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 6-phase migration strategy |
+| [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Detailed 8-phase migration strategy |
 | [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Sprint development plan (100/100 complete) |
 | [AGENTS.md](AGENTS.md) | Multi-agent architecture & interaction flows |
 | [docs/ADR/](docs/ADR/) | Architecture Decision Records |

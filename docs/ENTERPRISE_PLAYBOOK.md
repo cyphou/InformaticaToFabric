@@ -104,7 +104,8 @@ This playbook guides enterprise-scale migration from **Informatica PowerCenter /
    | L2 | Column checksum | VAL notebook |
    | L3 | Sample data diff | VAL notebook |
    | L4 | Key sampling | VAL notebook |
-   | L5 | Aggregate validation | VAL notebook |
+   | L5 | Statistical distribution comparison (K-S test) | VAL notebook |
+   | L6 | End-to-end + business rules | VAL notebook |
 
 3. **UAT sign-off:**
    - Business users validate report outputs
@@ -213,9 +214,17 @@ The migration wave planner (`wave_plan.json`) groups objects by dependency depth
 |------|---------|---------|
 | CLI | Full migration | `informatica-to-fabric run` |
 | CLI (Databricks) | Full migration to Databricks | `informatica-to-fabric run --target databricks` |
+| CLI (DBT) | DBT models on Databricks | `informatica-to-fabric run --target dbt` |
+| CLI (Auto) | Auto-route (dbt + PySpark) | `informatica-to-fabric run --target auto` |
 | Web wizard | Guided migration | `streamlit run web/app.py` |
 | Assessment | Parse & inventory | `python run_assessment.py` |
 | Dashboard | Visual status | `python dashboard.py` |
 | Fabric deployment | Push to Fabric | `python deploy_to_fabric.py` |
-| Databricks deployment | Import to Databricks | `databricks workspace import_dir` |
+| Databricks deployment | Push to Databricks | `python deploy_to_databricks.py` |
+| DBT deployment | Deploy dbt project | `python deploy_dbt_project.py` |
+| IaC generation | Terraform/Bicep | `python iac_generator.py` |
+| CI/CD generation | GitHub Actions/Azure DevOps | `python cicd_generator.py` |
+| CDC blueprints | Event Hub + APIM + Functions | `python run_blueprint_generator.py` |
+| Functions migration | Azure Functions (7 triggers) | `python run_functions_migration.py` |
+| Cost advisor | TCO + reserved capacity | `python cost_advisor.py` |
 | Tests | Validate code | `py -m pytest tests/` |

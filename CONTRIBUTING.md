@@ -30,7 +30,7 @@ py -m pytest tests/test_gaps.py -v
 py -m pytest tests/test_coverage.py::TestSqlConversion -v
 ```
 
-**Current status:** 1,843 tests, ~98% coverage. Multi-source: PowerCenter, IICS, IDMC (12 services). Multi-target: Microsoft Fabric, Azure Databricks, and DBT.
+**Current status:** 2,143 tests, ~98% coverage. Multi-source: PowerCenter, IICS, IDMC (12 services). Multi-target: Microsoft Fabric, Azure Databricks, and DBT. 9 specialized AI agents.
 
 ## Test Files
 
@@ -64,6 +64,13 @@ py -m pytest tests/test_coverage.py::TestSqlConversion -v
 | `tests/test_idmc_review.py` | DD10–DD12: IDMC & migration review | 54 |
 | `tests/test_sprint92_94.py` | Phase 15: IaC (Terraform/Bicep), Container/K8s, CI/CD | 87 |
 | `tests/test_sprint95_97.py` | Phase 16: Benchmarks, Parallel/Memory, Regression/Golden | 69 |
+| `tests/test_sprint98_100.py` | Phase 17: ML Pipelines, Cost Advisor | 27 |
+| `tests/test_sprint80_82.py` | Phase 11: CDC/RT, Streaming, MERGE INTO, Eventstream | ~50 |
+| `tests/test_sprint83_85.py` | Phase 12: Security, Compliance, Certification | 68 |
+| `tests/test_sprint86_88.py` | Phase 13: AI-Assisted SQL, Chat Assistant | 50 |
+| `tests/test_sprint89_91.py` | Phase 14: Lineage Explorer, Diff & Review | 24 |
+| `tests/test_functions_migration.py` | Azure Functions (7 trigger types) | 45 |
+| `tests/test_blueprint_generator.py` | CDC/RT Deployment Blueprints | 42 |
 
 ## Code Style
 

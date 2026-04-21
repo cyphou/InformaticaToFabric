@@ -245,6 +245,9 @@ In VS Code with Copilot, invoke specialized agents in the chat:
 | Convert a mapping | `@notebook-migration convert mapping M_LOAD_CUSTOMERS` |
 | Convert SQL | `@sql-migration convert Oracle SQL overrides` |
 | Generate a pipeline | `@pipeline-migration convert workflow WF_DAILY_LOAD` |
+| Analyze CDC patterns | `@streaming-migration analyze CDC patterns` |
+| Apply security policies | `@governance apply security policies` |
+| Generate Terraform | `@infrastructure generate terraform` |
 | Generate tests | `@validation generate tests for Silver tables` |
 
 See [AGENTS.md](../AGENTS.md) for full agent documentation.

@@ -116,10 +116,10 @@ def slide_title(prs):
 
     # Stat bar
     stats = [
-        ("97 / 100", "Sprints Complete", ACCENT_ORANGE),
-        ("1,843", "Automated Tests", ACCENT_GREEN),
-        ("6", "AI Agents", FABRIC_BLUE),
-        ("3", "Target Platforms", ACCENT_PURPLE),
+        ("100 / 100", "Sprints Complete", ACCENT_ORANGE),
+        ("2,143", "Automated Tests", ACCENT_GREEN),
+        ("9", "AI Agents", FABRIC_BLUE),
+        ("4", "Target Platforms", ACCENT_PURPLE),
     ]
     x = Inches(1.5)
     for val, lbl, clr in stats:
@@ -166,7 +166,7 @@ def slide_solution(prs):
     _add_title_bar(slide, "The Solution", "AI-Orchestrated, Fully Automated Migration")
 
     _add_text_box(slide, Inches(0.6), Inches(1.5), Inches(12), Inches(0.6),
-                  "A 6-agent Copilot architecture that converts Informatica XML exports end-to-end, "
+                  "A 9-agent Copilot architecture that converts Informatica XML exports end-to-end, "
                   "producing production-ready Fabric/Databricks artifacts with zero manual code rewriting.",
                   font_size=16, font_color=DARK_GRAY)
 
@@ -232,7 +232,7 @@ def slide_pipeline_flow(prs):
         ("📓", "NOTEBOOK\nGENERATE", ACCENT_GREEN, "Mappings → PySpark\n18 transform types\nFabric or Databricks"),
         ("🏗️", "DBT\nMODELS", RGBColor(0xFF, 0x69, 0x4F), "staging/int/marts\nJinja SQL models\nauto-routing"),
         ("⚡", "PIPELINE\nGENERATE", FABRIC_BLUE, "Workflows → JSON\nAutoSys JIL\nSchedule triggers"),
-        ("✅", "VALIDATE", RGBColor(0x27, 0xAE, 0x60), "5-level checks\nRow counts\nChecksums"),
+        ("✅", "VALIDATE", RGBColor(0x27, 0xAE, 0x60), "6-level checks\nRow counts\nChecksums"),
         ("🚀", "DEPLOY", DARK_BLUE, "Fabric REST API\nor Databricks CLI\nor dbt deploy"),
     ]
 
@@ -347,21 +347,24 @@ def slide_architecture(prs):
     """Slide 4 — Architecture."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg(slide, WHITE)
-    _add_title_bar(slide, "Multi-Agent Architecture", "6 specialized AI agents orchestrated by GitHub Copilot")
+    _add_title_bar(slide, "Multi-Agent Architecture", "9 specialized AI agents orchestrated by GitHub Copilot")
 
     agents = [
-        ("🎯 Orchestrator", "Plans & coordinates\nmigration waves", DARK_BLUE),
-        ("🔍 Assessment", "XML parsing, inventory,\ncomplexity scoring", RGBColor(0xE6, 0x7E, 0x22)),
-        ("🗄️ SQL Migration", "Oracle/MSSQL/Teradata\n→ Spark SQL / T-SQL", ACCENT_PURPLE),
-        ("📓 Notebook Migration", "Mappings → PySpark\nnotebooks / DBT", ACCENT_GREEN),
-        ("⚡ Pipeline Migration", "Workflows → Fabric\nPipeline / DB Workflow", FABRIC_BLUE),
-        ("✅ Validation", "Test generation,\nrow counts & checksums", RGBColor(0xC0, 0x39, 0x2B)),
+        ("🎯 Orchestrator", "Plans & coordinates", DARK_BLUE),
+        ("🔍 Assessment", "XML parse, inventory", RGBColor(0xE6, 0x7E, 0x22)),
+        ("🗄️ SQL Migration", "Oracle/MSSQL→Spark", ACCENT_PURPLE),
+        ("📓 Notebook", "Mappings→PySpark", ACCENT_GREEN),
+        ("⚡ Pipeline", "Workflows→JSON", FABRIC_BLUE),
+        ("🌊 Streaming", "CDC / RT / Functions", RGBColor(0xE7, 0x4C, 0x3C)),
+        ("🔒 Governance", "RLS / PII / GDPR", RGBColor(0xF3, 0x9C, 0x12)),
+        ("🏗️ Infrastructure", "IaC / CI-CD / K8s", RGBColor(0x1A, 0xBC, 0x9C)),
+        ("✅ Validation", "Tests & QA", RGBColor(0xC0, 0x39, 0x2B)),
     ]
     x = Inches(0.3)
     for name, desc, clr in agents:
-        _add_shape(slide, x, Inches(1.6), Inches(2.0), Inches(1.0), clr, name, font_size=14, font_color=WHITE, bold=True)
-        _add_text_box(slide, x + Inches(0.05), Inches(2.7), Inches(1.9), Inches(0.9), desc, font_size=11, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
-        x += Inches(2.15)
+        _add_shape(slide, x, Inches(1.6), Inches(1.35), Inches(1.0), clr, name, font_size=11, font_color=WHITE, bold=True)
+        _add_text_box(slide, x + Inches(0.02), Inches(2.7), Inches(1.31), Inches(0.7), desc, font_size=10, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        x += Inches(1.42)
 
     # Targets
     _add_text_box(slide, Inches(0.6), Inches(3.9), Inches(12), Inches(0.4),
@@ -371,12 +374,13 @@ def slide_architecture(prs):
         ("Microsoft Fabric", "Notebooks (notebookutils)\nData Pipelines JSON\nLakehouse DDL\nOneLake + Medallion", FABRIC_BLUE),
         ("Azure Databricks", "Notebooks (dbutils)\nWorkflows (Jobs API)\nUnity Catalog DDL\nDLT + Delta Sharing", RGBColor(0xFF, 0x36, 0x21)),
         ("DBT on Databricks", "staging / intermediate / marts\nJinja SQL models\nCI/CD pipeline\nSources + Schema YAML", ACCENT_PURPLE),
+        ("PySpark Auto", "Auto-routes per mapping\nDBT + PySpark hybrid\nComplexity-based split\nBest-fit selection", ACCENT_ORANGE),
     ]
-    x = Inches(0.5)
+    x = Inches(0.4)
     for name, desc, clr in targets:
-        _add_shape(slide, x, Inches(4.5), Inches(3.8), Inches(0.7), clr, name, font_size=16, font_color=WHITE, bold=True)
-        _add_text_box(slide, x + Inches(0.1), Inches(5.25), Inches(3.6), Inches(1.8), desc, font_size=12, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
-        x += Inches(4.15)
+        _add_shape(slide, x, Inches(4.5), Inches(2.9), Inches(0.7), clr, name, font_size=14, font_color=WHITE, bold=True)
+        _add_text_box(slide, x + Inches(0.05), Inches(5.25), Inches(2.8), Inches(1.8), desc, font_size=11, font_color=DARK_GRAY, align=PP_ALIGN.CENTER)
+        x += Inches(3.15)
 
 
 def slide_what_gets_migrated(prs):
@@ -461,32 +465,29 @@ def slide_validation(prs):
     """Slide 7 — Validation & Quality."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg(slide, WHITE)
-    _add_title_bar(slide, "Validation & Quality Assurance", "11-level automated validation framework")
+    _add_title_bar(slide, "Validation & Quality Assurance", "6-level automated validation framework")
 
     levels = [
         ("L1", "Row Count", "Source vs Target row count match"),
         ("L2", "Column Checksum", "Hash-based column integrity check"),
         ("L3", "Aggregate Check", "SUM / AVG / MIN / MAX comparison"),
-        ("L4", "Sample Diff", "Row-by-row sample record comparison"),
-        ("L5", "NULL / Duplicate", "NULL distribution & duplicate detection"),
-        ("L6", "Statistical", "Mean/stddev distribution + K-S test"),
-        ("L7", "SCD Type 2", "Effective dates, current_flag, gap/overlap check"),
-        ("L8", "Null Distribution", "Column-level null % comparison (1% threshold)"),
-        ("L9", "Referential Integrity", "FK relationship validation from LKP/JNR"),
-        ("L10", "A/B Testing", "Side-by-side source/target row comparison"),
-        ("L11", "Business Rules", "Custom assertions from migration.yaml"),
+        ("L4", "Sample Diff", "Row-by-row sample record comparison + NULL / duplicate detection"),
+        ("L5", "Statistical", "Mean/stddev distribution + K-S test + SCD2 verification + RI checks"),
+        ("L6", "End-to-End", "Full pipeline run + downstream report validation + business rules"),
     ]
 
     y = Inches(1.5)
     for lvl, name, desc in levels:
-        clr = ACCENT_GREEN if int(lvl[1:]) <= 5 else FABRIC_BLUE if int(lvl[1:]) <= 8 else ACCENT_PURPLE
-        _add_shape(slide, Inches(0.4), y, Inches(0.7), Inches(0.42), clr, lvl, font_size=11, font_color=WHITE, bold=True)
-        _add_text_box(slide, Inches(1.2), y + Inches(0.02), Inches(2.2), Inches(0.4), name, font_size=13, font_color=DARK_BLUE, bold=True)
-        _add_text_box(slide, Inches(3.5), y + Inches(0.02), Inches(8), Inches(0.4), desc, font_size=13, font_color=DARK_GRAY)
-        y += Inches(0.48)
+        num = int(lvl[1:])
+        clr = ACCENT_GREEN if num <= 3 else FABRIC_BLUE if num <= 5 else ACCENT_PURPLE
+        _add_shape(slide, Inches(0.4), y, Inches(0.7), Inches(0.6), clr, lvl, font_size=14, font_color=WHITE, bold=True)
+        _add_text_box(slide, Inches(1.2), y + Inches(0.05), Inches(2.5), Inches(0.55), name, font_size=16, font_color=DARK_BLUE, bold=True)
+        _add_text_box(slide, Inches(3.8), y + Inches(0.05), Inches(8.5), Inches(0.55), desc, font_size=15, font_color=DARK_GRAY)
+        y += Inches(0.7)
 
-    _add_text_box(slide, Inches(0.4), Inches(6.9), Inches(12), Inches(0.4),
-                  "1,843 automated tests  •  Purview & Unity Catalog lineage  •  Column-level impact analysis",
+    _add_text_box(slide, Inches(0.4), Inches(5.9), Inches(12), Inches(0.8),
+                  "2,143 automated tests  \u2022  Purview & Unity Catalog lineage  \u2022  Column-level impact analysis\n"
+                  "Statistical distribution comparison (K-S test)  \u2022  SCD2 verification  \u2022  Referential integrity  \u2022  A/B testing  \u2022  Business rules",
                   font_size=14, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
 
@@ -796,6 +797,106 @@ def slide_next_steps(prs):
                   "informatica-to-fabric  •  MIT Licensed  •  github.com/cyphou/InformaticaToFabric",
                   font_size=14, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
+def slide_functionality_coverage(prs):
+    """Slide — Functionality Coverage Overview (grid diagram)."""
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg(slide, WHITE)
+    _add_title_bar(slide, "Functionality Coverage",
+                   "100 sprints  •  17 phases  •  2,143 tests  •  9 agents  •  4 target platforms")
+
+    # 3×3 capability grid
+    capabilities = [
+        # Row 1
+        ("🔄 Migration Engine", [
+            "26+ transformation types",
+            "6 source databases",
+            "180+ SQL patterns",
+            "AutoSys JIL conversion",
+            "IICS + IDMC (12 services)",
+        ], FABRIC_BLUE),
+        ("🤖 AI & Intelligence", [
+            "LLM-powered SQL conversion",
+            "Confidence scoring",
+            "Pattern learning",
+            "Chat-based assistant",
+            "Gap resolution",
+        ], ACCENT_PURPLE),
+        ("🌊 CDC & Streaming", [
+            "Structured Streaming",
+            "Azure Functions (7 triggers)",
+            "Eventstream definitions",
+            "CDC MERGE INTO patterns",
+            "Deployment blueprints",
+        ], RGBColor(0xE7, 0x4C, 0x3C)),
+        # Row 2
+        ("🔒 Governance", [
+            "RLS / Column masking",
+            "GDPR / CCPA compliance",
+            "PII classification",
+            "6-gate certification",
+            "Data residency validation",
+        ], RGBColor(0xF3, 0x9C, 0x12)),
+        ("📊 Observability", [
+            "Datadog integration",
+            "Agentic auto-remediation",
+            "Global monitoring platform",
+            "4-tier escalation chains",
+            "SLO tracking",
+        ], RGBColor(0x63, 0x2C, 0xA6)),
+        ("✅ Validation", [
+            "6-level framework",
+            "Statistical tests (K-S)",
+            "SCD2 verification",
+            "RI checks + A/B testing",
+            "Business rule assertions",
+        ], ACCENT_GREEN),
+        # Row 3
+        ("🏗️ DevOps & Infra", [
+            "Terraform + Bicep IaC",
+            "CI/CD (GitHub + ADO)",
+            "Docker / K8s / Helm",
+            "DAB bundles",
+            "Env promotion gates",
+        ], RGBColor(0x1A, 0xBC, 0x9C)),
+        ("🧠 ML & Cost", [
+            "Feature Store notebooks",
+            "MLflow experiment tracking",
+            "Batch scoring pipelines",
+            "TCO / DBU cost estimator",
+            "Cost optimization advisor",
+        ], DARK_BLUE),
+        ("🔌 Extensibility", [
+            "Plugin system (decorators)",
+            "Python SDK + REST API",
+            "YAML/JSON rule engine",
+            "Purview / Unity Catalog",
+            "Visual lineage explorer",
+        ], ACCENT_ORANGE),
+    ]
+
+    # Draw 3×3 grid
+    card_w = Inches(4.0)
+    card_h = Inches(1.7)
+    x_start = Inches(0.35)
+    y_start = Inches(1.45)
+    gap_x = Inches(0.25)
+    gap_y = Inches(0.12)
+
+    for idx, (title, items, clr) in enumerate(capabilities):
+        col = idx % 3
+        row = idx // 3
+        x = x_start + col * (card_w + gap_x)
+        y = y_start + row * (card_h + gap_y)
+
+        # Header bar
+        _add_shape(slide, x, y, card_w, Inches(0.42), clr, title,
+                   font_size=12, font_color=WHITE, bold=True, align=PP_ALIGN.LEFT)
+        # Bullet items
+        _add_bullet_list(slide, x + Inches(0.08), y + Inches(0.44),
+                         card_w - Inches(0.16), card_h - Inches(0.46),
+                         items, font_size=10, font_color=DARK_GRAY, spacing=Pt(2))
+
+
 def slide_detailed_savings(prs):
     """Slide 11 — Detailed per-task time savings breakdown."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -914,7 +1015,8 @@ def main():
     slide_validation(prs)      # 7 - Validation
     slide_extensibility(prs)   # 8 - Extensibility
     slide_observability(prs)   # 9 - Observability & Monitoring
-    slide_roi_model(prs)       # 10 - ROI Model
+    slide_functionality_coverage(prs)  # 10 - Functionality Coverage Overview
+    slide_roi_model(prs)       # 11 - ROI Model
     slide_roi_timeline(prs)    # 11 - Timeline
     slide_detailed_savings(prs)   # 12 - Detailed Savings Breakdown
     slide_customer_scenarios(prs)  # 13 - Scenarios

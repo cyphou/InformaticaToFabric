@@ -38,10 +38,13 @@ flowchart LR
         SESS["⚙️ Sessions"]
     end
 
-    subgraph "Migration Engine (6 Agents)"
+    subgraph "Migration Engine (9 Agents)"
         ASS["🔍 Assess"]
         CONV["⚙️ Convert"]
         VAL["✅ Validate"]
+        STR["🌊 Stream"]
+        GOV["🔒 Govern"]
+        INF["🏗️ Infra"]
     end
 
     subgraph "Target (Microsoft Fabric / Azure Databricks)"
@@ -313,13 +316,14 @@ df_transformed.write.format("delta").mode("overwrite").saveAsTable(f"{target_lak
 
 ```mermaid
 flowchart LR
-    L1["🔢 Level 1\nRow Count"] --> L2["🔐 Level 2\nChecksum"] --> L3["📊 Level 3\nAggregates"] --> L4["🔍 Level 4\nSample Records"] --> L5["🚀 Level 5\nEnd-to-End"]
+    L1["🔢 Level 1\nRow Count"] --> L2["🔐 Level 2\nChecksum"] --> L3["📊 Level 3\nAggregates"] --> L4["🔍 Level 4\nSample Records"] --> L5["� Level 5\nStatistical"] --> L6["🚀 Level 6\nEnd-to-End"]
 
     style L1 fill:#27AE60,color:#fff
     style L2 fill:#2980B9,color:#fff
     style L3 fill:#8E44AD,color:#fff
     style L4 fill:#E67E22,color:#fff
-    style L5 fill:#C0392B,color:#fff
+    style L5 fill:#E74C3C,color:#fff
+    style L6 fill:#C0392B,color:#fff
 ```
 
 | Level | Method | What It Checks |
@@ -328,7 +332,8 @@ flowchart LR
 | **L2** | Checksum | Hash-based comparison of key columns |
 | **L3** | Aggregates | SUM, AVG, MIN, MAX of metric columns |
 | **L4** | Sample Records | Field-by-field comparison of random sample |
-| **L5** | End-to-End | Full pipeline run + downstream report validation |
+| **L5** | Statistical | Distribution comparison (K-S test), SCD2 verification, null distribution |
+| **L6** | End-to-End | Full pipeline run + downstream report validation + business rules |
 
 ### 5.2 Automated Validation Notebook
 A dedicated validation notebook runs post-migration:
@@ -467,7 +472,19 @@ gantt
 
 ## Multi-Agent Architecture
 
-The migration is powered by a **6-agent system** defined in the `.github/agents/` directory.
+The migration is powered by a **9-agent system** defined in the `.github/agents/` directory:
+
+| Agent | Role | Primary Output |
+|-------|------|----------------|
+| 🎯 **migration-orchestrator** | Plans waves, delegates, tracks progress | `migration_summary.md` |
+| 🔍 **assessment** | Parses XML, classifies complexity, maps deps | `inventory.json`, `complexity_report.md` |
+| 📓 **notebook-migration** | Mapping → PySpark notebook | `NB_*.py` |
+| ⚡ **pipeline-migration** | Workflow → Pipeline/Workflow JSON | `PL_*.json` |
+| 🗄️ **sql-migration** | Oracle/SQL Server → Spark SQL | `SQL_*.sql` |
+| 🌊 **streaming-migration** | CDC, Structured Streaming, Azure Functions, Eventstreams | `output/functions/`, `output/blueprints/` |
+| 🔒 **governance** | RLS/CLS, PII, GDPR/CCPA, certification | `output/security/`, `output/compliance/` |
+| 🏗️ **infrastructure** | IaC (Terraform/Bicep), CI/CD, containers, observability | `output/environments/`, `output/scripts/` |
+| ✅ **validation** | Test generation, row counts, checksums, statistical | `VAL_*.py` |
 
 > **Full details:** [AGENTS.md](AGENTS.md) — Architecture diagrams, interaction flows, handoff protocol, file ownership rules.
 

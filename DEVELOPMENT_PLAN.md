@@ -2,11 +2,11 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/sprints-100%2F100%20complete-27AE60?style=for-the-badge" alt="100/100 Sprints Complete"/>
-  <img src="https://img.shields.io/badge/agents-6-27AE60?style=for-the-badge" alt="6 Agents"/>
+  <img src="https://img.shields.io/badge/agents-9-27AE60?style=for-the-badge" alt="9 Agents"/>
   <img src="https://img.shields.io/badge/phase_1-complete-27AE60?style=for-the-badge" alt="Phase 1 Complete"/>
-  <img src="https://img.shields.io/badge/phase_2-7%2F10_complete-F39C12?style=for-the-badge" alt="Phase 2 7/10 Complete"/>
-  <img src="https://img.shields.io/badge/tests-2042-27AE60?style=for-the-badge" alt="2042 Tests"/>
-  <img src="https://img.shields.io/badge/phase_3-5%2F10_complete-F39C12?style=for-the-badge" alt="Phase 3 5/10 Complete"/>
+  <img src="https://img.shields.io/badge/phase_2-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 2 Complete"/>
+  <img src="https://img.shields.io/badge/tests-2143-27AE60?style=for-the-badge" alt="2143 Tests"/>
+  <img src="https://img.shields.io/badge/phase_3-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 3 Complete"/>
   <img src="https://img.shields.io/badge/phase_4-10%2F10_complete-27AE60?style=for-the-badge" alt="Phase 4 Complete"/>
   <img src="https://img.shields.io/badge/phase_5-5%2F5_complete-27AE60?style=for-the-badge" alt="Phase 5 Complete"/>
   <img src="https://img.shields.io/badge/phase_6-2%2F2_complete-27AE60?style=for-the-badge" alt="Phase 6 Complete"/>
@@ -24,7 +24,7 @@
   <img src="https://img.shields.io/badge/targets-Fabric_%7C_Databricks_%7C_DBT-0078D4?style=for-the-badge" alt="Fabric | Databricks | DBT"/>
 </p>
 
-> This document describes the **development roadmap** for each of the 6 migration agents, from initial scaffold through production readiness.
+> This document describes the **development roadmap** for each of the 9 migration agents, from initial scaffold through production readiness.
 
 ---
 
