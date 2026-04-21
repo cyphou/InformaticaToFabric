@@ -798,103 +798,70 @@ def slide_next_steps(prs):
                   font_size=14, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
 def slide_functionality_coverage(prs):
-    """Slide — Functionality Coverage Overview (grid diagram)."""
+    """Slide — Generated Artifacts at a Glance."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg(slide, WHITE)
-    _add_title_bar(slide, "Functionality Coverage",
-                   "100 sprints  •  17 phases  •  2,143 tests  •  9 agents  •  4 target platforms")
+    _add_title_bar(slide, "What Gets Generated",
+                   "One command → all artifacts, ready for Fabric / Databricks / DBT")
 
-    # 3×3 capability grid
-    capabilities = [
-        # Row 1
-        ("🔄 Migration Engine", [
-            "26+ transformation types",
-            "6 source databases",
-            "180+ SQL patterns",
-            "AutoSys JIL conversion",
-            "IICS + IDMC (12 services)",
-        ], FABRIC_BLUE),
-        ("🤖 AI & Intelligence", [
-            "LLM-powered SQL conversion",
-            "Confidence scoring",
-            "Pattern learning",
-            "Chat-based assistant",
-            "Gap resolution",
-        ], ACCENT_PURPLE),
-        ("🌊 CDC & Streaming", [
-            "Structured Streaming",
-            "Azure Functions (7 triggers)",
-            "Eventstream definitions",
-            "CDC MERGE INTO patterns",
-            "Deployment blueprints",
-        ], RGBColor(0xE7, 0x4C, 0x3C)),
-        # Row 2
-        ("🔒 Governance", [
-            "RLS / Column masking",
-            "GDPR / CCPA compliance",
-            "PII classification",
-            "6-gate certification",
-            "Data residency validation",
-        ], RGBColor(0xF3, 0x9C, 0x12)),
-        ("📊 Observability", [
-            "Datadog integration",
-            "Agentic auto-remediation",
-            "Global monitoring platform",
-            "4-tier escalation chains",
-            "SLO tracking",
-        ], RGBColor(0x63, 0x2C, 0xA6)),
-        ("✅ Validation", [
-            "6-level framework",
-            "Statistical tests (K-S)",
-            "SCD2 verification",
-            "RI checks + A/B testing",
-            "Business rule assertions",
-        ], ACCENT_GREEN),
-        # Row 3
-        ("🏗️ DevOps & Infra", [
-            "Terraform + Bicep IaC",
-            "CI/CD (GitHub + ADO)",
-            "Docker / K8s / Helm",
-            "DAB bundles",
-            "Env promotion gates",
-        ], RGBColor(0x1A, 0xBC, 0x9C)),
-        ("🧠 ML & Cost", [
-            "Feature Store notebooks",
-            "MLflow experiment tracking",
-            "Batch scoring pipelines",
-            "TCO / DBU cost estimator",
-            "Cost optimization advisor",
-        ], DARK_BLUE),
-        ("🔌 Extensibility", [
-            "Plugin system (decorators)",
-            "Python SDK + REST API",
-            "YAML/JSON rule engine",
-            "Purview / Unity Catalog",
-            "Visual lineage explorer",
-        ], ACCENT_ORANGE),
+    # Simple 4-column artifact grid — each item is (icon, label, description, color)
+    artifacts = [
+        # Column 1 — Core Migration
+        ("📓", "PySpark Notebooks", "NB_*.py", ACCENT_GREEN),
+        ("🗄️", "Converted SQL", "SQL_*.sql", ACCENT_PURPLE),
+        ("⚡", "Pipeline JSON", "PL_*.json", FABRIC_BLUE),
+        ("🏗️", "DBT Models", "staging / int / marts", RGBColor(0xFF, 0x69, 0x4F)),
+        ("📐", "Delta Lake DDL", "CREATE TABLE + partitions", RGBColor(0x1A, 0xBC, 0x9C)),
+        # Column 2 — Orchestration & Streaming
+        ("⏰", "AutoSys Pipelines", "JIL → Pipeline JSON", ACCENT_ORANGE),
+        ("🌊", "Streaming Notebooks", "CDC / MERGE INTO", RGBColor(0xE7, 0x4C, 0x3C)),
+        ("⚙️", "Azure Functions", "7 trigger types", RGBColor(0xE7, 0x4C, 0x3C)),
+        ("📡", "Eventstream Defs", "Kafka / Event Hub", RGBColor(0xC0, 0x39, 0x2B)),
+        ("🔗", "Deployment Blueprints", "Bicep / Terraform", RGBColor(0x63, 0x2C, 0xA6)),
+        # Column 3 — Quality & Governance
+        ("✅", "Validation Scripts", "VAL_*.py (6 levels)", ACCENT_GREEN),
+        ("📊", "Inventory & Reports", "JSON + HTML + SVG", FABRIC_BLUE),
+        ("🔒", "Security Policies", "RLS / column masking", RGBColor(0xF3, 0x9C, 0x12)),
+        ("📋", "Compliance Docs", "GDPR / CCPA / PII", RGBColor(0xF3, 0x9C, 0x12)),
+        ("🏷️", "Catalog Metadata", "Purview / Unity Catalog", DARK_BLUE),
+        # Column 4 — DevOps & Enterprise
+        ("🏗️", "IaC Templates", "Terraform HCL + Bicep", RGBColor(0x1A, 0xBC, 0x9C)),
+        ("🔄", "CI/CD Pipelines", "GitHub Actions / ADO", ACCENT_GREEN),
+        ("🐳", "Container Configs", "Docker / K8s / Helm", FABRIC_BLUE),
+        ("🧠", "ML Pipelines", "Feature Store / MLflow", DARK_BLUE),
+        ("💰", "Cost Reports", "TCO / DBU estimates", ACCENT_ORANGE),
     ]
 
-    # Draw 3×3 grid
-    card_w = Inches(4.0)
-    card_h = Inches(1.7)
-    x_start = Inches(0.35)
-    y_start = Inches(1.45)
-    gap_x = Inches(0.25)
-    gap_y = Inches(0.12)
+    # Draw as 4 columns × 5 rows
+    cols = 4
+    rows = 5
+    col_w = Inches(3.1)
+    row_h = Inches(1.0)
+    x_start = Inches(0.3)
+    y_start = Inches(1.5)
+    gap_x = Inches(0.1)
 
-    for idx, (title, items, clr) in enumerate(capabilities):
-        col = idx % 3
-        row = idx // 3
-        x = x_start + col * (card_w + gap_x)
-        y = y_start + row * (card_h + gap_y)
+    for idx, (icon, label, desc, clr) in enumerate(artifacts):
+        col = idx // rows
+        row = idx % rows
+        x = x_start + col * (col_w + gap_x)
+        y = y_start + row * row_h
 
-        # Header bar
-        _add_shape(slide, x, y, card_w, Inches(0.42), clr, title,
-                   font_size=12, font_color=WHITE, bold=True, align=PP_ALIGN.LEFT)
-        # Bullet items
-        _add_bullet_list(slide, x + Inches(0.08), y + Inches(0.44),
-                         card_w - Inches(0.16), card_h - Inches(0.46),
-                         items, font_size=10, font_color=DARK_GRAY, spacing=Pt(2))
+        # Color bar (thin left accent)
+        _add_shape(slide, x, y + Inches(0.05), Inches(0.12), Inches(0.7), clr, "",
+                   font_size=1, font_color=clr, bold=False)
+        # Icon + label
+        _add_text_box(slide, x + Inches(0.18), y + Inches(0.05), col_w - Inches(0.2), Inches(0.38),
+                      f"{icon}  {label}", font_size=13, font_color=DARK_BLUE, bold=True)
+        # Description
+        _add_text_box(slide, x + Inches(0.18), y + Inches(0.4), col_w - Inches(0.2), Inches(0.35),
+                      desc, font_size=11, font_color=DARK_GRAY)
+
+    # Footer
+    _add_text_box(slide, Inches(0.3), Inches(6.7), Inches(12.5), Inches(0.5),
+                  "CLI:  informatica-to-fabric --target fabric | databricks | dbt | auto    •    "
+                  "Python SDK:  MigrationSDK.migrate()    •    REST API:  POST /migrate",
+                  font_size=12, font_color=RGBColor(0x95, 0xA5, 0xA6), align=PP_ALIGN.CENTER)
 
 
 def slide_detailed_savings(prs):
